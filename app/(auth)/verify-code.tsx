@@ -53,7 +53,7 @@ export default function VerifyCodeScreen() {
     >
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.replace('/(auth)/email')}
+          onPress={() => router.back()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -66,6 +66,9 @@ export default function VerifyCodeScreen() {
           Ingresa el código de verificación enviado a:
         </Text>
         <Text style={styles.email}>{email}</Text>
+        <Text style={styles.mockCodeInfo}>
+          (Para desarrollo, usa el código: {MOCK_VERIFICATION_CODE})
+        </Text>
 
         <TextInput
           style={styles.codeInput}
@@ -126,6 +129,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 32,
+  },
+  mockCodeInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    fontStyle: 'italic',
   },
   codeInput: {
     borderWidth: 1,

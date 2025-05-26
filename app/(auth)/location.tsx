@@ -37,11 +37,13 @@ export default function LocationScreen() {
   const handleManualLocation = () => {
     if (manualLocation.trim()) {
       // TODO: Guardar la ubicación manual
+      console.log('Ubicación manual guardada:', manualLocation.trim());
       router.replace('/(user)');
     }
   };
 
   const handleSkip = () => {
+    console.log('Ubicación omitida');
     router.replace('/(user)');
   };
 
@@ -49,7 +51,7 @@ export default function LocationScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.replace('/(auth)/register')}
+          onPress={() => router.back()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -82,13 +84,20 @@ export default function LocationScreen() {
             placeholder="Introduce tu ciudad o barrio"
             value={manualLocation}
             onChangeText={setManualLocation}
+            autoCapitalize="words"
           />
           <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
+            style={[
+              styles.button,
+              styles.secondaryButton,
+              !manualLocation.trim() && styles.buttonDisabled
+            ]}
             onPress={handleManualLocation}
             disabled={!manualLocation.trim()}
           >
-            <Text style={styles.buttonText}>Continuar</Text>
+            <Text style={[styles.buttonText, !manualLocation.trim() && styles.buttonTextDisabled]}>
+              Continuar
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -185,5 +194,12 @@ const styles = StyleSheet.create({
   skipText: {
     color: '#666',
     fontSize: 16,
+  },
+  buttonDisabled: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#ddd',
+  },
+  buttonTextDisabled: {
+    color: '#999',
   },
 }); 

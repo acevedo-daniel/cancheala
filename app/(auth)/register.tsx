@@ -1,5 +1,5 @@
 // app/(auth)/register.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,17 @@ export default function RegisterScreen() {
     gender: '',
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Efecto para actualizar los datos cuando vienen de Google
+  useEffect(() => {
+    if (params.firstName || params.lastName) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: Array.isArray(params.firstName) ? params.firstName[0] : params.firstName || prev.firstName,
+        lastName: Array.isArray(params.lastName) ? params.lastName[0] : params.lastName || prev.lastName,
+      }));
+    }
+  }, [params.firstName, params.lastName]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
@@ -53,7 +64,7 @@ export default function RegisterScreen() {
     >
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.replace('/(auth)/verify-code')}
+          onPress={() => router.back()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
