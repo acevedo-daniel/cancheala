@@ -69,13 +69,6 @@ export default function EmailScreen() {
               Continuar
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={() => router.replace('/(tabs)')}
-          >
-            <Text style={styles.skipText}>Omitir por ahora</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -180,15 +173,5 @@ const styles = StyleSheet.create({
   },
   buttonTextDisabled: {
     color: '#999999',
-  },
-  skipButton: {
-    marginTop: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  skipText: {
-    color: '#666666',
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
   },
 }); 

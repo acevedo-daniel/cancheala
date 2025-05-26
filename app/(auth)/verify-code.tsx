@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ export default function VerifyCodeScreen() {
   const [code, setCode] = useState('');
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     if (code.length === CODE_LENGTH) {
@@ -67,40 +69,50 @@ export default function VerifyCodeScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Verificar código</Text>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.subtitle}>
-          Ingresa el código de verificación enviado a:
-        </Text>
-        <Text style={styles.email}>{email}</Text>
-        <Text style={styles.mockCodeInfo}>
-          (Para desarrollo, usa el código: {MOCK_VERIFICATION_CODE})
-        </Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.subtitle}>Verifica tu correo</Text>
 
-        <TextInput
-          style={[styles.codeInput, error && styles.inputError]}
-          value={code}
-          onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, CODE_LENGTH))}
-          keyboardType="number-pad"
-          maxLength={CODE_LENGTH}
-          placeholder="Código de 6 dígitos"
-          autoFocus
-        />
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <TouchableOpacity
-          style={styles.resendButton}
-          onPress={handleResendCode}
-          disabled={isResending}
-        >
-          <Text style={styles.resendText}>
-            {isResending ? 'Reenviando...' : 'Reenviar código'}
+        <View style={styles.form}>
+          <Text style={styles.infoText}>
+            Hemos enviado un código de verificación a:
           </Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.email}>{email}</Text>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Código de verificación</Text>
+            <TextInput
+              style={[
+                styles.input,
+                error && styles.inputError,
+                isFocused && styles.inputFocused
+              ]}
+              value={code}
+              onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, CODE_LENGTH))}
+              keyboardType="number-pad"
+              maxLength={CODE_LENGTH}
+              placeholder="Código de 6 dígitos"
+              autoFocus
+              selectionColor="#00C853"
+              caretHidden={true}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </View>
+
+          <TouchableOpacity
+            style={styles.resendButton}
+            onPress={handleResendCode}
+            disabled={isResending}
+          >
+            <Text style={styles.resendText}>
+              {isResending ? 'Reenviando...' : 'Reenviar código'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -130,42 +142,31 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     marginRight: 8,
   },
-  title: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    marginLeft: 16,
-    color: '#000000',
-  },
   content: {
     flex: 1,
     padding: 24,
-    alignItems: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
-    textAlign: 'center',
-    marginBottom: 8,
-    lineHeight: 22,
-  },
-  email: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 32,
-    color: '#000000',
-  },
-  mockCodeInfo: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#666666',
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
     marginBottom: 24,
-    fontStyle: 'italic',
-    backgroundColor: '#f8f8f8',
-    padding: 12,
-    borderRadius: 12,
+    color: '#000000',
+    textAlign: 'center',
   },
-  codeInput: {
+  form: {
+    gap: 16,
+  },
+  inputContainer: {
+    gap: 8,
+    marginTop: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
+    marginBottom: 4,
+  },
+  input: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 12,
@@ -173,18 +174,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Inter-Medium',
     textAlign: 'center',
-    width: '100%',
-    marginBottom: 24,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
     color: '#000000',
   },
-  resendButton: {
-    padding: 16,
-  },
-  resendText: {
-    color: '#00C853',
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+  inputFocused: {
+    borderColor: '#00C853',
+    borderWidth: 2,
+    backgroundColor: '#f8fff8',
   },
   inputError: {
     borderColor: '#00C853',
@@ -193,7 +189,29 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#00C853',
     fontSize: 14,
-    marginBottom: 16,
     fontFamily: 'Inter-Medium',
+  },
+  infoText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    textAlign: 'center',
+  },
+  email: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  resendButton: {
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  resendText: {
+    color: '#00C853',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
   },
 }); 

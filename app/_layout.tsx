@@ -11,8 +11,8 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 
-// SplashScreen.preventAutoHideAsync(); // Opcional: Descomenta para controlar la splash screen manualmente.
-                                    // Por ahora, Expo la ocultará automáticamente al cargar el primer componente.
+// Prevenimos que el splash se oculte automáticamente
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -27,23 +27,26 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (!fontsLoaded) return;
+    async function prepare() {
+      try {
+        // Esperamos a que las fuentes estén cargadas
+        if (!fontsLoaded) return;
 
-    // --- SIMULACIÓN DE PROCESO DE AUTENTICACIÓN ---
-    // En una aplicación real, aquí:
-    // 1. Verificarías si hay un token de sesión guardado (ej. en AsyncStorage).
-    // 2. Si hay un token, harías una llamada a tu API para validarlo y obtener el rol del usuario.
-    // 3. Establecerías userRole y setIsLoading(false).
-    const timer = setTimeout(() => {
-      // Descomenta UNA de las siguientes líneas para probar:
-      // setUserRole('user');  // Simula un usuario normal (jugador) autenticado
-      // setUserRole('owner'); // Simula un usuario propietario de club autenticado
-      setUserRole(null);    // Simula que el usuario NO está autenticado (irá al login)
-      setIsLoading(false);
-      // SplashScreen.hideAsync(); // Opcional: Si usaste preventAutoHideAsync()
-    }, 2000); // Simula 2 segundos de carga
+        // Ocultamos el splash screen nativo
+        await SplashScreen.hideAsync();
 
-    return () => clearTimeout(timer); // Limpia el timer si el componente se desmonta
+        // Esperamos un momento antes de continuar
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Actualizamos el estado
+        setUserRole(null);
+        setIsLoading(false);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    prepare();
   }, [fontsLoaded]);
 
   useEffect(() => {
@@ -59,10 +62,13 @@ export default function RootLayout() {
   }, [isLoading, userRole, fontsLoaded]); // Se ejecuta cuando isLoading o userRole cambian
 
   if (!fontsLoaded || isLoading) {
-    // Muestra un indicador de carga mientras se verifica el estado de autenticación
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00C853" />
+        <ActivityIndicator 
+          size="large" 
+          color="#FFFFFF" 
+          style={styles.loader}
+        />
       </View>
     );
   }
@@ -83,6 +89,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#00C853',
+  },
+  loader: {
+    transform: [{ scale: 1.5 }],
   },
 });
