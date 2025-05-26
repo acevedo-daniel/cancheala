@@ -1,49 +1,72 @@
+// app/_layout.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { SplashScreen, router } from 'expo-router'; // Para manejar la splash screen
+import { Stack } from 'expo-router'; // Componente de navegación y objeto router
+import { View, ActivityIndicator, StyleSheet } from 'react-native'; // Componentes UI básicos
+
+// SplashScreen.preventAutoHideAsync(); // Opcional: Descomenta para controlar la splash screen manualmente.
+                                    // Por ahora, Expo la ocultará automáticamente al cargar el primer componente.
 
 export default function RootLayout() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  // Simula el rol del usuario: 'user', 'owner', o null (no autenticado)
+  const [userRole, setUserRole] = useState<'user' | 'owner' | null>(null);
 
   useEffect(() => {
-    // Simula checkeo async de auth (ej: token guardado)
-    setTimeout(() => {
-      // Simulamos que el usuario NO está logueado (false)
-      setIsLoggedIn(false);
-      setLoading(false);
-    }, 1500);
+    // --- SIMULACIÓN DE PROCESO DE AUTENTICACIÓN ---
+    // En una aplicación real, aquí:
+    // 1. Verificarías si hay un token de sesión guardado (ej. en AsyncStorage).
+    // 2. Si hay un token, harías una llamada a tu API para validarlo y obtener el rol del usuario.
+    // 3. Establecerías userRole y setIsLoading(false).
+    const timer = setTimeout(() => {
+      // Descomenta UNA de las siguientes líneas para probar:
+      // setUserRole('user');  // Simula un usuario normal (jugador) autenticado
+      // setUserRole('owner'); // Simula un usuario propietario de club autenticado
+      setUserRole(null);    // Simula que el usuario NO está autenticado (irá al login)
+      setIsLoading(false);
+      // SplashScreen.hideAsync(); // Opcional: Si usaste preventAutoHideAsync()
+    }, 2000); // Simula 2 segundos de carga
+
+    return () => clearTimeout(timer); // Limpia el timer si el componente se desmonta
   }, []);
 
   useEffect(() => {
-    if (!loading) {
-      if (isLoggedIn) {
-        // Si está logueado, redirigimos a /player o /club según rol
-        router.replace('/player');
+    if (!isLoading) { // Una vez que la simulación de carga termina
+      if (userRole === 'user') {
+        router.replace('/(user)');
+      } else if (userRole === 'owner') {
+        router.replace('/(owner)');
       } else {
-        // Si NO está logueado, redirigimos a auth
-        router.replace('/auth');
+        router.replace('/(auth)');
       }
     }
-  }, [loading, isLoggedIn]);
+  }, [isLoading, userRole]); // Se ejecuta cuando isLoading o userRole cambian
 
-  if (loading) {
+  if (isLoading) {
+    // Muestra un indicador de carga mientras se verifica el estado de autenticación
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
 
-  // Mientras redirige, no renderizamos nada
-  return <Stack />;
+  // Si la carga terminó, renderiza el Stack principal de navegación.
+  // Los grupos de rutas (auth), (user), (owner) serán los "hijos" principales de este Stack.
+  return (
+    <Stack>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(user)" options={{ headerShown: false }} />
+      <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+    </Stack>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f0f0', // Un color de fondo simple para la pantalla de carga
   },
 });

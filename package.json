@@ -1,7 +1,7 @@
 {
   "name": "cancheala",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "expo": "~53.0.9",
+    "expo-router": "~5.0.7",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.2",
-    "expo-router": "~5.0.7"
+    "@expo/vector-icons": "^14.1.0",
+    "@react-native-community/datetimepicker": "8.3.0",
+    "expo-location": "~18.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -29,6 +32,6 @@
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
-    "typescript": "^5.1.6"
+    "typescript": "~5.8.3"
   }
 }
