@@ -14,47 +14,217 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 48 : 16,
+    marginTop: Platform.OS === 'ios' ? 0 : 32,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  backButton: {
+    padding: 16,
+    marginLeft: -8,
+    marginRight: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    marginLeft: 16,
+    color: '#000000',
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+  },
+  subtitle: {
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    marginBottom: 32,
+    color: '#000000',
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Regular',
+    color: '#666666',
+    marginBottom: 32,
+    lineHeight: 22,
+  },
+  form: {
+    gap: 24,
+  },
+  inputContainer: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    backgroundColor: '#fff',
+    color: '#000000',
+  },
+  inputError: {
+    borderColor: '#00C853',
+    backgroundColor: '#fff5f5',
+  },
+  errorText: {
+    color: '#00C853',
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+  },
+  button: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 32,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  primaryButton: {
+    backgroundColor: '#00C853',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+  },
+  buttonDisabled: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e0e0e0',
+  },
+  buttonTextDisabled: {
+    color: '#999999',
+  },
+  skipButton: {
+    marginTop: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  skipText: {
+    color: '#666666',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+  },
+  genderContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  genderButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
+  genderButtonSelected: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  genderButtonText: {
+    fontSize: 15,
+    fontFamily: 'Inter-SemiBold',
+    color: '#000000',
+  },
+  genderButtonTextSelected: {
+    color: '#FFFFFF',
+  },
+});
+
 export default function RegisterScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const { email } = useLocalSearchParams();
   const [formData, setFormData] = useState({
-    firstName: Array.isArray(params.firstName) ? params.firstName[0] : params.firstName || '',
-    lastName: Array.isArray(params.lastName) ? params.lastName[0] : params.lastName || '',
-    birthDate: new Date(),
+    name: '',
+    lastName: '',
+    birthDate: '',
     gender: '',
   });
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Efecto para actualizar los datos cuando vienen de Google
-  useEffect(() => {
-    if (params.firstName || params.lastName) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: Array.isArray(params.firstName) ? params.firstName[0] : params.firstName || prev.firstName,
-        lastName: Array.isArray(params.lastName) ? params.lastName[0] : params.lastName || prev.lastName,
-      }));
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre es requerido';
     }
-  }, [params.firstName, params.lastName]);
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'El apellido es requerido';
+    }
+    if (!formData.birthDate.trim()) {
+      newErrors.birthDate = 'La fecha de nacimiento es requerida';
+    } else {
+      // Validar formato DD/MM/YYYY
+      const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+      if (!dateRegex.test(formData.birthDate)) {
+        newErrors.birthDate = 'Formato inválido. Usa DD/MM/YYYY';
+      } else {
+        const [day, month, year] = formData.birthDate.split('/').map(Number);
+        const date = new Date(year, month - 1, day);
+        const currentDate = new Date();
+        
+        if (date > currentDate) {
+          newErrors.birthDate = 'La fecha no puede ser futura';
+        } else if (year < 1900) {
+          newErrors.birthDate = 'Año inválido';
+        }
+      }
+    }
+    if (!formData.gender) {
+      newErrors.gender = 'Selecciona tu género';
+    }
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setFormData(prev => ({ ...prev, birthDate: selectedDate }));
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const formatDate = (text: string) => {
+    // Eliminar todo excepto números
+    const numbers = text.replace(/[^\d]/g, '');
+    
+    // Formatear como DD/MM/YYYY
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    } else {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
     }
   };
 
-  const handleGenderSelect = (gender: string) => {
-    setFormData(prev => ({ ...prev, gender }));
-  };
-
-  const handleSkip = () => {
-    // Redirigir a la solicitud de ubicación
-    router.replace('/(auth)/location');
-  };
-
-  const handleContinue = () => {
-    // TODO: Guardar datos del usuario
-    router.replace('/(auth)/location');
+  const handleSubmit = () => {
+    if (validateForm()) {
+      // TODO: Guardar datos del usuario
+      console.log('Datos del usuario:', { email, ...formData });
+      router.replace('/(auth)/location');
+    }
   };
 
   return (
@@ -69,197 +239,104 @@ export default function RegisterScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Completa tu perfil</Text>
       </View>
 
-      <ScrollView style={styles.content}>
-        <Text style={styles.subtitle}>
-          Cuéntanos un poco más sobre ti
-        </Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.subtitle}>¿Quién eres?</Text>
 
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Nombres"
-            value={formData.firstName}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Apellidos"
-            value={formData.lastName}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
-          />
-
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateButtonText}>
-              {formData.birthDate.toLocaleDateString()}
-            </Text>
-          </TouchableOpacity>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.birthDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Nombre</Text>
+            <TextInput
+              style={[styles.input, errors.name && styles.inputError]}
+              placeholder="Tu nombre"
+              value={formData.name}
+              onChangeText={(text) => setFormData({ ...formData, name: text })}
+              autoCapitalize="words"
             />
-          )}
+            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+          </View>
 
-          <View style={styles.genderContainer}>
-            <Text style={styles.genderLabel}>Género</Text>
-            <View style={styles.genderButtons}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Apellido</Text>
+            <TextInput
+              style={[styles.input, errors.lastName && styles.inputError]}
+              placeholder="Tu apellido"
+              value={formData.lastName}
+              onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+              autoCapitalize="words"
+            />
+            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Fecha de nacimiento</Text>
+            <TextInput
+              style={[styles.input, errors.birthDate && styles.inputError]}
+              placeholder="DD/MM/YYYY"
+              value={formData.birthDate}
+              onChangeText={(text) => setFormData({ ...formData, birthDate: formatDate(text) })}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+            {errors.birthDate && <Text style={styles.errorText}>{errors.birthDate}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Género</Text>
+            <View style={styles.genderContainer}>
               <TouchableOpacity
                 style={[
                   styles.genderButton,
                   formData.gender === 'M' && styles.genderButtonSelected,
+                  errors.gender && styles.inputError
                 ]}
-                onPress={() => handleGenderSelect('M')}
+                onPress={() => setFormData({ ...formData, gender: 'M' })}
               >
                 <Text style={[
                   styles.genderButtonText,
-                  formData.gender === 'M' && styles.genderButtonTextSelected,
+                  formData.gender === 'M' && styles.genderButtonTextSelected
                 ]}>Masculino</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.genderButton,
                   formData.gender === 'F' && styles.genderButtonSelected,
+                  errors.gender && styles.inputError
                 ]}
-                onPress={() => handleGenderSelect('F')}
+                onPress={() => setFormData({ ...formData, gender: 'F' })}
               >
                 <Text style={[
                   styles.genderButtonText,
-                  formData.gender === 'F' && styles.genderButtonTextSelected,
+                  formData.gender === 'F' && styles.genderButtonTextSelected
                 ]}>Femenino</Text>
               </TouchableOpacity>
             </View>
+            {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
           </View>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.primaryButton,
+              (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender) && styles.buttonDisabled
+            ]}
+            onPress={handleSubmit}
+            disabled={!formData.name || !formData.lastName || !formData.birthDate || !formData.gender}
+          >
+            <Text style={[styles.buttonText, (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender) && styles.buttonTextDisabled]}>
+              Continuar
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => router.replace('/(auth)/location')}
+          >
+            <Text style={styles.skipText}>Omitir por ahora</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleContinue}
-        >
-          <Text style={styles.buttonText}>Continuar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={handleSkip}
-        >
-          <Text style={styles.skipText}>Ahora no</Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginLeft: 16,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  form: {
-    gap: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-  },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: '#000',
-  },
-  genderContainer: {
-    marginTop: 8,
-  },
-  genderLabel: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#666',
-  },
-  genderButtons: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  genderButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  genderButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  genderButtonText: {
-    fontSize: 16,
-    color: '#000',
-  },
-  genderButtonTextSelected: {
-    color: '#fff',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  skipButton: {
-    alignItems: 'center',
-    padding: 16,
-    marginTop: 8,
-  },
-  skipText: {
-    color: '#666',
-    fontSize: 16,
-  },
-});

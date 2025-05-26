@@ -3,6 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { SplashScreen, router } from 'expo-router'; // Para manejar la splash screen
 import { Stack } from 'expo-router'; // Componente de navegación y objeto router
 import { View, ActivityIndicator, StyleSheet } from 'react-native'; // Componentes UI básicos
+import { 
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 // SplashScreen.preventAutoHideAsync(); // Opcional: Descomenta para controlar la splash screen manualmente.
                                     // Por ahora, Expo la ocultará automáticamente al cargar el primer componente.
@@ -12,7 +19,16 @@ export default function RootLayout() {
   // Simula el rol del usuario: 'user', 'owner', o null (no autenticado)
   const [userRole, setUserRole] = useState<'user' | 'owner' | null>(null);
 
+  const [fontsLoaded] = useFonts({
+    'Inter-Regular': Inter_400Regular,
+    'Inter-Medium': Inter_500Medium,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
+  });
+
   useEffect(() => {
+    if (!fontsLoaded) return;
+
     // --- SIMULACIÓN DE PROCESO DE AUTENTICACIÓN ---
     // En una aplicación real, aquí:
     // 1. Verificarías si hay un token de sesión guardado (ej. en AsyncStorage).
@@ -28,10 +44,10 @@ export default function RootLayout() {
     }, 2000); // Simula 2 segundos de carga
 
     return () => clearTimeout(timer); // Limpia el timer si el componente se desmonta
-  }, []);
+  }, [fontsLoaded]);
 
   useEffect(() => {
-    if (!isLoading) { // Una vez que la simulación de carga termina
+    if (!isLoading && fontsLoaded) {
       if (userRole === 'user') {
         router.replace('/(user)');
       } else if (userRole === 'owner') {
@@ -40,13 +56,13 @@ export default function RootLayout() {
         router.replace('/(auth)');
       }
     }
-  }, [isLoading, userRole]); // Se ejecuta cuando isLoading o userRole cambian
+  }, [isLoading, userRole, fontsLoaded]); // Se ejecuta cuando isLoading o userRole cambian
 
-  if (isLoading) {
+  if (!fontsLoaded || isLoading) {
     // Muestra un indicador de carga mientras se verifica el estado de autenticación
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#00C853" />
       </View>
     );
   }
@@ -67,6 +83,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0', // Un color de fondo simple para la pantalla de carga
+    backgroundColor: '#fff',
   },
 });

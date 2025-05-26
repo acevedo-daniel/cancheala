@@ -72,7 +72,7 @@ export default function LocationScreen() {
           disabled={isLoading}
         >
           <Text style={styles.buttonText}>
-            {isLoading ? 'Obteniendo ubicación...' : 'Permitir Ubicación'}
+            {isLoading ? 'Obteniendo ubicación...' : 'Permitir ubicación'}
           </Text>
         </TouchableOpacity>
 
@@ -81,7 +81,7 @@ export default function LocationScreen() {
         <View style={styles.manualLocationContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Introduce tu ciudad o barrio"
+            placeholder="Ingresa tu ciudad o barrio"
             value={manualLocation}
             onChangeText={setManualLocation}
             autoCapitalize="words"
@@ -105,7 +105,7 @@ export default function LocationScreen() {
           style={styles.skipButton}
           onPress={handleSkip}
         >
-          <Text style={styles.skipText}>Ahora no</Text>
+          <Text style={styles.skipText}>Omitir por ahora</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -121,60 +121,80 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 48 : 16,
+    marginTop: Platform.OS === 'ios' ? 0 : 32,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   backButton: {
-    padding: 8,
+    padding: 16,
+    marginLeft: -8,
+    marginRight: 8,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: 'Inter-Bold',
     marginLeft: 16,
+    color: '#000000',
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   subtitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
+    fontFamily: 'Inter-Bold',
+    marginTop: 24,
+    marginBottom: 12,
     textAlign: 'center',
+    color: '#000000',
   },
   description: {
     fontSize: 16,
-    color: '#666',
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 32,
+    lineHeight: 22,
   },
   button: {
     width: '100%',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   primaryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#00C853',
   },
   secondaryButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f8f8',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: 'Inter-SemiBold',
   },
   orText: {
     fontSize: 16,
-    color: '#666',
-    marginVertical: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
+    marginVertical: 20,
   },
   manualLocationContainer: {
     width: '100%',
@@ -182,24 +202,28 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
     padding: 16,
-    fontSize: 16,
+    fontSize: 15,
+    fontFamily: 'Inter-Regular',
+    backgroundColor: '#f8f8f8',
+    color: '#000000',
   },
   skipButton: {
-    marginTop: 20,
+    marginTop: 24,
     padding: 16,
   },
   skipText: {
-    color: '#666',
-    fontSize: 16,
+    color: '#666666',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
   },
   buttonDisabled: {
     backgroundColor: '#f5f5f5',
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
   },
   buttonTextDisabled: {
-    color: '#999',
+    color: '#999999',
   },
 }); 

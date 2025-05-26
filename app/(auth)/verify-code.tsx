@@ -13,33 +13,42 @@ import { Ionicons } from '@expo/vector-icons';
 
 const CODE_LENGTH = 6;
 const MOCK_VERIFICATION_CODE = '123456'; // Para simulación
+const MOCK_EXISTING_EMAILS = ['usuario@existente.com']; // Emails que simulan usuarios existentes
 
 export default function VerifyCodeScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams();
   const [code, setCode] = useState('');
   const [isResending, setIsResending] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (code.length === CODE_LENGTH) {
       // Simular verificación de código
       if (code === MOCK_VERIFICATION_CODE) {
-        // TODO: Verificar si el email existe en la base de datos
-        const emailExists = false; // Simulamos que es un usuario nuevo
+        // Verificar si el email existe en la base de datos
+        const emailExists = MOCK_EXISTING_EMAILS.includes(email as string);
         if (emailExists) {
+          console.log('Usuario existente, redirigiendo a home');
           router.replace('/(user)');
         } else {
+          console.log('Usuario nuevo, redirigiendo a registro');
           router.replace({
             pathname: '/(auth)/register',
             params: { email }
           });
         }
+      } else {
+        setError('Código incorrecto');
       }
+    } else {
+      setError('');
     }
   }, [code]);
 
   const handleResendCode = () => {
     setIsResending(true);
+    setError('');
     // Simular envío de código
     setTimeout(() => {
       setIsResending(false);
@@ -58,7 +67,7 @@ export default function VerifyCodeScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Verificar Código</Text>
+        <Text style={styles.title}>Verificar código</Text>
       </View>
 
       <View style={styles.content}>
@@ -71,7 +80,7 @@ export default function VerifyCodeScreen() {
         </Text>
 
         <TextInput
-          style={styles.codeInput}
+          style={[styles.codeInput, error && styles.inputError]}
           value={code}
           onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, CODE_LENGTH))}
           keyboardType="number-pad"
@@ -79,6 +88,8 @@ export default function VerifyCodeScreen() {
           placeholder="Código de 6 dígitos"
           autoFocus
         />
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TouchableOpacity
           style={styles.resendButton}
@@ -103,54 +114,86 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 48 : 16,
+    marginTop: Platform.OS === 'ios' ? 0 : 32,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   backButton: {
-    padding: 8,
+    padding: 16,
+    marginLeft: -8,
+    marginRight: 8,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: 'Inter-Bold',
     marginLeft: 16,
+    color: '#000000',
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
     textAlign: 'center',
     marginBottom: 8,
+    lineHeight: 22,
   },
   email: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     marginBottom: 32,
+    color: '#000000',
   },
   mockCodeInfo: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#666666',
+    marginBottom: 24,
     fontStyle: 'italic',
+    backgroundColor: '#f8f8f8',
+    padding: 12,
+    borderRadius: 12,
   },
   codeInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
     padding: 16,
     fontSize: 24,
+    fontFamily: 'Inter-Medium',
     textAlign: 'center',
     width: '100%',
     marginBottom: 24,
+    backgroundColor: '#f8f8f8',
+    color: '#000000',
   },
   resendButton: {
     padding: 16,
   },
   resendText: {
-    color: '#007AFF',
-    fontSize: 16,
+    color: '#00C853',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+  },
+  inputError: {
+    borderColor: '#00C853',
+    backgroundColor: '#fff5f5',
+  },
+  errorText: {
+    color: '#00C853',
+    fontSize: 14,
+    marginBottom: 16,
+    fontFamily: 'Inter-Medium',
   },
 }); 

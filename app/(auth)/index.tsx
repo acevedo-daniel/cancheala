@@ -63,17 +63,18 @@ export default function AuthScreen() {
       <ImageBackground
         source={require('../../assets/background.jpg')}
         style={styles.backgroundImage}
+        imageStyle={styles.backgroundImageStyle}
       >
         <TouchableOpacity
           style={styles.skipButton}
           onPress={handleGuestAccess}
         >
-          <Text style={styles.skipText}>Ahora no</Text>
+          <Text style={styles.skipText}>Omitir por ahora</Text>
         </TouchableOpacity>
-        
-        <View style={styles.logoContainer}>
+
+        {/* <View style={styles.logoContainer}>
           <Text style={styles.logoText}>Cancheala</Text>
-        </View>
+        </View> */}
       </ImageBackground>
 
       <View style={styles.content}>
@@ -84,6 +85,7 @@ export default function AuthScreen() {
           <Image
             source={{ uri: 'https://www.google.com/favicon.ico' }}
             style={styles.googleIcon}
+            resizeMode="contain"
           />
           <Text style={styles.buttonText}>Continuar con Google</Text>
         </TouchableOpacity>
@@ -93,7 +95,7 @@ export default function AuthScreen() {
           onPress={handleEmailLogin}
         >
           <Text style={[styles.buttonText, styles.emailButtonText]}>
-            Continuar con Correo Electrónico
+            Continuar con correo electrónico
           </Text>
         </TouchableOpacity>
 
@@ -102,7 +104,7 @@ export default function AuthScreen() {
           onPress={handleProviderAccess}
         >
           <Text style={styles.providerText}>
-            Acceso para Proveedores de Servicios/Espacios
+            Acceso para proveedores de servicios
           </Text>
         </TouchableOpacity>
       </View>
@@ -117,35 +119,47 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     width: width,
-    height: height * 0.5,
-    justifyContent: 'space-between',
+    height: height * 0.65,
+    justifyContent: 'flex-start',
     padding: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  backgroundImageStyle: {
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   skipButton: {
     alignSelf: 'flex-end',
     padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 20,
   },
   skipText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginTop: 10,
   },
   logoText: {
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontFamily: 'Inter-Bold',
     color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    textShadowRadius: 6,
+    letterSpacing: 1,
   },
   content: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'flex-start',
+    padding: 24,
+    justifyContent: 'center',
     backgroundColor: '#fff',
   },
   button: {
@@ -156,7 +170,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -165,22 +179,22 @@ const styles = StyleSheet.create({
   googleButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
   },
   emailButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#00C853',
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 15,
+    fontFamily: 'Inter-SemiBold',
+    color: '#000000',
   },
   emailButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
   googleIcon: {
-    width: 24,
-    height: 24,
+    width: 18,
+    height: 18,
     marginRight: 12,
   },
   providerButton: {
@@ -189,8 +203,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   providerText: {
-    color: '#007AFF',
+    color: '#000000',
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: 'Inter-SemiBold',
   },
 });

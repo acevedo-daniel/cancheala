@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,12 +16,13 @@ export default function EmailScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
 
-  const handleContinue = () => {
-    // Simulamos el envío del código
-    router.push({
-      pathname: '/(auth)/verify-code',
-      params: { email }
-    });
+  const handleSubmit = () => {
+    if (email.trim()) {
+      router.push({
+        pathname: '/(auth)/verify-code',
+        params: { email: email.trim() }
+      });
+    }
   };
 
   return (
@@ -35,32 +37,47 @@ export default function EmailScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Ingresa tu correo</Text>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.subtitle}>
-          Te enviaremos un código de verificación a tu correo electrónico
-        </Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.subtitle}>Ingresa tu correo</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Correo electrónico"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-        />
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Correo electrónico</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="tu@correo.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+          </View>
 
-        <TouchableOpacity
-          style={[styles.button, !email && styles.buttonDisabled]}
-          onPress={handleContinue}
-          disabled={!email}
-        >
-          <Text style={styles.buttonText}>Continuar</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.primaryButton,
+              !email && styles.buttonDisabled
+            ]}
+            onPress={handleSubmit}
+            disabled={!email}
+          >
+            <Text style={[styles.buttonText, !email && styles.buttonTextDisabled]}>
+              Continuar
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => router.replace('/(tabs)')}
+          >
+            <Text style={styles.skipText}>Omitir por ahora</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -74,11 +91,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 48 : 16,
+    marginTop: Platform.OS === 'ios' ? 0 : 32,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   backButton: {
-    padding: 8,
+    padding: 16,
+    marginLeft: -8,
+    marginRight: 8,
   },
   title: {
     fontSize: 20,
@@ -87,35 +114,81 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    padding: 24,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
+    fontSize: 28,
+    fontFamily: 'Inter-Bold',
+    marginBottom: 32,
+    color: '#000000',
     textAlign: 'center',
+  },
+  form: {
+    gap: 24,
+  },
+  inputContainer: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#666666',
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    marginBottom: 24,
+    fontFamily: 'Inter-Regular',
+    backgroundColor: '#fff',
+    color: '#000000',
+  },
+  inputError: {
+    borderColor: '#00C853',
+    backgroundColor: '#fff5f5',
+  },
+  errorText: {
+    color: '#00C853',
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
   },
   button: {
-    backgroundColor: '#007AFF',
+    width: '100%',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
+    marginTop: 32,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
+  primaryButton: {
+    backgroundColor: '#00C853',
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
+  },
+  buttonDisabled: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e0e0e0',
+  },
+  buttonTextDisabled: {
+    color: '#999999',
+  },
+  skipButton: {
+    marginTop: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  skipText: {
+    color: '#666666',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
   },
 }); 
