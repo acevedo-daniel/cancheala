@@ -5,14 +5,25 @@ import {
   ViewStyle,
   TouchableOpacity,
 } from 'react-native';
-import { COLORS, BORDER_RADIUS, SHADOWS, SPACING } from '../../constants';
+import { COLORS, BORDER_RADIUS, SHADOWS, SPACING } from '../../../constants';
+
+type CardVariant = 'elevated' | 'outlined' | 'flat';
 
 interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   onPress?: () => void;
-  variant?: 'elevated' | 'outlined' | 'flat';
+  variant?: CardVariant;
 }
+
+const CARD_STYLES: Record<CardVariant, ViewStyle> = {
+  elevated: SHADOWS.md,
+  outlined: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  flat: {},
+};
 
 export function Card({
   children,
@@ -20,29 +31,13 @@ export function Card({
   onPress,
   variant = 'elevated',
 }: CardProps) {
-  const getCardStyle = () => {
-    switch (variant) {
-      case 'elevated':
-        return SHADOWS.md;
-      case 'outlined':
-        return {
-          borderWidth: 1,
-          borderColor: COLORS.border,
-        };
-      case 'flat':
-        return {};
-      default:
-        return SHADOWS.md;
-    }
-  };
-
   const Container = onPress ? TouchableOpacity : View;
 
   return (
     <Container
       style={[
         styles.card,
-        getCardStyle(),
+        CARD_STYLES[variant],
         style,
       ]}
       onPress={onPress}

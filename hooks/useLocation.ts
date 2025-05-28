@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAppStore } from '../store';
 import { Location } from '../types';
-import { api } from '../services/api';
+import { MOCK_LOCATIONS } from '../mocks/data';
 
 export function useLocation() {
   const location = useAppStore(state => state.location);
@@ -12,8 +12,8 @@ export function useLocation() {
   const fetchLocations = useCallback(async () => {
     try {
       setLoading(true);
-      const locations = await api.getLocations();
-      return locations;
+      // Simular llamada a API
+      return MOCK_LOCATIONS;
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error al cargar ubicaciones');
       return [];
@@ -25,8 +25,13 @@ export function useLocation() {
   const selectLocation = useCallback(async (locationId: string) => {
     try {
       setLoading(true);
-      const location = await api.getLocationById(locationId);
-      setLocation(location);
+      // Simular llamada a API
+      const location = MOCK_LOCATIONS.find(loc => loc.id === locationId);
+      if (location) {
+        setLocation(location);
+      } else {
+        setError('Ubicación no encontrada');
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error al seleccionar ubicación');
     } finally {

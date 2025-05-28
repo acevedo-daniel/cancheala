@@ -7,13 +7,17 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../constants';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../../constants';
+
+type ButtonVariant = 'primary' | 'secondary' | 'outline';
+type ButtonSize = 'small' | 'medium' | 'large';
 
 interface ButtonProps {
   onPress: () => void;
   title: string;
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
   style?: ViewStyle;
@@ -21,6 +25,30 @@ interface ButtonProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
+
+const BACKGROUND_COLORS: Record<ButtonVariant, string> = {
+  primary: COLORS.primary,
+  secondary: COLORS.secondary,
+  outline: 'transparent',
+};
+
+const TEXT_COLORS: Record<ButtonVariant, string> = {
+  primary: COLORS.text.light,
+  secondary: COLORS.text.light,
+  outline: COLORS.primary,
+};
+
+const PADDING: Record<ButtonSize, number> = {
+  small: SPACING.sm,
+  medium: SPACING.md,
+  large: SPACING.lg,
+};
+
+const FONT_SIZES: Record<ButtonSize, number> = {
+  small: TYPOGRAPHY.fontSize.sm,
+  medium: TYPOGRAPHY.fontSize.md,
+  large: TYPOGRAPHY.fontSize.md,
+};
 
 export function Button({
   onPress,
@@ -34,40 +62,10 @@ export function Button({
   leftIcon,
   rightIcon,
 }: ButtonProps) {
-  const getBackgroundColor = () => {
-    if (disabled) return COLORS.border;
-    switch (variant) {
-      case 'primary':
-        return COLORS.primary;
-      case 'secondary':
-        return COLORS.secondary;
-      case 'outline':
-        return 'transparent';
-      default:
-        return COLORS.primary;
-    }
-  };
-
-  const getTextColor = () => {
-    if (disabled) return COLORS.text.secondary;
-    switch (variant) {
-      case 'outline':
-        return COLORS.primary;
-      default:
-        return COLORS.text.light;
-    }
-  };
-
-  const getPadding = () => {
-    switch (size) {
-      case 'small':
-        return SPACING.sm;
-      case 'large':
-        return SPACING.lg;
-      default:
-        return SPACING.md;
-    }
-  };
+  const backgroundColor = disabled ? COLORS.border : BACKGROUND_COLORS[variant];
+  const textColor = disabled ? COLORS.text.secondary : TEXT_COLORS[variant];
+  const padding = PADDING[size];
+  const fontSize = FONT_SIZES[size];
 
   return (
     <TouchableOpacity
@@ -76,15 +74,15 @@ export function Button({
       style={[
         styles.button,
         {
-          backgroundColor: getBackgroundColor(),
-          padding: getPadding(),
+          backgroundColor,
+          padding,
           borderColor: variant === 'outline' ? COLORS.primary : 'transparent',
         },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={getTextColor()} />
+        <ActivityIndicator color={textColor} />
       ) : (
         <>
           {leftIcon}
@@ -92,8 +90,8 @@ export function Button({
             style={[
               styles.text,
               {
-                color: getTextColor(),
-                fontSize: size === 'small' ? TYPOGRAPHY.fontSize.sm : TYPOGRAPHY.fontSize.md,
+                color: textColor,
+                fontSize,
               },
               textStyle,
             ]}

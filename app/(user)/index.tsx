@@ -16,51 +16,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Banner, Category, Space } from '../../types';
+import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-interface Banner {
-  id: string;
-  title: string;
-  image: string | null;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-interface Space {
-  id: string;
-  name: string;
-  rating: number;
-  location: string;
-}
-
-// Datos de ejemplo para el carrusel de banners
-const BANNERS: Banner[] = [
-  { id: '1', title: 'Promociones destacadas', image: null },
-  { id: '2', title: 'Nuevos espacios', image: null },
-  { id: '3', title: 'Eventos especiales', image: null },
-  { id: '4', title: 'Espacios populares', image: null },
-];
-
-// Datos de ejemplo para las categorías
-const CATEGORIES: Category[] = [
-  { id: '1', name: 'Fútbol', icon: 'football-outline' },
-  { id: '2', name: 'Tenis', icon: 'tennisball-outline' },
-  { id: '3', name: 'Básquet', icon: 'basketball-outline' },
-  { id: '4', name: 'Pádel', icon: 'baseball-outline' },
-  { id: '5', name: 'Vóley', icon: 'basketball-outline' },
-];
-
-// Datos de ejemplo para el feed
-const SPACES: Space[] = [
-  { id: '1', name: 'Cancha Central', rating: 4.5, location: 'Falucho 257' },
-  { id: '2', name: 'Club Deportivo', rating: 4.8, location: 'Av. Rivadavia 1234' },
-  { id: '3', name: 'Polideportivo', rating: 4.2, location: 'Calle Principal 789' },
-];
 
 export default function HomeScreen() {
   const router = useRouter();

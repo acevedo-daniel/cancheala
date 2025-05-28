@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
-import { TabBar } from '../components/ui/TabBar';
-import { COLORS } from '../constants';
+import { TabBar } from '../../components/ui/TabBar';
+import { COLORS } from '../../constants';
+import { UserStackParamList } from '../../types';
 
 export default function UserLayout() {
   return (

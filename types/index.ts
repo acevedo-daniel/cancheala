@@ -19,22 +19,26 @@ export type UserStackParamList = {
 // Tipos de datos
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: 'user' | 'owner';
+  firstName: string;
+  lastName: string;
+  isGoogleUser: boolean;
 }
 
 export interface Location {
   id: string;
+  name: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface Banner {
   id: string;
   title: string;
-  imageUrl: string;
+  image: string | null;
 }
 
 export interface Category {
@@ -48,11 +52,6 @@ export interface Space {
   name: string;
   rating: number;
   location: string;
-  images: string[];
-  price: number;
-  description: string;
-  amenities: string[];
-  sports: string[];
 }
 
 export interface Reservation {

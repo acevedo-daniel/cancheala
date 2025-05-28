@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../../constants';
 
 const { width, height } = Dimensions.get('window');
 
@@ -115,33 +116,29 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   backgroundImage: {
     width: width,
     height: height * 0.65,
     justifyContent: 'flex-start',
-    padding: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    padding: SPACING.lg,
+    ...SHADOWS.lg,
   },
   backgroundImageStyle: {
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: BORDER_RADIUS.xl,
+    borderBottomRightRadius: BORDER_RADIUS.xl,
   },
   skipButton: {
     alignSelf: 'flex-end',
-    padding: 10,
+    padding: SPACING.sm,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 20,
+    borderRadius: BORDER_RADIUS.full,
   },
   skipText: {
-    color: '#fff',
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    color: COLORS.text.light,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontFamily: TYPOGRAPHY.fontFamily.semiBold,
   },
   logoContainer: {
     alignItems: 'center',
@@ -158,53 +155,48 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 24,
+    padding: SPACING.xl,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   button: {
     width: '100%',
-    padding: 16,
-    borderRadius: 12,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginBottom: SPACING.lg,
+    ...SHADOWS.sm,
   },
   googleButton: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
   },
   emailButton: {
-    backgroundColor: '#00C853',
+    backgroundColor: COLORS.primary,
   },
   buttonText: {
-    fontSize: 15,
-    fontFamily: 'Inter-SemiBold',
-    color: '#000000',
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.semiBold,
+    color: COLORS.text.primary,
   },
   emailButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.text.light,
   },
   googleIcon: {
     width: 18,
     height: 18,
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   providerButton: {
-    marginTop: 'auto',
-    padding: 16,
-    alignItems: 'center',
+    marginTop: SPACING.md,
   },
   providerText: {
-    color: '#000000',
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
+    color: COLORS.text.secondary,
+    textAlign: 'center',
   },
 });
