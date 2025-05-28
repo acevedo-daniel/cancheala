@@ -42,12 +42,15 @@ export default function LoginScreen() {
         style={styles.backgroundImage}
       >
         <View style={styles.overlay}>
-          <TouchableOpacity
-            style={styles.guestButton}
-            onPress={handleGuestAccess}
-          >
-            <Text style={styles.guestText}>Ahora no</Text>
-          </TouchableOpacity>
+          <View style={styles.guestButtonContainer}>
+            <TouchableOpacity
+              style={styles.guestButton}
+              onPress={handleGuestAccess}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.guestText}>Ahora no</Text>
+            </TouchableOpacity>
+          </View>
           
           <Image
             source={require('../../../assets/icon.png')}
@@ -103,9 +106,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
   },
+  guestButtonContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    zIndex: 999,
+  },
   guestButton: {
-    alignSelf: 'flex-end',
-    padding: 10,
+    padding: 16,
+    margin: 8,
   },
   guestText: {
     color: '#fff',
