@@ -34,8 +34,7 @@ export interface Location {
 export interface Banner {
   id: string;
   title: string;
-  image: string | null;
-  link?: string;
+  imageUrl: string;
 }
 
 export interface Category {

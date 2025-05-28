@@ -141,7 +141,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        overScrollMode="always"
+      >
         <TouchableOpacity
           style={styles.searchBar}
           onPress={handleSearchPress}
@@ -159,6 +164,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             onScroll={handleBannerChange}
             style={styles.bannerList}
+            nestedScrollEnabled={true}
+            scrollEnabled={true}
           />
           <View style={styles.bannerPagination}>
             {BANNERS.map((_, index) => (
@@ -196,12 +203,19 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.categoriesList}
+            nestedScrollEnabled={true}
+            scrollEnabled={true}
           />
         </View>
 
         <View style={styles.spacesSection}>
           <Text style={styles.sectionTitle}>Espacios cerca de ti</Text>
-          {SPACES.map((space) => renderSpace({ item: space }))}
+          <FlatList
+            data={SPACES}
+            renderItem={renderSpace}
+            scrollEnabled={false}
+            nestedScrollEnabled={true}
+          />
         </View>
       </ScrollView>
     </View>
@@ -215,11 +229,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 48 : 16,
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
     paddingBottom: 16,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
