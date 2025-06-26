@@ -57,14 +57,15 @@ export const CATEGORIES: Category[] = [
   { id: '5', name: 'Vóley', icon: 'basketball-outline' },
 ];
 
+
 export const SPACES: Space[] = [
   {
     id: '1',
     name: 'Cancha Central',
     rating: 4.5,
     location: 'Buenos Aires',
-    address: 'Faluco 257',
-    image: require('../assets/padel1.png'),
+    address: 'Falucho 257',
+    image: require('../assets/padel1.png'), 
   },
   {
     id: '2',
@@ -83,3 +84,4 @@ export const SPACES: Space[] = [
     image: require('../assets/padel3.png'),
   },
 ];
+

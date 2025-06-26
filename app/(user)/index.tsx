@@ -169,13 +169,13 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.spacesSection}>
-          <Text style={styles.sectionTitle}>cancha disponibles</Text>
-          <FlatList
-            data={SPACES}
-            renderItem={renderSpace}
-            scrollEnabled={false}
-            nestedScrollEnabled={true}
-          />
+          <Text style={styles.sectionTitle}>Canchas Disponibles</Text>
+<FlatList
+  data={SPACES}
+  keyExtractor={(item) => item.id}
+  renderItem={renderSpace}
+/>
+
         </View>
       </ScrollView>
     </View>
