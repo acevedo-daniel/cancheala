@@ -58,30 +58,29 @@ export const CATEGORIES: Category[] = [
 ];
 
 
-export const SPACES: Space[] = [
+export const SPACES = [
   {
     id: '1',
-    name: 'Cancha Central',
+    name: 'Cancha Material',
     rating: 4.5,
-    location: 'Buenos Aires',
-    address: 'Falucho 257',
-    image: require('../assets/padel1.png'), 
+    location: 'Resistencia Chaco, Alea Padel Club',
+    address: 'Faluco 257',
+    image: require('../assets/padel1.png'),
   },
   {
     id: '2',
-    name: 'Club Deportivo',
+    name: 'Cancha Central TECHADA',
     rating: 4.8,
-    location: 'Buenos Aires',
+    location: 'Resistencia Chaco, Making Padel',
     address: 'Av. Rivadavia 1234',
     image: require('../assets/padel2.png'),
   },
   {
     id: '3',
-    name: 'Polideportivo',
+    name: 'Cancha 3 ',
     rating: 4.2,
-    location: 'Buenos Aires',
+    location: 'Resistencia Chaco, Central Norte',
     address: 'Calle Principal 789',
     image: require('../assets/padel3.png'),
   },
 ];
-

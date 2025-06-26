@@ -69,8 +69,13 @@ export default function HomeScreen() {
   const renderSpace = ({ item }: { item: Space }) => (
     <TouchableOpacity style={styles.spaceCard}>
       <View style={styles.spaceImage}>
-        <Text style={styles.spaceImagePlaceholder}>Imagen</Text>
-      </View>
+  <Image
+    source={item.image}
+    style={{ width: '100%', height: '100%', borderRadius: 10 }}
+    resizeMode="cover"
+  />
+</View>
+
       <View style={styles.spaceInfo}>
         <Text style={styles.spaceName}>{item.name}</Text>
         <View style={styles.spaceRating}>
@@ -170,12 +175,12 @@ export default function HomeScreen() {
 
         <View style={styles.spacesSection}>
           <Text style={styles.sectionTitle}>Canchas Disponibles</Text>
-<FlatList
-  data={SPACES}
-  keyExtractor={(item) => item.id}
-  renderItem={renderSpace}
-/>
-
+          <FlatList
+            data={SPACES}
+            keyExtractor={(item) => item.id}
+            renderItem={renderSpace}
+            scrollEnabled={false}
+          />
         </View>
       </ScrollView>
     </View>
