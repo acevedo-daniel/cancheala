@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
 
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HomeScreen() {
@@ -168,7 +169,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.spacesSection}>
-          <Text style={styles.sectionTitle}>Espacios cerca de ti</Text>
+          <Text style={styles.sectionTitle}>cancha disponibles</Text>
           <FlatList
             data={SPACES}
             renderItem={renderSpace}

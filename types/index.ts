@@ -16,10 +16,24 @@ export type UserStackParamList = {
   'my-reservations': undefined;
 };
 
+// Enums
+export enum UserRole {
+  USER = 'user',
+  OWNER = 'owner',
+}
+
+export enum ReservationStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+}
+
 // Tipos de datos
 export interface User {
   id: string;
   email: string;
+  name: string;
+  role: UserRole;
   firstName: string;
   lastName: string;
   isGoogleUser: boolean;
@@ -52,6 +66,8 @@ export interface Space {
   name: string;
   rating: number;
   location: string;
+  address: string;
+  image: string;
 }
 
 export interface Reservation {
@@ -61,20 +77,8 @@ export interface Reservation {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: ReservationStatus;
   totalPrice: number;
-}
-
-// Enums
-export enum UserRole {
-  USER = 'user',
-  OWNER = 'owner',
-}
-
-export enum ReservationStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  CANCELLED = 'cancelled',
 }
 
 // Tipos de estado
@@ -84,4 +88,4 @@ export interface AppState {
   selectedCategory: string | null;
   isLoading: boolean;
   error: string | null;
-} 
+}

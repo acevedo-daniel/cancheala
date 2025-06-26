@@ -1,32 +1,44 @@
-import { User, Location, Category, Banner, Space } from '../types';
+import { User, Location, Category, Banner, Space, UserRole } from '../types';
 
 export const MOCK_USERS: User[] = [
   {
     id: '1',
     name: 'Juan Pérez',
     email: 'juan@example.com',
-    role: 'user',
+    role: UserRole.USER,
+    firstName: 'Juan',
+    lastName: 'Pérez',
+    isGoogleUser: false
   },
   {
     id: '2',
     name: 'María García',
     email: 'maria@example.com',
-    role: 'owner',
+    role: UserRole.OWNER,
+    firstName: 'María',
+    lastName: 'García',
+    isGoogleUser: true
   },
 ];
 
 export const MOCK_LOCATIONS: Location[] = [
   {
     id: '1',
+    name: 'Ubicación 1',
     address: 'Av. Siempreviva 742',
-    latitude: -34.603722,
-    longitude: -58.381592,
+    coordinates: {
+      latitude: -34.603722,
+      longitude: -58.381592,
+    }
   },
   {
     id: '2',
+    name: 'Ubicación 2',
     address: 'Calle Falsa 123',
-    latitude: -34.603722,
-    longitude: -58.381592,
+    coordinates: {
+      latitude: -34.603722,
+      longitude: -58.381592,
+    }
   },
 ];
 
@@ -46,7 +58,28 @@ export const CATEGORIES: Category[] = [
 ];
 
 export const SPACES: Space[] = [
-  { id: '1', name: 'Cancha Central', rating: 4.5, location: 'Falucho 257' },
-  { id: '2', name: 'Club Deportivo', rating: 4.8, location: 'Av. Rivadavia 1234' },
-  { id: '3', name: 'Polideportivo', rating: 4.2, location: 'Calle Principal 789' },
-]; 
+  {
+    id: '1',
+    name: 'Cancha Central',
+    rating: 4.5,
+    location: 'Buenos Aires',
+    address: 'Faluco 257',
+    image: require('../assets/padel1.png'),
+  },
+  {
+    id: '2',
+    name: 'Club Deportivo',
+    rating: 4.8,
+    location: 'Buenos Aires',
+    address: 'Av. Rivadavia 1234',
+    image: require('../assets/padel2.png'),
+  },
+  {
+    id: '3',
+    name: 'Polideportivo',
+    rating: 4.2,
+    location: 'Buenos Aires',
+    address: 'Calle Principal 789',
+    image: require('../assets/padel3.png'),
+  },
+];
