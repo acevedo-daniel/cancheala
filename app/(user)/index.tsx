@@ -14,14 +14,17 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
+import { SPACING } from '../../constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -38,7 +41,9 @@ export default function HomeScreen() {
     router.push('/(user)/advanced-search');
   };
 
-  const handleBannerChange = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const handleBannerChange = (
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(contentOffset / (SCREEN_WIDTH - 32));
     setCurrentBanner(currentIndex);
@@ -51,10 +56,10 @@ export default function HomeScreen() {
   );
 
   const renderCategory = ({ item }: { item: Category }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         styles.categoryCard,
-        selectedCategory === item.id && styles.selectedCategory
+        selectedCategory === item.id && styles.selectedCategory,
       ]}
       onPress={() => setSelectedCategory(item.id)}
     >
@@ -82,7 +87,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.locationButton}
@@ -100,16 +105,13 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         bounces={true}
         overScrollMode="always"
       >
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={handleSearchPress}
-        >
+        <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress}>
           <Ionicons name="search" size={20} color="#666" />
           <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
         </TouchableOpacity>
@@ -196,6 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    marginTop: SPACING.sm,
   },
   locationButton: {
     flexDirection: 'row',

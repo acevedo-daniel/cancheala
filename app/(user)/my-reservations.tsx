@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 
 export default function MyReservationsScreen() {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>Mis Reservas</Text>
     </View>
   );
@@ -22,4 +24,4 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     marginBottom: SPACING.md,
   },
-}); 
+});
