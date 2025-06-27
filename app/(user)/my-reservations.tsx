@@ -1,17 +1,22 @@
+import Card from '../../components/ui/Card';
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
   FlatList,
-  Modal,
-  Pressable,
-  Button,
+  Alert,
 } from 'react-native';
-import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
-import Card from '../../components/ui/Card';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Space } from '../../types';
+import { SPACES } from '../../mocks/data';
 import { useReservations, Reservation } from '../context/ReservationsContext';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type GroupedReservation = {
   id: string;
@@ -19,220 +24,165 @@ type GroupedReservation = {
   date: string;
   times: string[];
   location: string;
+  image?: any;
 };
+
+export default function MyReservationsScreen() {
+  const router = useRouter();
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  const { reservations, setReservations } = useReservations();
+
+  // Agrupa reservas y guarda la imagen
+  const groupedReservationsObj = reservations.reduce((acc, curr) => {
+    const key = `${curr.title}-${curr.date}`;
+    if (!acc[key]) {
+      // Busca la imagen en SPACES si no está en la reserva
+      let image = curr.image;
+      if (!image) {
+        const found = SPACES.find(
+          s =>
+            s.location === curr.location ||
+            s.name === curr.title.replace('Reserva en ', '')
+        );
+        image = found?.image;
+      }
+      acc[key] = {
+        id: curr.id,
+        title: curr.title,
+        date: curr.date,
+        times: [curr.time],
+        location: curr.location,
+        image: image,
+      };
+    } else {
+      acc[key].times.push(curr.time);
+    }
+    return acc;
+  }, {} as Record<string, GroupedReservation>);
+
+  // Convertir el objeto agrupado a array
+  const groupedReservationsArray = Object.values(groupedReservationsObj);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.locationButton}
+          onPress={() => router.push('/(user)/location-selection')}
+        >
+          <Ionicons name="location" size={20} color="#000" />
+          <Text style={styles.locationText}>Falucho 257</Text>
+          <Ionicons name="chevron-down" size={20} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => router.push('/(user)/notifications')}
+        >
+          <Ionicons name="notifications-outline" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+
+<View style={styles.content}>
+  {groupedReservationsArray.length > 0 && (
+    <View style={{ marginBottom: 20 }}>
+      <Text style={styles.sectionTitle}>Mis Reservas</Text>
+      <FlatList
+        data={groupedReservationsArray}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }: { item: GroupedReservation }) => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <View style={{ flex: 1 }}>
+              <Card
+                space={{
+                  id: item.id,
+                  name: `${item.title} (${item.times.join(', ')})`,
+                  rating: 0,
+                  address: item.location,
+                  image: item.image || { uri: '' },
+                  location: item.location,
+                }}
+                onPress={() => {}}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(
+                  'Cancelar reserva',
+                  '¿Estás seguro de que deseas cancelar esta reserva?',
+                  [
+                    { text: 'No', style: 'cancel' },
+                    {
+                      text: 'Sí',
+                      style: 'destructive',
+                      onPress: () => {
+                        setReservations((prev) =>
+                          prev.filter(
+                            (r) =>
+                              !(
+                                r.title === item.title &&
+                                r.date === item.date &&
+                                item.times.includes(r.time)
+                              )
+                          )
+                        );
+                      },
+                    },
+                  ]
+                );
+              }}
+              style={{ marginLeft: 10 }}
+            >
+              <Ionicons name="trash" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  )}
+</View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SPACING.lg,
+    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: TYPOGRAPHY.fontSize.xl,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-    color: COLORS.text.primary,
-    marginBottom: SPACING.md,
-  },
-  subtitle: {
-    fontSize: TYPOGRAPHY.fontSize.md,
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
   },
-  modalContent: {
-    width: '80%',
-    backgroundColor: COLORS.background,
-    padding: SPACING.md,
-    borderRadius: 10,
-    elevation: 5,
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  modalTitle: {
-    fontSize: TYPOGRAPHY.fontSize.lg,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-    marginBottom: SPACING.sm,
-  },
-  cancelButton: {
-    marginTop: SPACING.md,
-    backgroundColor: COLORS.error || 'red',
-    padding: SPACING.sm,
-    borderRadius: 5,
-  },
-  cancelButtonText: {
-    color: 'white',
-    textAlign: 'center',
+  locationText: {
+    marginHorizontal: 6,
     fontWeight: 'bold',
+    fontSize: 16,
   },
-  closeText: {
-    marginTop: SPACING.sm,
-    textAlign: 'center',
-    color: COLORS.primary || 'blue',
+  notificationButton: {
+    padding: 8,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 12,
   },
 });
-
-export default function MyReservationsScreen() {
-  const params = useLocalSearchParams();
-  const router = useRouter();
-  const { reservations, setReservations } = useReservations();
-  const [selectedReservation, setSelectedReservation] = useState<GroupedReservation | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedHours, setSelectedHours] = useState<string[]>([]);
-
-  if (!params?.name) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Mis Reservas</Text>
-        <FlatList
-          data={Object.values(
-            reservations.reduce((acc, curr) => {
-              const key = `${curr.title}-${curr.date}`;
-              if (!acc[key]) {
-                acc[key] = {
-                  id: curr.id,
-                  title: curr.title,
-                  date: curr.date,
-                  times: [curr.time],
-                  location: curr.location,
-                };
-              } else {
-                acc[key].times.push(curr.time);
-              }
-              return acc;
-            }, {} as Record<string, GroupedReservation>)
-          )}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Card
-              space={{
-                id: item.id,
-                name: `${item.title} (${item.times.join(', ')})`,
-                rating: 0,
-                address: item.location,
-                image: { uri: '' },
-                location: item.location,
-              }}
-              onPress={() => {
-                setSelectedReservation(item);
-                setModalVisible(true);
-              }}
-            />
-          )}
-        />
-        {/* Modal de detalles para reservas existentes */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(false);
-            setSelectedReservation(null);
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Detalles de la Reserva</Text>
-              {selectedReservation && (
-                <>
-                  <Text>Cancha: {selectedReservation.title}</Text>
-                  <Text>Fecha: {selectedReservation.date}</Text>
-                  <Text>Horarios: {selectedReservation.times.join(', ')}</Text>
-                  <Text>Lugar: {selectedReservation.location}</Text>
-
-                  <Pressable
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      setReservations((prev) =>
-                        prev.filter(
-                          (r) =>
-                            !(
-                              r.title === selectedReservation.title &&
-                              r.date === selectedReservation.date &&
-                              r.location === selectedReservation.location
-                            )
-                        )
-                      );
-                      setModalVisible(false);
-                      setSelectedReservation(null);
-                    }}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancelar Reserva</Text>
-                  </Pressable>
-                </>
-              )}
-              <Pressable
-                onPress={() => {
-                  setModalVisible(false);
-                  setSelectedReservation(null);
-                }}
-              >
-                <Text style={styles.closeText}>Cerrar</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
-      </View>
-    );
-  }
-
-  // Si params.name existe, muestra el selector de horarios
-  const availableHours = Array.from({ length: 13 }, (_, i) => {
-    const hour = (14 + i) % 24;
-    return `${hour.toString().padStart(2, '0')}:00`;
-  });
-
-  return (
-    <View style={styles.container}>
-      <View style={{ marginTop: SPACING.lg }}>
-        <Text style={styles.subtitle}>Horarios disponibles:</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {availableHours.map((hour) => (
-            <Pressable
-              key={hour}
-              onPress={() => {
-                setSelectedHours((prev) =>
-                  prev.includes(hour)
-                    ? prev.filter((h) => h !== hour)
-                    : [...prev, hour]
-                );
-              }}
-              style={{
-                backgroundColor: selectedHours.includes(hour) ? COLORS.primary : '#eee',
-                padding: 10,
-                borderRadius: 5,
-                marginBottom: 10,
-                minWidth: 70,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: selectedHours.includes(hour) ? '#fff' : '#000' }}>{hour}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {selectedHours.length > 0 && (
-          <Button
-            title="Reservar"
-            onPress={() => {
-              const newReservations: Reservation[] = selectedHours.map((hour) => ({
-                id: `${Date.now().toString()}-${hour}`,
-                title: `Reserva en ${params.name}`,
-                date: new Date().toISOString().split('T')[0],
-                time: hour,
-                location: params.location as string,
-              }));
-
-              setReservations((prev) => [...prev, ...newReservations]);
-              setSelectedHours([]);
-              router.replace('/(user)/my-reservations');
-            }}
-          />
-        )}
-      </View>
-                    <Button title="Volver" onPress={() => router.replace('/(user)/my-reservations')} />
-                  </View>
-        );
-      }

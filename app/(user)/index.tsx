@@ -34,6 +34,7 @@ type GroupedReservation = {
   date: string;
   times: string[];
   location: string;
+  image?: any;
 };
 
 export default function HomeScreen() {
@@ -46,6 +47,7 @@ export default function HomeScreen() {
 
   const { reservations, setReservations } = useReservations();
 
+  // Agrupa reservas y guarda la imagen
   const groupedReservationsObj = reservations.reduce((acc, curr) => {
     const key = `${curr.title}-${curr.date}`;
     if (!acc[key]) {
@@ -55,6 +57,7 @@ export default function HomeScreen() {
         date: curr.date,
         times: [curr.time],
         location: curr.location,
+        image: curr.image,
       };
     } else {
       acc[key].times.push(curr.time);
@@ -132,7 +135,7 @@ export default function HomeScreen() {
                     name: `${item.title} (${item.times.join(', ')})`,
                     rating: 0,
                     address: item.location,
-                    image: { uri: '' },
+                    image: item.image || { uri: '' },
                     location: item.location,
                   }}
                   onPress={() => {}}
@@ -242,23 +245,26 @@ export default function HomeScreen() {
               ))}
             </View>
             {selectedHours.length > 0 && (
-              <Button
-                title="Reservar"
-                onPress={() => {
-                  if (!selectedSpace) return;
-                  const newReservations: Reservation[] = selectedHours.map((hour) => ({
-                    id: `${Date.now().toString()}-${hour}`,
-                    title: `Reserva en ${selectedSpace.name}`,
-                    date: new Date().toISOString().split('T')[0],
-                    time: hour,
-                    location: selectedSpace.location,
-                  }));
-                  setReservations((prev) => [...prev, ...newReservations]);
-                  setModalVisible(false);
-                  setSelectedHours([]);
-                  alert('Reserva confirmada');
-                }}
-              />
+              // ...existing code...
+<Button
+  title="Reservar"
+  onPress={() => {
+    if (!selectedSpace) return;
+    const newReservations: Reservation[] = selectedHours.map((hour) => ({
+      id: `${Date.now().toString()}-${hour}`,
+      title: `Reserva en ${selectedSpace.name}`,
+      date: new Date().toISOString().split('T')[0],
+      time: hour,
+      location: selectedSpace.location,
+      image: selectedSpace.image, // <-- Así se guarda la imagen real de la cancha
+    }));
+    setReservations((prev) => [...prev, ...newReservations]);
+    setModalVisible(false);
+    setSelectedHours([]);
+    alert('Reserva confirmada');
+  }}
+/>
+// ...existing code...
             )}
             <Button title="Cerrar" onPress={() => setModalVisible(false)} />
           </View>
@@ -269,136 +275,161 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f8f8' },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 12,
-    backgroundColor: '#f8f8f8',
+    paddingTop: 40,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
   },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    borderRadius: 20,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
+  },
+  locationText: {
+    marginHorizontal: 8,
+    fontSize: 16,
+    color: '#000',
+    fontWeight: '500',
   },
   notificationButton: {
     padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
   },
-  locationText: {
-    marginLeft: 6,
-    marginRight: 2,
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#222',
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 20,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    paddingHorizontal: 14,
-    margin: 16,
-    marginBottom: 8,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
+    marginBottom: 20,
+    marginTop: 10,
   },
   searchText: {
-    marginLeft: 8,
+    marginLeft: 10,
     color: '#666',
-    fontSize: 15,
+    fontSize: 16,
   },
-  content: { flex: 1 },
-  bannerContainer: { marginHorizontal: 16, marginBottom: 12 },
-  bannerList: { flexGrow: 0 },
+  bannerContainer: {
+    marginBottom: 20,
+  },
+  bannerList: {
+    width: '100%',
+  },
+  banner: {
+    width: SCREEN_WIDTH - 32,
+    height: 120,
+    backgroundColor: '#007bff',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  bannerText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   bannerPagination: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
+    marginTop: 8,
   },
   bannerDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#ccc',
-    marginHorizontal: 3,
+    marginHorizontal: 4,
   },
-  bannerDotActive: { backgroundColor: '#007bff' },
-  banner: {
-    width: SCREEN_WIDTH - 32,
-    height: 120,
-    borderRadius: 12,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 8,
-    marginBottom: 8,
+  bannerDotActive: {
+    backgroundColor: '#007bff',
   },
-  bannerText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#222' },
-  categoriesSection: { marginBottom: 20 },
-  categoriesList: { flexGrow: 0 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  categoriesSection: {
+    marginBottom: 20,
+  },
+  categoriesList: {
+    marginBottom: 10,
+  },
   categoryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 12,
     padding: 12,
-    marginHorizontal: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
+    marginRight: 12,
+    flexDirection: 'column',
     minWidth: 80,
   },
-  selectedCategory: { borderColor: '#007bff', backgroundColor: '#e6f0ff' },
-  categoryIcon: { marginBottom: 6 },
-  categoryText: { fontSize: 14, color: '#333', fontWeight: '500' },
-  spacesSection: { marginBottom: 20 },
+  selectedCategory: {
+    backgroundColor: '#007bff',
+  },
+  categoryIcon: {
+    marginBottom: 6,
+  },
+  categoryText: {
+    fontSize: 14,
+    color: '#000',
+    fontWeight: '500',
+  },
+  spacesSection: {
+    marginBottom: 20,
+  },
   spaceCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    marginVertical: 8,
-    marginHorizontal: 8,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    marginBottom: 14,
+    overflow: 'hidden',
+    elevation: 1,
   },
   spaceImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
+    width: 90,
+    height: 90,
+    borderRadius: 12,
     marginRight: 12,
     backgroundColor: '#eee',
   },
-  spaceInfo: { flex: 1, justifyContent: 'center' },
-  spaceName: { fontSize: 16, fontWeight: 'bold', marginBottom: 4, color: '#222' },
-  spaceRating: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  ratingText: { marginLeft: 4, fontSize: 14, color: '#FFD700', fontWeight: 'bold' },
-  spaceLocation: { fontSize: 13, color: '#666' },
+  spaceInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  spaceName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  spaceRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  ratingText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: '#333',
+  },
+  spaceLocation: {
+    fontSize: 13,
+    color: '#666',
+  },
 });

@@ -6,6 +6,9 @@ export type Reservation = {
   date: string;
   time: string;
   location: string;
+  image?: any; // Puedes usar ImageSourcePropType si prefieres
+
+
 };
 
 type ReservationsContextType = {
