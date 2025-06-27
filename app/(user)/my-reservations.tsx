@@ -10,119 +10,16 @@ import {
 } from 'react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 import Card from '../../components/ui/Card';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useReservations, Reservation } from '../context/ReservationsContext';
 
-type Reservation = {
+type GroupedReservation = {
   id: string;
   title: string;
   date: string;
-  time: string;
+  times: string[];
   location: string;
 };
-
-const mockReservations: Reservation[] = [
-  {
-    id: '1',
-    title: 'Reserva en Cancha A',
-    date: '2025-07-01',
-    time: '18:00',
-    location: 'Complejo Las Palmas',
-  },
-  {
-    id: '2',
-    title: 'Reserva en Cancha B',
-    date: '2025-07-03',
-    time: '20:00',
-    location: 'Club Atlético Norte',
-  },
-];
-
-export default function MyReservationsScreen() {
-  const params = useLocalSearchParams();
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const openModal = (reservation: any) => {
-    setSelectedReservation(reservation);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedReservation(null);
-  };
-
-  return (
-    <View style={styles.container}>
-      {params?.name ? (
-        <>
-          <Text style={styles.title}>Reserva de: {params.name}</Text>
-          <Text>Ubicación: {params.location}</Text>
-          <Text>Rating: ⭐ {params.rating}</Text>
-
-          <View style={{ marginTop: SPACING.lg }}>
-            <Text style={styles.subtitle}>Horarios disponibles:</Text>
-            <Text>🕒 14:00, 15:00, 16:00</Text>
-
-            <View style={{ marginTop: 20 }}>
-              <Button title="Reservar" onPress={() => alert('Reserva confirmada ✅')} />
-            </View>
-          </View>
-        </>
-      ) : (
-        <>
-          <Text style={styles.title}>Mis Reservas</Text>
-          <FlatList
-            data={mockReservations}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <Card
-                space={{
-                  id: item.id,
-                  name: item.title,
-                  rating: 0,
-                  address: item.location,
-                  image: { uri: '' },
-                  location: item.location,
-                }}
-                onPress={() => openModal(item)}
-              />
-            )}
-          />
-        </>
-      )}
-
-      {/* Modal de detalles para reservas existentes */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Detalles de la Reserva</Text>
-            {selectedReservation && (
-              <>
-                <Text>Cancha: {selectedReservation.title}</Text>
-                <Text>Fecha: {selectedReservation.date}</Text>
-                <Text>Hora: {selectedReservation.time}</Text>
-                <Text>Lugar: {selectedReservation.location}</Text>
-
-                <Pressable style={styles.cancelButton} onPress={() => {}}>
-                  <Text style={styles.cancelButtonText}>Cancelar Reserva</Text>
-                </Pressable>
-              </>
-            )}
-            <Pressable onPress={closeModal}>
-              <Text style={styles.closeText}>Cerrar</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -168,6 +65,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: 'white',
     textAlign: 'center',
+    fontWeight: 'bold',
   },
   closeText: {
     marginTop: SPACING.sm,
@@ -175,3 +73,166 @@ const styles = StyleSheet.create({
     color: COLORS.primary || 'blue',
   },
 });
+
+export default function MyReservationsScreen() {
+  const params = useLocalSearchParams();
+  const router = useRouter();
+  const { reservations, setReservations } = useReservations();
+  const [selectedReservation, setSelectedReservation] = useState<GroupedReservation | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedHours, setSelectedHours] = useState<string[]>([]);
+
+  if (!params?.name) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Mis Reservas</Text>
+        <FlatList
+          data={Object.values(
+            reservations.reduce((acc, curr) => {
+              const key = `${curr.title}-${curr.date}`;
+              if (!acc[key]) {
+                acc[key] = {
+                  id: curr.id,
+                  title: curr.title,
+                  date: curr.date,
+                  times: [curr.time],
+                  location: curr.location,
+                };
+              } else {
+                acc[key].times.push(curr.time);
+              }
+              return acc;
+            }, {} as Record<string, GroupedReservation>)
+          )}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Card
+              space={{
+                id: item.id,
+                name: `${item.title} (${item.times.join(', ')})`,
+                rating: 0,
+                address: item.location,
+                image: { uri: '' },
+                location: item.location,
+              }}
+              onPress={() => {
+                setSelectedReservation(item);
+                setModalVisible(true);
+              }}
+            />
+          )}
+        />
+        {/* Modal de detalles para reservas existentes */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(false);
+            setSelectedReservation(null);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Detalles de la Reserva</Text>
+              {selectedReservation && (
+                <>
+                  <Text>Cancha: {selectedReservation.title}</Text>
+                  <Text>Fecha: {selectedReservation.date}</Text>
+                  <Text>Horarios: {selectedReservation.times.join(', ')}</Text>
+                  <Text>Lugar: {selectedReservation.location}</Text>
+
+                  <Pressable
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      setReservations((prev) =>
+                        prev.filter(
+                          (r) =>
+                            !(
+                              r.title === selectedReservation.title &&
+                              r.date === selectedReservation.date &&
+                              r.location === selectedReservation.location
+                            )
+                        )
+                      );
+                      setModalVisible(false);
+                      setSelectedReservation(null);
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancelar Reserva</Text>
+                  </Pressable>
+                </>
+              )}
+              <Pressable
+                onPress={() => {
+                  setModalVisible(false);
+                  setSelectedReservation(null);
+                }}
+              >
+                <Text style={styles.closeText}>Cerrar</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
+  // Si params.name existe, muestra el selector de horarios
+  const availableHours = Array.from({ length: 13 }, (_, i) => {
+    const hour = (14 + i) % 24;
+    return `${hour.toString().padStart(2, '0')}:00`;
+  });
+
+  return (
+    <View style={styles.container}>
+      <View style={{ marginTop: SPACING.lg }}>
+        <Text style={styles.subtitle}>Horarios disponibles:</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {availableHours.map((hour) => (
+            <Pressable
+              key={hour}
+              onPress={() => {
+                setSelectedHours((prev) =>
+                  prev.includes(hour)
+                    ? prev.filter((h) => h !== hour)
+                    : [...prev, hour]
+                );
+              }}
+              style={{
+                backgroundColor: selectedHours.includes(hour) ? COLORS.primary : '#eee',
+                padding: 10,
+                borderRadius: 5,
+                marginBottom: 10,
+                minWidth: 70,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: selectedHours.includes(hour) ? '#fff' : '#000' }}>{hour}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {selectedHours.length > 0 && (
+          <Button
+            title="Reservar"
+            onPress={() => {
+              const newReservations: Reservation[] = selectedHours.map((hour) => ({
+                id: `${Date.now().toString()}-${hour}`,
+                title: `Reserva en ${params.name}`,
+                date: new Date().toISOString().split('T')[0],
+                time: hour,
+                location: params.location as string,
+              }));
+
+              setReservations((prev) => [...prev, ...newReservations]);
+              setSelectedHours([]);
+              router.replace('/(user)/my-reservations');
+            }}
+          />
+        )}
+      </View>
+                    <Button title="Volver" onPress={() => router.replace('/(user)/my-reservations')} />
+                  </View>
+        );
+      }

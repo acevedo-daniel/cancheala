@@ -1,8 +1,7 @@
-// app/_layout.tsx
 import React, { useEffect, useState } from 'react';
-import { SplashScreen, router } from 'expo-router'; // Para manejar la splash screen
-import { Stack } from 'expo-router'; // Componente de navegación y objeto router
-import { View, ActivityIndicator, StyleSheet } from 'react-native'; // Componentes UI básicos
+import { SplashScreen, router } from 'expo-router';
+import { Stack } from 'expo-router';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { 
   useFonts,
   Inter_400Regular,
@@ -10,13 +9,12 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
+import { ReservationsProvider } from './context/ReservationsContext'; // <--- AGREGA ESTA LÍNEA
 
-// Prevenimos que el splash se oculte automáticamente
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
-  // Simula el rol del usuario: 'user', 'owner', o null (no autenticado)
   const [userRole, setUserRole] = useState<'user' | 'owner' | null>(null);
 
   const [fontsLoaded] = useFonts({
@@ -29,23 +27,15 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Esperamos a que las fuentes estén cargadas
         if (!fontsLoaded) return;
-
-        // Ocultamos el splash screen nativo
         await SplashScreen.hideAsync();
-
-        // Esperamos un momento antes de continuar
         await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Actualizamos el estado
         setUserRole(null);
         setIsLoading(false);
       } catch (e) {
         console.warn(e);
       }
     }
-
     prepare();
   }, [fontsLoaded]);
 
@@ -59,7 +49,7 @@ export default function RootLayout() {
         router.replace('/(auth)');
       }
     }
-  }, [isLoading, userRole, fontsLoaded]); // Se ejecuta cuando isLoading o userRole cambian
+  }, [isLoading, userRole, fontsLoaded]);
 
   if (!fontsLoaded || isLoading) {
     return (
@@ -73,14 +63,15 @@ export default function RootLayout() {
     );
   }
 
-  // Si la carga terminó, renderiza el Stack principal de navegación.
-  // Los grupos de rutas (auth), (user), (owner) serán los "hijos" principales de este Stack.
+  // ENVUELVE EL STACK CON EL PROVIDER
   return (
-    <Stack>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(user)" options={{ headerShown: false }} />
-      <Stack.Screen name="(owner)" options={{ headerShown: false }} />
-    </Stack>
+    <ReservationsProvider>
+      <Stack>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false }} />
+        <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+      </Stack>
+    </ReservationsProvider>
   );
 }
 
