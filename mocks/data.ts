@@ -61,8 +61,8 @@ export const CATEGORIES: Category[] = [
 export const SPACES = [
   {
     id: '1',
-    name: 'Cancha Material',
-    rating: 4.5,
+    name: 'Cancha de Material',
+    rating: 2.5,
     location: 'Resistencia Chaco, Alea Padel Club',
     address: 'Faluco 257',
     image: require('../assets/padel1.png'),
@@ -70,15 +70,15 @@ export const SPACES = [
   {
     id: '2',
     name: 'Cancha Central TECHADA',
-    rating: 4.8,
+    rating: 9.8,
     location: 'Resistencia Chaco, Making Padel',
     address: 'Av. Rivadavia 1234',
     image: require('../assets/padel2.png'),
   },
   {
     id: '3',
-    name: 'Cancha 3 ',
-    rating: 4.2,
+    name: 'Cancha 3',
+    rating: 8.2,
     location: 'Resistencia Chaco, Central Norte',
     address: 'Calle Principal 789',
     image: require('../assets/padel3.png'),

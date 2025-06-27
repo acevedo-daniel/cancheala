@@ -1,4 +1,5 @@
-// app/(user)/index.tsx
+// app/(user)/index.tsximport { useNavigation } from 'expo-router';
+import Card from '../../components/ui/Card';
 import React, { useState } from 'react';
 import {
   View,
@@ -66,26 +67,33 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderSpace = ({ item }: { item: Space }) => (
-    <TouchableOpacity style={styles.spaceCard}>
-      <View style={styles.spaceImage}>
-  <Image
-    source={item.image}
-    style={{ width: '100%', height: '100%', borderRadius: 10 }}
-    resizeMode="cover"
-  />
+const renderSpace = ({ item }: { item: Space }) => (
+  <TouchableOpacity
+    style={styles.spaceCard}
+    onPress={() =>
+      router.push({
+        pathname: '/my-reservations',
+        params: {
+          name: item.name,
+          location: item.location,
+          rating: item.rating,
+        },
+      })
+    }
+  >
+    <View style={styles.spaceImage}>
+  <Image source={item.image} style={styles.spaceImage} resizeMode="cover" />
 </View>
-
-      <View style={styles.spaceInfo}>
-        <Text style={styles.spaceName}>{item.name}</Text>
-        <View style={styles.spaceRating}>
-          <Ionicons name="star" size={16} color="#FFD700" />
-          <Text style={styles.ratingText}>{item.rating}</Text>
-        </View>
-        <Text style={styles.spaceLocation}>{item.location}</Text>
+    <View style={styles.spaceInfo}>
+      <Text style={styles.spaceName}>{item.name}</Text>
+      <View style={styles.spaceRating}>
+        <Ionicons name="star" size={16} color="#FFD700" />
+        <Text style={styles.ratingText}>{item.rating}</Text>
       </View>
-    </TouchableOpacity>
-  );
+      <Text style={styles.spaceLocation}>{item.location}</Text>
+    </View>
+  </TouchableOpacity>
+);
 
   return (
     <View style={styles.container}>
@@ -184,6 +192,8 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
     </View>
+
+    
   );
 }
 
