@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Platform, StatusBar, Dimensions } from 'react-native';
 import { COLORS } from '../../constants';
 
-interface ScreenContainerProps {
+interface BottomSafeAreaProps {
   children: React.ReactNode;
   backgroundColor?: string;
   style?: any;
@@ -10,38 +10,36 @@ interface ScreenContainerProps {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Valores calculados para simular el comportamiento de Instagram/MercadoPago
-const getSafeAreaMargins = () => {
-  const statusBarHeight = StatusBar.currentHeight || 0;
-  
+// Valores calculados para el área segura inferior
+const getBottomSafeAreaMargins = () => {
   if (Platform.OS === 'ios') {
-    // iOS: valores típicos para iPhone con notch
+    // iOS: Home indicator + margen extra
     return {
-      top: statusBarHeight + 8, // Status bar + 8px extra
+      bottom: 34 + 8, // Home indicator + 8px extra
       horizontal: 8,
     };
   } else {
-    // Android: valores adaptativos
+    // Android: Navigation bar + margen extra
     return {
-      top: statusBarHeight + 8, // Status bar + 8px extra
+      bottom: 16 + 8, // Navigation bar + 8px extra
       horizontal: 8,
     };
   }
 };
 
-export default function ScreenContainer({ 
+export default function BottomSafeArea({ 
   children, 
   backgroundColor = COLORS.background,
   style 
-}: ScreenContainerProps) {
-  const margins = getSafeAreaMargins();
+}: BottomSafeAreaProps) {
+  const margins = getBottomSafeAreaMargins();
 
   return (
     <View style={[styles.container, { backgroundColor }, style]}>
       <View style={[
         styles.content,
         {
-          marginTop: margins.top,
+          marginBottom: margins.bottom,
           marginHorizontal: margins.horizontal,
         }
       ]}>
@@ -53,17 +51,15 @@ export default function ScreenContainer({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#000', // Fondo negro como Instagram
   },
   content: {
-    flex: 1,
     backgroundColor: COLORS.background,
     borderRadius: Platform.OS === 'ios' ? 12 : 8,
     overflow: 'hidden',
-    borderBottomLeftRadius: 0, // Sin borde inferior para conectar con BottomSafeArea
-    borderBottomRightRadius: 0, // Sin borde inferior para conectar con BottomSafeArea
-    borderTopLeftRadius: Platform.OS === 'ios' ? 12 : 8,
-    borderTopRightRadius: Platform.OS === 'ios' ? 12 : 8,
+    borderTopLeftRadius: 0, // Sin borde superior para conectar con ScreenContainer
+    borderTopRightRadius: 0, // Sin borde superior para conectar con ScreenContainer
+    borderBottomLeftRadius: Platform.OS === 'ios' ? 12 : 8,
+    borderBottomRightRadius: Platform.OS === 'ios' ? 12 : 8,
   },
 }); 
