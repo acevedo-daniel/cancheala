@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import { TabBar } from '../../components/ui/TabBar';
-import { COLORS } from '../../constants';
 import { ReservationsProvider } from '../context/ReservationsContext'; // Importa el provider
 
 export default function UserLayout() {
@@ -29,6 +28,12 @@ export default function UserLayout() {
           name="profile"
           options={{
             title: 'Perfil',
+          }}
+        />
+        <Tabs.Screen
+          name="canchas"
+          options={{
+            title: 'Canchas',
           }}
         />
       </Tabs>

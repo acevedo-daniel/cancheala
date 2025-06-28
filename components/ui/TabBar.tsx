@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { COLORS, SHADOWS } from '../../constants';
 import { Tab } from './Tab';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { UserStackParamList } from '../../types';
 import BottomSafeArea from './BottomSafeArea';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,6 +19,11 @@ const TABS = [
     route: 'my-reservations',
   },
   {
+    label: 'Canchas',
+    icon: 'tennisball', // Icono para canchas
+    route: 'canchas',
+  },
+  {
     label: 'Perfil',
     icon: 'person',
     route: 'profile',
@@ -28,9 +32,10 @@ const TABS = [
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+
   return (
     <BottomSafeArea>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
         {TABS.map((tab, index) => (
           <Tab
             key={tab.route}
