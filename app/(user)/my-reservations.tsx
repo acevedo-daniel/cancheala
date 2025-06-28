@@ -7,6 +7,9 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
  import Card from '../../components/ui/Card'; 
 
@@ -53,8 +56,9 @@ export default function MyReservationsScreen() {
     setSelectedReservation(null);
   };
 
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>Mis Reservas</Text>
       <FlatList
         data={mockReservations}
@@ -152,4 +156,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: COLORS.primary || 'blue',
   },
+});
 });

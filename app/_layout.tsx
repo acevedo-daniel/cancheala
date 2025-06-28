@@ -1,22 +1,26 @@
-// app/_layout.tsx
 import React, { useEffect, useState } from 'react';
-import { SplashScreen, router } from 'expo-router'; // Para manejar la splash screen
-import { Stack } from 'expo-router'; // Componente de navegación y objeto router
-import { View, ActivityIndicator, StyleSheet } from 'react-native'; // Componentes UI básicos
-import { 
+import { SplashScreen, router } from 'expo-router';
+import { Stack } from 'expo-router';
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  StatusBar,
+  Platform,
+} from 'react-native';
+import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-// Prevenimos que el splash se oculte automáticamente
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
-  // Simula el rol del usuario: 'user', 'owner', o null (no autenticado)
   const [userRole, setUserRole] = useState<'user' | 'owner' | null>(null);
 
   const [fontsLoaded] = useFonts({
@@ -29,16 +33,9 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Esperamos a que las fuentes estén cargadas
         if (!fontsLoaded) return;
-
-        // Ocultamos el splash screen nativo
         await SplashScreen.hideAsync();
-
-        // Esperamos un momento antes de continuar
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Actualizamos el estado
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         setUserRole(null);
         setIsLoading(false);
       } catch (e) {
@@ -59,28 +56,30 @@ export default function RootLayout() {
         router.replace('/(auth)');
       }
     }
-  }, [isLoading, userRole, fontsLoaded]); // Se ejecuta cuando isLoading o userRole cambian
+  }, [isLoading, userRole, fontsLoaded]);
 
   if (!fontsLoaded || isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator 
-          size="large" 
-          color="#FFFFFF" 
-          style={styles.loader}
-        />
+        <ActivityIndicator size="large" color="#FFFFFF" style={styles.loader} />
       </View>
     );
   }
 
-  // Si la carga terminó, renderiza el Stack principal de navegación.
-  // Los grupos de rutas (auth), (user), (owner) serán los "hijos" principales de este Stack.
   return (
-    <Stack>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(user)" options={{ headerShown: false }} />
-      <Stack.Screen name="(owner)" options={{ headerShown: false }} />
-    </Stack>
+    <SafeAreaProvider>
+      {/* Configuración de la StatusBar */}
+      <StatusBar
+        barStyle="dark-content" // o "light-content"
+        backgroundColor="#ffffff" // cambia según el fondo deseado
+        translucent={false} // hace que no se superponga el contenido
+      />
+      <Stack>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false }} />
+        <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
 
@@ -90,6 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#00C853',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   loader: {
     transform: [{ scale: 1.5 }],

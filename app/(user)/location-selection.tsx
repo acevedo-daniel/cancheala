@@ -7,10 +7,12 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LocationSelectionScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [address, setAddress] = useState('');
 
@@ -25,7 +27,7 @@ export default function LocationSelectionScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -42,7 +44,9 @@ export default function LocationSelectionScreen() {
           onPress={handleUseCurrentLocation}
         >
           <Ionicons name="location" size={24} color="#00C853" />
-          <Text style={styles.currentLocationText}>Usar mi ubicación actual</Text>
+          <Text style={styles.currentLocationText}>
+            Usar mi ubicación actual
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.divider}>
@@ -162,4 +166,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
   },
-}); 
+});
