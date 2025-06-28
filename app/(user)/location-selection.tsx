@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ScreenContainer from '../../components/ui/ScreenContainer';
 
 export default function LocationSelectionScreen() {
   const router = useRouter();
@@ -25,52 +26,54 @@ export default function LocationSelectionScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Seleccionar ubicación</Text>
-      </View>
-
-      <View style={styles.content}>
-        <TouchableOpacity
-          style={styles.currentLocationButton}
-          onPress={handleUseCurrentLocation}
-        >
-          <Ionicons name="location" size={24} color="#00C853" />
-          <Text style={styles.currentLocationText}>Usar mi ubicación actual</Text>
-        </TouchableOpacity>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>o</Text>
-          <View style={styles.dividerLine} />
+    <ScreenContainer>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Seleccionar ubicación</Text>
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Ingresa una dirección</Text>
-          <TextInput
-            style={styles.input}
-            value={address}
-            onChangeText={setAddress}
-            placeholder="Ej: Falucho 257"
-            placeholderTextColor="#666"
-          />
-        </View>
+        <View style={styles.content}>
+          <TouchableOpacity
+            style={styles.currentLocationButton}
+            onPress={handleUseCurrentLocation}
+          >
+            <Ionicons name="location" size={24} color="#00C853" />
+            <Text style={styles.currentLocationText}>Usar mi ubicación actual</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.saveButton, !address && styles.saveButtonDisabled]}
-          onPress={handleSaveLocation}
-          disabled={!address}
-        >
-          <Text style={styles.saveButtonText}>Guardar ubicación</Text>
-        </TouchableOpacity>
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>o</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Ingresa una dirección</Text>
+            <TextInput
+              style={styles.input}
+              value={address}
+              onChangeText={setAddress}
+              placeholder="Ej: Falucho 257"
+              placeholderTextColor="#666"
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveButton, !address && styles.saveButtonDisabled]}
+            onPress={handleSaveLocation}
+            disabled={!address}
+          >
+            <Text style={styles.saveButtonText}>Guardar ubicación</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -83,7 +86,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 48 : 16,
+    paddingTop: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',

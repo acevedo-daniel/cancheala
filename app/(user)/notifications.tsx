@@ -17,6 +17,7 @@ import { COLORS, SPACING, TYPOGRAPHY, SHADOWS, BORDER_RADIUS } from '../../const
 import { Event, EventType } from '../../types';
 import { EVENTS } from '../../mocks/data';
 import EventCard from '../../components/ui/EventCard';
+import ScreenContainer from '../../components/ui/ScreenContainer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -106,150 +107,152 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Notificaciones</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <ScreenContainer>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Notificaciones</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      {/* Content */}
-      <FlatList
-        data={EVENTS}
-        renderItem={renderEventCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={renderEmptyState}
-      />
+        {/* Content */}
+        <FlatList
+          data={EVENTS}
+          renderItem={renderEventCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmptyState}
+        />
 
-      {/* Modal de detalles */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color={COLORS.text.primary} />
-              </TouchableOpacity>
-            </View>
+        {/* Modal de detalles */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+                  <Ionicons name="close" size={24} color={COLORS.text.primary} />
+                </TouchableOpacity>
+              </View>
 
-            {selectedEvent && (
-              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                {/* Imagen del evento */}
-                {selectedEvent.image && (
-                  <View style={styles.eventImageContainer}>
-                    <Image 
-                      source={require('../../assets/padel1.png')} 
-                      style={styles.eventImage}
-                      resizeMode="cover"
-                    />
-                    <View style={[
-                      styles.eventTypeBadge, 
-                      { backgroundColor: getEventTypeColor(selectedEvent.type) }
-                    ]}>
-                      <Ionicons 
-                        name={getEventTypeIcon(selectedEvent.type)} 
-                        size={16} 
-                        color="#FFF" 
+              {selectedEvent && (
+                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                  {/* Imagen del evento */}
+                  {selectedEvent.image && (
+                    <View style={styles.eventImageContainer}>
+                      <Image 
+                        source={require('../../assets/padel1.png')} 
+                        style={styles.eventImage}
+                        resizeMode="cover"
                       />
+                      <View style={[
+                        styles.eventTypeBadge, 
+                        { backgroundColor: getEventTypeColor(selectedEvent.type) }
+                      ]}>
+                        <Ionicons 
+                          name={getEventTypeIcon(selectedEvent.type)} 
+                          size={16} 
+                          color="#FFF" 
+                        />
+                      </View>
                     </View>
-                  </View>
-                )}
+                  )}
 
-                {/* Información del evento */}
-                <View style={styles.eventInfo}>
-                  <Text style={styles.eventTitle}>{selectedEvent.title}</Text>
-                  
-                  <View style={styles.eventMeta}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="calendar-outline" size={16} color={COLORS.text.secondary} />
-                      <Text style={styles.metaText}>{formatDate(selectedEvent.date)}</Text>
-                    </View>
+                  {/* Información del evento */}
+                  <View style={styles.eventInfo}>
+                    <Text style={styles.eventTitle}>{selectedEvent.title}</Text>
                     
-                    {selectedEvent.location && (
+                    <View style={styles.eventMeta}>
                       <View style={styles.metaItem}>
-                        <Ionicons name="location-outline" size={16} color={COLORS.text.secondary} />
-                        <Text style={styles.metaText}>{selectedEvent.location}</Text>
+                        <Ionicons name="calendar-outline" size={16} color={COLORS.text.secondary} />
+                        <Text style={styles.metaText}>{formatDate(selectedEvent.date)}</Text>
+                      </View>
+                      
+                      {selectedEvent.location && (
+                        <View style={styles.metaItem}>
+                          <Ionicons name="location-outline" size={16} color={COLORS.text.secondary} />
+                          <Text style={styles.metaText}>{selectedEvent.location}</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <Text style={styles.eventDescription}>{selectedEvent.description}</Text>
+
+                    {/* Información adicional */}
+                    {(selectedEvent.startDate || selectedEvent.endDate) && (
+                      <View style={styles.additionalInfo}>
+                        <Text style={styles.additionalInfoTitle}>Horarios:</Text>
+                        {selectedEvent.startDate && (
+                          <Text style={styles.additionalInfoText}>
+                            Inicio: {formatDate(selectedEvent.startDate)} {formatTime(selectedEvent.startDate)}
+                          </Text>
+                        )}
+                        {selectedEvent.endDate && (
+                          <Text style={styles.additionalInfoText}>
+                            Fin: {formatDate(selectedEvent.endDate)} {formatTime(selectedEvent.endDate)}
+                          </Text>
+                        )}
+                      </View>
+                    )}
+
+                    {/* Precio y descuento */}
+                    {(selectedEvent.price || selectedEvent.discount) && (
+                      <View style={styles.pricingInfo}>
+                        {selectedEvent.discount && (
+                          <View style={[
+                            styles.discountContainer, 
+                            { backgroundColor: getEventTypeColor(selectedEvent.type) + '20' }
+                          ]}>
+                            <Text style={[
+                              styles.discountText, 
+                              { color: getEventTypeColor(selectedEvent.type) }
+                            ]}>
+                              ¡{selectedEvent.discount}% de descuento!
+                            </Text>
+                          </View>
+                        )}
+                        {selectedEvent.price && (
+                          <Text style={styles.priceText}>Precio: ${selectedEvent.price}</Text>
+                        )}
                       </View>
                     )}
                   </View>
-
-                  <Text style={styles.eventDescription}>{selectedEvent.description}</Text>
-
-                  {/* Información adicional */}
-                  {(selectedEvent.startDate || selectedEvent.endDate) && (
-                    <View style={styles.additionalInfo}>
-                      <Text style={styles.additionalInfoTitle}>Horarios:</Text>
-                      {selectedEvent.startDate && (
-                        <Text style={styles.additionalInfoText}>
-                          Inicio: {formatDate(selectedEvent.startDate)} {formatTime(selectedEvent.startDate)}
-                        </Text>
-                      )}
-                      {selectedEvent.endDate && (
-                        <Text style={styles.additionalInfoText}>
-                          Fin: {formatDate(selectedEvent.endDate)} {formatTime(selectedEvent.endDate)}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-
-                  {/* Precio y descuento */}
-                  {(selectedEvent.price || selectedEvent.discount) && (
-                    <View style={styles.pricingInfo}>
-                      {selectedEvent.discount && (
-                        <View style={[
-                          styles.discountContainer, 
-                          { backgroundColor: getEventTypeColor(selectedEvent.type) + '20' }
-                        ]}>
-                          <Text style={[
-                            styles.discountText, 
-                            { color: getEventTypeColor(selectedEvent.type) }
-                          ]}>
-                            ¡{selectedEvent.discount}% de descuento!
-                          </Text>
-                        </View>
-                      )}
-                      {selectedEvent.price && (
-                        <Text style={styles.priceText}>Precio: ${selectedEvent.price}</Text>
-                      )}
-                    </View>
-                  )}
-                </View>
-              </ScrollView>
-            )}
-
-            {/* Botones de acción */}
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.actionButton} onPress={closeModal}>
-                <Text style={styles.actionButtonText}>Cerrar</Text>
-              </TouchableOpacity>
-              {selectedEvent && (
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.primaryActionButton]} 
-                  onPress={() => {
-                    closeModal();
-                    // Aquí podrías navegar a la reserva o acción específica
-                  }}
-                >
-                  <Text style={styles.primaryActionButtonText}>
-                    {selectedEvent.type === EventType.TOURNAMENT ? 'Inscribirse' : 
-                     selectedEvent.type === EventType.PROMOTION ? 'Reservar' : 'Más información'}
-                  </Text>
-                </TouchableOpacity>
+                </ScrollView>
               )}
+
+              {/* Botones de acción */}
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.actionButton} onPress={closeModal}>
+                  <Text style={styles.actionButtonText}>Cerrar</Text>
+                </TouchableOpacity>
+                {selectedEvent && (
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.primaryActionButton]} 
+                    onPress={() => {
+                      closeModal();
+                      // Aquí podrías navegar a la reserva o acción específica
+                    }}
+                  >
+                    <Text style={styles.primaryActionButtonText}>
+                      {selectedEvent.type === EventType.TOURNAMENT ? 'Inscribirse' : 
+                       selectedEvent.type === EventType.PROMOTION ? 'Reservar' : 'Más información'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </ScreenContainer>
   );
 }
 
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
-    paddingTop: Platform.OS === 'ios' ? 50 : SPACING.md,
+    paddingTop: 16,
     paddingBottom: SPACING.md,
     backgroundColor: COLORS.background,
     borderBottomWidth: 1,

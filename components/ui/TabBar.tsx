@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { COLORS, SHADOWS } from '../../constants';
 import { Tab } from './Tab';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    paddingBottom: Platform.OS === 'ios' ? 8 : 4,
     ...SHADOWS.sm,
   },
 }); 

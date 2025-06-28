@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
-
+import ScreenContainer from '../../components/ui/ScreenContainer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -83,102 +83,104 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.locationButton}
-          onPress={handleLocationPress}
-        >
-          <Ionicons name="location" size={20} color="#000" />
-          <Text style={styles.locationText}>Falucho 257</Text>
-          <Ionicons name="chevron-down" size={20} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.notificationButton}
-          onPress={handleNotificationsPress}
-        >
-          <Ionicons name="notifications-outline" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
+    <ScreenContainer>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.locationButton}
+            onPress={handleLocationPress}
+          >
+            <Ionicons name="location" size={20} color="#000" />
+            <Text style={styles.locationText}>Falucho 257</Text>
+            <Ionicons name="chevron-down" size={20} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={handleNotificationsPress}
+          >
+            <Ionicons name="notifications-outline" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView 
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-        overScrollMode="always"
-      >
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={handleSearchPress}
+        <ScrollView 
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          overScrollMode="always"
         >
-          <Ionicons name="search" size={20} color="#666" />
-          <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={handleSearchPress}
+          >
+            <Ionicons name="search" size={20} color="#666" />
+            <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
+          </TouchableOpacity>
 
-        <View style={styles.bannerContainer}>
-          <FlatList
-            data={BANNERS}
-            renderItem={renderBanner}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleBannerChange}
-            style={styles.bannerList}
-            nestedScrollEnabled={true}
-            scrollEnabled={true}
-          />
-          <View style={styles.bannerPagination}>
-            {BANNERS.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.bannerDot,
-                  currentBanner === index && styles.bannerDotActive,
-                ]}
-              />
-            ))}
+          <View style={styles.bannerContainer}>
+            <FlatList
+              data={BANNERS}
+              renderItem={renderBanner}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={handleBannerChange}
+              style={styles.bannerList}
+              nestedScrollEnabled={true}
+              scrollEnabled={true}
+            />
+            <View style={styles.bannerPagination}>
+              {BANNERS.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.bannerDot,
+                    currentBanner === index && styles.bannerDotActive,
+                  ]}
+                />
+              ))}
+            </View>
           </View>
-        </View>
 
-        <View style={styles.quickAccess}>
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Ionicons name="map-outline" size={24} color="#000" />
-            </View>
-            <Text style={styles.quickAccessText}>Espacios</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Ionicons name="people-outline" size={24} color="#000" />
-            </View>
-            <Text style={styles.quickAccessText}>Matchmaking</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.quickAccess}>
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIcon}>
+                <Ionicons name="map-outline" size={24} color="#000" />
+              </View>
+              <Text style={styles.quickAccessText}>Espacios</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIcon}>
+                <Ionicons name="people-outline" size={24} color="#000" />
+              </View>
+              <Text style={styles.quickAccessText}>Matchmaking</Text>
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.categoriesSection}>
-          <Text style={styles.sectionTitle}>Categorías</Text>
-          <FlatList
-            data={CATEGORIES}
-            renderItem={renderCategory}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesList}
-            nestedScrollEnabled={true}
-            scrollEnabled={true}
-          />
-        </View>
+          <View style={styles.categoriesSection}>
+            <Text style={styles.sectionTitle}>Categorías</Text>
+            <FlatList
+              data={CATEGORIES}
+              renderItem={renderCategory}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoriesList}
+              nestedScrollEnabled={true}
+              scrollEnabled={true}
+            />
+          </View>
 
-        <View style={styles.spacesSection}>
-          <Text style={styles.sectionTitle}>cancha disponibles</Text>
-          <FlatList
-            data={SPACES}
-            renderItem={renderSpace}
-            scrollEnabled={false}
-            nestedScrollEnabled={true}
-          />
-        </View>
-      </ScrollView>
-    </View>
+          <View style={styles.spacesSection}>
+            <Text style={styles.sectionTitle}>cancha disponibles</Text>
+            <FlatList
+              data={SPACES}
+              renderItem={renderSpace}
+              scrollEnabled={false}
+              nestedScrollEnabled={true}
+            />
+          </View>
+        </ScrollView>
+      </View>
+    </ScreenContainer>
   );
 }
 
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingTop: 16,
     paddingBottom: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
