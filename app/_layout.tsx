@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SplashScreen, router } from 'expo-router';
-import { Stack } from 'expo-router';
+import { SplashScreen, router, Stack } from 'expo-router';
 import {
   View,
   ActivityIndicator,
@@ -15,6 +14,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
+import { ReservationsProvider } from './context/ReservationsContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
@@ -42,7 +42,6 @@ export default function RootLayout() {
         console.warn(e);
       }
     }
-
     prepare();
   }, [fontsLoaded]);
 
@@ -68,17 +67,18 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      {/* Configuración de la StatusBar */}
       <StatusBar
-        barStyle="dark-content" // o "light-content"
-        backgroundColor="#ffffff" // cambia según el fondo deseado
-        translucent={false} // hace que no se superponga el contenido
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
       />
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(user)" options={{ headerShown: false }} />
-        <Stack.Screen name="(owner)" options={{ headerShown: false }} />
-      </Stack>
+      <ReservationsProvider>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(user)" options={{ headerShown: false }} />
+          <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+        </Stack>
+      </ReservationsProvider>
     </SafeAreaProvider>
   );
 }

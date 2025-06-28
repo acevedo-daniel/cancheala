@@ -1,4 +1,5 @@
-// Tipos de navegación
+
+ // Tipos de navegación
 export type RootStackParamList = {
   '(auth)': undefined;
   '(user)': undefined;
@@ -61,14 +62,17 @@ export interface Category {
   icon: string;
 }
 
-export interface Space {
+import { ImageSourcePropType } from 'react-native';
+
+export type Space = {
   id: string;
   name: string;
   rating: number;
   location: string;
   address: string;
-  image: string;
-}
+  image: ImageSourcePropType; // ✅ Tipo correcto
+};
+
 
 export interface Reservation {
   id: string;

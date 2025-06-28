@@ -2,22 +2,33 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 import { Space } from '../../types';
+import { useRouter } from 'expo-router';
 
 interface CardProps {
   space: Space;
-  onPress: () => void;
+  onPress?: () => void; // opcional
 }
 
-const imageMap: Record<string, any> = {
-  'padel1.png': require('../../assets/padel1.png'),
-  'padel2.png': require('../../assets/padel2.png'),
-  'padel3.png': require('../../assets/padel3.png'),
-};
+export default function Card({ space }: CardProps) {
+  const router = useRouter();
 
-export default function Card({ space, onPress }: CardProps) {
   return (
-    <Pressable onPress={onPress} style={styles.card}>
-      <Image source={imageMap[space.image]} style={styles.image} />
+    <Pressable
+      onPress={() =>
+  router.push({
+    pathname: '/user/my-reservations',
+    params: {
+      id: space.id,
+      name: space.name,
+      location: space.location,
+      rating: space.rating,
+    },
+  })
+}
+
+      style={styles.card}
+    >
+      <Image source={space.image} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.title}>{space.name}</Text>
         <Text style={styles.rating}>⭐ {space.rating}</Text>
@@ -29,7 +40,6 @@ export default function Card({ space, onPress }: CardProps) {
 
 const styles = StyleSheet.create({
   card: {
-  
     backgroundColor: COLORS.background,
     padding: SPACING.md,
     borderRadius: 8,

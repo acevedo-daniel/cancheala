@@ -50,35 +50,33 @@ export const BANNERS: Banner[] = [
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: '1', name: 'Fútbol', icon: 'football-outline' },
   { id: '2', name: 'Tenis', icon: 'tennisball-outline' },
-  { id: '3', name: 'Básquet', icon: 'basketball-outline' },
   { id: '4', name: 'Pádel', icon: 'baseball-outline' },
-  { id: '5', name: 'Vóley', icon: 'basketball-outline' },
 ];
 
-export const SPACES: Space[] = [
+
+export const SPACES = [
   {
     id: '1',
-    name: 'Cancha Central',
+    name: 'Las Cortadas Padel Club',
     rating: 4.5,
-    location: 'Buenos Aires',
+    location: 'San Lorenzo 555, Resistencia Chaco',
     address: 'Faluco 257',
     image: require('../assets/padel1.png'),
   },
   {
     id: '2',
-    name: 'Club Deportivo',
-    rating: 4.8,
-    location: 'Buenos Aires',
+    name: 'HD Padel',
+    rating: 9.8,
+    location: 'Jose Hernandez 567, Resistencia Chaco',
     address: 'Av. Rivadavia 1234',
     image: require('../assets/padel2.png'),
   },
   {
     id: '3',
-    name: 'Polideportivo',
-    rating: 4.2,
-    location: 'Buenos Aires',
+    name: 'Central Norte Padel Club',
+    rating: 8.2,
+    location: 'Av Hernandarias, Resistencia Chaco',
     address: 'Calle Principal 789',
     image: require('../assets/padel3.png'),
   },

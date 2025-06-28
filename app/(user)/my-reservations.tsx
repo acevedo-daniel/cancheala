@@ -1,159 +1,194 @@
+import Card from '../../components/ui/Card';
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
   FlatList,
-  Modal,
-  Pressable,
+  Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
-import Card from '../../components/ui/Card';
-import ScreenContainer from '../../components/ui/ScreenContainer';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Space } from '../../types';
+import { SPACES } from '../../mocks/data';
+import { useReservations, Reservation } from '../context/ReservationsContext';
 
-const mockReservations = [
-  {
-    id: '1',
-    title: 'Reserva en Cancha A',
-    date: '2025-07-01',
-    time: '18:00',
-    location: 'Complejo Las Palmas',
-  },
-  {
-    id: '2',
-    title: 'Reserva en Cancha B',
-    date: '2025-07-03',
-    time: '20:00',
-    location: 'Club Atlético Norte',
-  },
-];
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type Reservation = {
+type GroupedReservation = {
   id: string;
   title: string;
   date: string;
-  time: string;
+  times: string[];
   location: string;
+  image?: any;
 };
 
 export default function MyReservationsScreen() {
-  const [selectedReservation, setSelectedReservation] =
-    useState<Reservation | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
+  const [currentBanner, setCurrentBanner] = useState(0);
 
-  const openModal = (reservation: Reservation) => {
-    setSelectedReservation(reservation);
-    setModalVisible(true);
-  };
+  const { reservations, setReservations } = useReservations();
 
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedReservation(null);
-  };
+  // Agrupa reservas y guarda la imagen
+  const groupedReservationsObj = reservations.reduce((acc, curr) => {
+    const key = `${curr.title}-${curr.date}`;
+    if (!acc[key]) {
+      // Busca la imagen en SPACES si no está en la reserva
+      let image = curr.image;
+      if (!image) {
+        const found = SPACES.find(
+          (s) =>
+            s.location === curr.location ||
+            s.name === curr.title.replace('Reserva en ', ''),
+        );
+        image = found?.image;
+      }
+      acc[key] = {
+        id: curr.id,
+        title: curr.title,
+        date: curr.date,
+        times: [curr.time],
+        location: curr.location,
+        image: image,
+      };
+    } else {
+      acc[key].times.push(curr.time);
+    }
+    return acc;
+  }, {} as Record<string, GroupedReservation>);
 
-  const insets = useSafeAreaInsets();
+  // Convertir el objeto agrupado a array
+  const groupedReservationsArray = Object.values(groupedReservationsObj);
 
   return (
-    <ScreenContainer>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Text style={styles.title}>Mis Reservas</Text>
-        <FlatList
-          data={mockReservations}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Card
-              space={{
-                id: item.id,
-                name: item.title,
-                rating: 0,
-                address: item.location,
-                image: '',
-                location: item.location,
-              }}
-              onPress={() => openModal(item)}
-            />
-          )}
-        />
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.locationButton}
+          onPress={() => router.push('/(user)/location-selection')}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Detalles de la Reserva</Text>
-              {selectedReservation && (
-                <>
-                  <Text>Cancha: {selectedReservation.title}</Text>
-                  <Text>Fecha: {selectedReservation.date}</Text>
-                  <Text>Hora: {selectedReservation.time}</Text>
-                  <Text>Lugar: {selectedReservation.location}</Text>
-
-                  <Pressable style={styles.cancelButton} onPress={() => {}}>
-                    <Text style={styles.cancelButtonText}>
-                      Cancelar Reserva
-                    </Text>
-                  </Pressable>
-                </>
-              )}
-              <Pressable onPress={closeModal}>
-                <Text style={styles.closeText}>Cerrar</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
+          <Ionicons name="location" size={20} color="#000" />
+          <Text style={styles.locationText}>Falucho 257</Text>
+          <Ionicons name="chevron-down" size={20} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => router.push('/(user)/notifications')}
+        >
+          <Ionicons name="notifications-outline" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
-    </ScreenContainer>
+
+      <View style={styles.content}>
+        {groupedReservationsArray.length > 0 && (
+          <View style={{ marginBottom: 20 }}>
+            <Text style={styles.sectionTitle}>Mis Reservas</Text>
+            <FlatList
+              data={groupedReservationsArray}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }: { item: GroupedReservation }) => (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Card
+                      space={{
+                        id: item.id,
+                        name: `${item.title} (${item.times.join(', ')})`,
+                        rating: 0,
+                        address: item.location,
+                        image: item.image || { uri: '' },
+                        location: item.location,
+                      }}
+                      onPress={() => {}}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Alert.alert(
+                        'Cancelar reserva',
+                        '¿Estás seguro de que deseas cancelar esta reserva?',
+                        [
+                          { text: 'No', style: 'cancel' },
+                          {
+                            text: 'Sí',
+                            style: 'destructive',
+                            onPress: () => {
+                              setReservations((prev) =>
+                                prev.filter(
+                                  (r) =>
+                                    !(
+                                      r.title === item.title &&
+                                      r.date === item.date &&
+                                      item.times.includes(r.time)
+                                    ),
+                                ),
+                              );
+                            },
+                          },
+                        ],
+                      );
+                    }}
+                    style={{ marginLeft: 10 }}
+                  >
+                    <Ionicons name="trash" size={24} color="red" />
+                  </TouchableOpacity>
+                </View>
+              )}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        )}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SPACING.lg,
-    paddingTop: 16,
+    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: TYPOGRAPHY.fontSize.xl,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-    color: COLORS.text.primary,
-    marginBottom: SPACING.md,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
   },
-  modalContent: {
-    width: '80%',
-    backgroundColor: COLORS.background,
-    padding: SPACING.md,
-    borderRadius: 10,
-    elevation: 5,
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  modalTitle: {
-    fontSize: TYPOGRAPHY.fontSize.lg,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-    marginBottom: SPACING.sm,
+  locationText: {
+    marginHorizontal: 6,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
-  cancelButton: {
-    marginTop: SPACING.md,
-    backgroundColor: COLORS.error || 'red',
-    padding: SPACING.sm,
-    borderRadius: 5,
+  notificationButton: {
+    padding: 8,
   },
-  cancelButtonText: {
-    color: 'white',
-    textAlign: 'center',
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
-  closeText: {
-    marginTop: SPACING.sm,
-    textAlign: 'center',
-    color: COLORS.primary || 'blue',
+  sectionTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 12,
   },
 });
