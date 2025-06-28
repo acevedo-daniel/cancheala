@@ -7,15 +7,9 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
- import Card from '../../components/ui/Card'; 
-
-
-
-
+import Card from '../../components/ui/Card';
 
 const mockReservations = [
   {
@@ -43,7 +37,8 @@ type Reservation = {
 };
 
 export default function MyReservationsScreen() {
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [selectedReservation, setSelectedReservation] =
+    useState<Reservation | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
   const openModal = (reservation: any) => {
@@ -64,19 +59,18 @@ export default function MyReservationsScreen() {
         data={mockReservations}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-  <Card
-  space={{
-    id: item.id,
-    name: item.title,
-    rating: 0, // o el rating real si está disponible
-    address: item.location,
-    image: '', // o la URL real de la imagen si está disponible
-    location: item.location, // asegúrate de que 'location' esté presente
-    // agrega otras propiedades requeridas por Space si es necesario
-  }}
-  onPress={() => openModal(item)}
-/>
-
+          <Card
+            space={{
+              id: item.id,
+              name: item.title,
+              rating: 0, // o el rating real si está disponible
+              address: item.location,
+              image: '', // o la URL real de la imagen si está disponible
+              location: item.location, // asegúrate de que 'location' esté presente
+              // agrega otras propiedades requeridas por Space si es necesario
+            }}
+            onPress={() => openModal(item)}
+          />
         )}
       />
 
@@ -156,5 +150,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: COLORS.primary || 'blue',
   },
-});
 });
