@@ -62,8 +62,7 @@ export default function AuthScreen() {
   };
 
   const handleProviderAccess = () => {
-    // Por ahora este botón no hace nada, como se especifica en el documento
-    console.log('Acceso para proveedores - No implementado en esta fase');
+    router.replace('/(owner)');
   };
 
   return (
