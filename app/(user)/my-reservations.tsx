@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 import Card from '../../components/ui/Card';
+import ScreenContainer from '../../components/ui/ScreenContainer';
 
 const mockReservations = [
   {
@@ -41,7 +42,7 @@ export default function MyReservationsScreen() {
     useState<Reservation | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const openModal = (reservation: any) => {
+  const openModal = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setModalVisible(true);
   };
@@ -52,56 +53,60 @@ export default function MyReservationsScreen() {
   };
 
   const insets = useSafeAreaInsets();
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Text style={styles.title}>Mis Reservas</Text>
-      <FlatList
-        data={mockReservations}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Card
-            space={{
-              id: item.id,
-              name: item.title,
-              rating: 0, // o el rating real si está disponible
-              address: item.location,
-              image: '', // o la URL real de la imagen si está disponible
-              location: item.location, // asegúrate de que 'location' esté presente
-              // agrega otras propiedades requeridas por Space si es necesario
-            }}
-            onPress={() => openModal(item)}
-          />
-        )}
-      />
+    <ScreenContainer>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <Text style={styles.title}>Mis Reservas</Text>
+        <FlatList
+          data={mockReservations}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Card
+              space={{
+                id: item.id,
+                name: item.title,
+                rating: 0,
+                address: item.location,
+                image: '',
+                location: item.location,
+              }}
+              onPress={() => openModal(item)}
+            />
+          )}
+        />
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Detalles de la Reserva</Text>
-            {selectedReservation && (
-              <>
-                <Text>Cancha: {selectedReservation.title}</Text>
-                <Text>Fecha: {selectedReservation.date}</Text>
-                <Text>Hora: {selectedReservation.time}</Text>
-                <Text>Lugar: {selectedReservation.location}</Text>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Detalles de la Reserva</Text>
+              {selectedReservation && (
+                <>
+                  <Text>Cancha: {selectedReservation.title}</Text>
+                  <Text>Fecha: {selectedReservation.date}</Text>
+                  <Text>Hora: {selectedReservation.time}</Text>
+                  <Text>Lugar: {selectedReservation.location}</Text>
 
-                <Pressable style={styles.cancelButton} onPress={() => {}}>
-                  <Text style={styles.cancelButtonText}>Cancelar Reserva</Text>
-                </Pressable>
-              </>
-            )}
-            <Pressable onPress={closeModal}>
-              <Text style={styles.closeText}>Cerrar</Text>
-            </Pressable>
+                  <Pressable style={styles.cancelButton} onPress={() => {}}>
+                    <Text style={styles.cancelButtonText}>
+                      Cancelar Reserva
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+              <Pressable onPress={closeModal}>
+                <Text style={styles.closeText}>Cerrar</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </ScreenContainer>
   );
 }
 
@@ -110,6 +115,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
     padding: SPACING.lg,
+    paddingTop: 16,
   },
   title: {
     fontSize: TYPOGRAPHY.fontSize.xl,

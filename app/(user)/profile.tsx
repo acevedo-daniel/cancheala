@@ -11,9 +11,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Modal from 'react-native-modal';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import ScreenContainer from '../../components/ui/ScreenContainer';
 import Feather from '@expo/vector-icons/Feather';
 
-const FotoPerfil = require('../../assets/FotoPerfil.png');
+import FotoPerfil from '../../assets/FotoPerfil.png';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -45,116 +46,120 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Título */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Mi Perfil</Text>
+    <ScreenContainer>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {/* Título */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Mi Perfil</Text>
+        </View>
+
+        {/* Imagen */}
+        <View style={styles.imageContainer}>
+          <Image source={FotoPerfil} style={styles.profileImage} />
+          <TouchableOpacity style={styles.editImage} onPress={toggleModal}>
+            <Feather name="edit" style={styles.editImage} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Datos */}
+        <View style={styles.DataContainer}>
+          {/* Nombre */}
+          <Text style={styles.label}>Nombre y Apellido</Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              editable={isNameEditable}
+            />
+            <TouchableOpacity
+              onPress={() => setIsNameEditable(!isNameEditable)}
+            >
+              <Feather
+                name={isNameEditable ? 'check-square' : 'edit'}
+                style={isNameEditable ? styles.saveIcon : styles.editIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Edad */}
+          <Text style={styles.label}>Edad</Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              value={age}
+              onChangeText={setAge}
+              editable={isAgeEditable}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity onPress={() => setIsAgeEditable(!isAgeEditable)}>
+              <Feather
+                name={isAgeEditable ? 'check-square' : 'edit'}
+                style={isAgeEditable ? styles.saveIcon : styles.editIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Correo */}
+          <Text style={styles.label}>Correo</Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              editable={isEmailEditable}
+              keyboardType="email-address"
+            />
+            <TouchableOpacity
+              onPress={() => setIsEmailEditable(!isEmailEditable)}
+            >
+              <Feather
+                name={isEmailEditable ? 'check-square' : 'edit'}
+                style={isEmailEditable ? styles.saveIcon : styles.editIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* DNI */}
+          <Text style={styles.label}>DNI</Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              value={dni}
+              onChangeText={setDni}
+              editable={isDniEditable}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity onPress={() => setIsDniEditable(!isDniEditable)}>
+              <Feather
+                name={isDniEditable ? 'check-square' : 'edit'}
+                style={isDniEditable ? styles.saveIcon : styles.editIcon}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Modal Imagen */}
+        <Modal
+          isVisible={isModalVisible}
+          onBackdropPress={toggleModal}
+          backdropOpacity={0.6}
+          style={styles.modalBottom}
+        >
+          <View style={styles.modalContainer}>
+            <Pressable style={styles.modalButton} onPress={handleCambiarImagen}>
+              <Text style={styles.modalButtonText}>Cambiar Imagen</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.modalButton, { backgroundColor: '#ff4d4d' }]}
+              onPress={handleBorrarImagen}
+            >
+              <Text style={styles.modalButtonText}>Borrar Imagen</Text>
+            </Pressable>
+          </View>
+        </Modal>
       </View>
-
-      {/* Imagen */}
-      <View style={styles.imageContainer}>
-        <Image source={FotoPerfil} style={styles.profileImage} />
-        <TouchableOpacity style={styles.editImage} onPress={toggleModal}>
-          <Feather name="edit" style={styles.editImage} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Datos */}
-      <View style={styles.DataContainer}>
-        {/* Nombre */}
-        <Text style={styles.label}>Nombre y Apellido</Text>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            editable={isNameEditable}
-          />
-          <TouchableOpacity onPress={() => setIsNameEditable(!isNameEditable)}>
-            <Feather
-              name={isNameEditable ? 'check-square' : 'edit'}
-              style={isNameEditable ? styles.saveIcon : styles.editIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Edad */}
-        <Text style={styles.label}>Edad</Text>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={age}
-            onChangeText={setAge}
-            editable={isAgeEditable}
-            keyboardType="numeric"
-          />
-          <TouchableOpacity onPress={() => setIsAgeEditable(!isAgeEditable)}>
-            <Feather
-              name={isAgeEditable ? 'check-square' : 'edit'}
-              style={isAgeEditable ? styles.saveIcon : styles.editIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Correo */}
-        <Text style={styles.label}>Correo</Text>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            editable={isEmailEditable}
-            keyboardType="email-address"
-          />
-          <TouchableOpacity
-            onPress={() => setIsEmailEditable(!isEmailEditable)}
-          >
-            <Feather
-              name={isEmailEditable ? 'check-square' : 'edit'}
-              style={isEmailEditable ? styles.saveIcon : styles.editIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* DNI */}
-        <Text style={styles.label}>DNI</Text>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={dni}
-            onChangeText={setDni}
-            editable={isDniEditable}
-            keyboardType="numeric"
-          />
-          <TouchableOpacity onPress={() => setIsDniEditable(!isDniEditable)}>
-            <Feather
-              name={isDniEditable ? 'check-square' : 'edit'}
-              style={isDniEditable ? styles.saveIcon : styles.editIcon}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Modal Imagen */}
-      <Modal
-        isVisible={isModalVisible}
-        onBackdropPress={toggleModal}
-        backdropOpacity={0.6}
-        style={styles.modalBottom}
-      >
-        <View style={styles.modalContainer}>
-          <Pressable style={styles.modalButton} onPress={handleCambiarImagen}>
-            <Text style={styles.modalButtonText}>Cambiar Imagen</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.modalButton, { backgroundColor: '#ff4d4d' }]}
-            onPress={handleBorrarImagen}
-          >
-            <Text style={styles.modalButtonText}>Borrar Imagen</Text>
-          </Pressable>
-        </View>
-      </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -163,6 +168,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
     padding: SPACING.lg,
+    paddingTop: 16,
   },
   header: {
     flexDirection: 'row',
@@ -179,11 +185,10 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    width: 120,
+    width: 130,
     marginLeft: 0,
     marginBottom: SPACING.xl,
   },
-
   profileImage: {
     width: 130,
     height: 130,

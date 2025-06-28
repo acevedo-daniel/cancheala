@@ -81,6 +81,31 @@ export interface Reservation {
   totalPrice: number;
 }
 
+// Tipos para eventos/notificaciones
+export enum EventType {
+  PROMOTION = 'promotion',
+  TOURNAMENT = 'tournament',
+  NEWS = 'news',
+  MAINTENANCE = 'maintenance',
+  SPECIAL_OFFER = 'special_offer',
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  type: EventType;
+  image?: string;
+  date: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string;
+  price?: number;
+  discount?: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
 // Tipos de estado
 export interface AppState {
   user: User | null;

@@ -1,4 +1,3 @@
-// app/(user)/index.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -6,9 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Image,
-  Platform,
   Dimensions,
   FlatList,
   NativeSyntheticEvent,
@@ -19,8 +15,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
+import ScreenContainer from '../../components/ui/ScreenContainer';
 import { SPACING } from '../../constants';
-
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -46,7 +42,7 @@ export default function HomeScreen() {
     event: NativeSyntheticEvent<NativeScrollEvent>,
   ) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
-    const currentIndex = Math.round(contentOffset / (SCREEN_WIDTH - 32));
+    const currentIndex = Math.round(contentOffset / SCREEN_WIDTH);
     setCurrentBanner(currentIndex);
   };
 
@@ -88,99 +84,103 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.locationButton}
-          onPress={handleLocationPress}
-        >
-          <Ionicons name="location" size={20} color="#000" />
-          <Text style={styles.locationText}>Falucho 257</Text>
-          <Ionicons name="chevron-down" size={20} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.notificationButton}
-          onPress={handleNotificationsPress}
-        >
-          <Ionicons name="notifications-outline" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
+    <ScreenContainer>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.locationButton}
+            onPress={handleLocationPress}
+          >
+            <Ionicons name="location" size={20} color="#000" />
+            <Text style={styles.locationText}>Falucho 257</Text>
+            <Ionicons name="chevron-down" size={20} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={handleNotificationsPress}
+          >
+            <Ionicons name="notifications-outline" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-        overScrollMode="always"
-      >
-        <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress}>
-          <Ionicons name="search" size={20} color="#666" />
-          <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
-        </TouchableOpacity>
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          overScrollMode="always"
+        >
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={handleSearchPress}
+          >
+            <Ionicons name="search" size={20} color="#666" />
+            <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
+          </TouchableOpacity>
 
-        <View style={styles.bannerContainer}>
-          <FlatList
-            data={BANNERS}
-            renderItem={renderBanner}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleBannerChange}
-            style={styles.bannerList}
-            nestedScrollEnabled={true}
-            scrollEnabled={true}
-          />
-          <View style={styles.bannerPagination}>
-            {BANNERS.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.bannerDot,
-                  currentBanner === index && styles.bannerDotActive,
-                ]}
-              />
-            ))}
+          <View style={styles.bannerContainer}>
+            <FlatList
+              data={BANNERS}
+              renderItem={renderBanner}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={handleBannerChange}
+              style={styles.bannerList}
+              keyExtractor={(item) => item.id}
+            />
+            <View style={styles.bannerPagination}>
+              {BANNERS.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.bannerDot,
+                    currentBanner === index && styles.bannerDotActive,
+                  ]}
+                />
+              ))}
+            </View>
           </View>
-        </View>
 
-        <View style={styles.quickAccess}>
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Ionicons name="map-outline" size={24} color="#000" />
-            </View>
-            <Text style={styles.quickAccessText}>Espacios</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Ionicons name="people-outline" size={24} color="#000" />
-            </View>
-            <Text style={styles.quickAccessText}>Matchmaking</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.quickAccess}>
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIcon}>
+                <Ionicons name="map-outline" size={24} color="#000" />
+              </View>
+              <Text style={styles.quickAccessText}>Espacios</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIcon}>
+                <Ionicons name="people-outline" size={24} color="#000" />
+              </View>
+              <Text style={styles.quickAccessText}>Matchmaking</Text>
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.categoriesSection}>
-          <Text style={styles.sectionTitle}>Categorías</Text>
-          <FlatList
-            data={CATEGORIES}
-            renderItem={renderCategory}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesList}
-            nestedScrollEnabled={true}
-            scrollEnabled={true}
-          />
-        </View>
+          <View style={styles.categoriesSection}>
+            <Text style={styles.sectionTitle}>Categorías</Text>
+            <FlatList
+              data={CATEGORIES}
+              renderItem={renderCategory}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoriesList}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
 
-        <View style={styles.spacesSection}>
-          <Text style={styles.sectionTitle}>cancha disponibles</Text>
-          <FlatList
-            data={SPACES}
-            renderItem={renderSpace}
-            scrollEnabled={false}
-            nestedScrollEnabled={true}
-          />
-        </View>
-      </ScrollView>
-    </View>
+          <View style={styles.spacesSection}>
+            <Text style={styles.sectionTitle}>Canchas disponibles</Text>
+            <FlatList
+              data={SPACES}
+              renderItem={renderSpace}
+              scrollEnabled={false}
+              nestedScrollEnabled={true}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
+        </ScrollView>
+      </View>
+    </ScreenContainer>
   );
 }
 
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingTop: 16,
     paddingBottom: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
@@ -204,12 +204,13 @@ const styles = StyleSheet.create({
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    // React Native no soporta 'gap', usar marginRight entre elementos si querés
   },
   locationText: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
     color: '#000',
+    marginHorizontal: 4, // reemplaza gap con marginHorizontal
   },
   notificationButton: {
     padding: 8,
@@ -224,12 +225,12 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#f5f5f5',
     borderRadius: 12,
-    gap: 8,
   },
   searchText: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#666',
+    marginLeft: 8,
   },
   bannerContainer: {
     marginBottom: 24,
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   banner: {
-    width: SCREEN_WIDTH - 32,
+    width: SCREEN_WIDTH,
     height: 160,
     backgroundColor: '#f0f0f0',
     borderRadius: 12,
@@ -255,13 +256,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
-    gap: 8,
   },
   bannerDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#e0e0e0',
+    marginHorizontal: 4,
   },
   bannerDotActive: {
     backgroundColor: '#000',
@@ -269,8 +270,8 @@ const styles = StyleSheet.create({
   quickAccess: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    gap: 16,
     marginBottom: 24,
+    justifyContent: 'space-between',
   },
   quickAccessCard: {
     flex: 1,
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    gap: 8,
+    marginHorizontal: 8,
   },
   quickAccessIcon: {
     width: 48,
@@ -292,6 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     color: '#000',
+    marginTop: 8,
   },
   categoriesSection: {
     marginBottom: 24,
@@ -309,7 +311,6 @@ const styles = StyleSheet.create({
   categoryCard: {
     alignItems: 'center',
     marginRight: 16,
-    gap: 8,
   },
   selectedCategory: {
     opacity: 0.5,
@@ -326,6 +327,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     color: '#000',
+    marginTop: 8,
   },
   spacesSection: {
     paddingBottom: 24,
@@ -372,12 +374,12 @@ const styles = StyleSheet.create({
   spaceRating: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
   },
   ratingText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     color: '#000',
+    marginLeft: 4,
   },
   spaceLocation: {
     fontSize: 14,

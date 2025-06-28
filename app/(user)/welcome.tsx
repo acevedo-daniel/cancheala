@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ScreenContainer from '../../components/ui/ScreenContainer';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -26,68 +28,70 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Cancheala</Text>
-        <TouchableOpacity onPress={handleProfile}>
-          <Ionicons name="person-circle-outline" size={32} color="#000" />
-        </TouchableOpacity>
+    <ScreenContainer>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Cancheala</Text>
+          <TouchableOpacity onPress={handleProfile}>
+            <Ionicons name="person-circle-outline" size={32} color="#000" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.content}>
+          <View style={styles.welcomeCard}>
+            <Text style={styles.welcomeTitle}>¡Bienvenido!</Text>
+            <Text style={styles.welcomeText}>
+              Reserva tu cancha favorita y disfruta del deporte
+            </Text>
+          </View>
+
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleReserve}
+            >
+              <Ionicons name="calendar-outline" size={32} color="#007AFF" />
+              <Text style={styles.actionText}>Reservar Cancha</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleMyReservations}
+            >
+              <Ionicons name="list-outline" size={32} color="#007AFF" />
+              <Text style={styles.actionText}>Mis Reservas</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.featuredSection}>
+            <Text style={styles.sectionTitle}>Canchas Destacadas</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.featuredScroll}
+            >
+              {/* TODO: Reemplazar con datos reales */}
+              {[1, 2, 3].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.featuredCard}
+                >
+                  <Image
+                    source={{ uri: 'https://via.placeholder.com/200x150' }}
+                    style={styles.featuredImage}
+                  />
+                  <View style={styles.featuredInfo}>
+                    <Text style={styles.featuredTitle}>Cancha {item}</Text>
+                    <Text style={styles.featuredLocation}>Ubicación {item}</Text>
+                    <Text style={styles.featuredPrice}>$50/hora</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
       </View>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>¡Bienvenido!</Text>
-          <Text style={styles.welcomeText}>
-            Reserva tu cancha favorita y disfruta del deporte
-          </Text>
-        </View>
-
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleReserve}
-          >
-            <Ionicons name="calendar-outline" size={32} color="#007AFF" />
-            <Text style={styles.actionText}>Reservar Cancha</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleMyReservations}
-          >
-            <Ionicons name="list-outline" size={32} color="#007AFF" />
-            <Text style={styles.actionText}>Mis Reservas</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.featuredSection}>
-          <Text style={styles.sectionTitle}>Canchas Destacadas</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.featuredScroll}
-          >
-            {/* TODO: Reemplazar con datos reales */}
-            {[1, 2, 3].map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={styles.featuredCard}
-              >
-                <Image
-                  source={{ uri: 'https://via.placeholder.com/200x150' }}
-                  style={styles.featuredImage}
-                />
-                <View style={styles.featuredInfo}>
-                  <Text style={styles.featuredTitle}>Cancha {item}</Text>
-                  <Text style={styles.featuredLocation}>Ubicación {item}</Text>
-                  <Text style={styles.featuredPrice}>$50/hora</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -101,6 +105,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    paddingTop: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },

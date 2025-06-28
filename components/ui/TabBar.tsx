@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { COLORS, SHADOWS } from '../../constants';
 import { Tab } from './Tab';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { UserStackParamList } from '../../types';
+import BottomSafeArea from './BottomSafeArea';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TABS = [
@@ -28,25 +29,27 @@ const TABS = [
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      {TABS.map((tab, index) => (
-        <Tab
-          key={tab.route}
-          label={tab.label}
-          icon={
-            <Ionicons
-              name={tab.icon}
-              size={24}
-              color={
-                state.index === index ? COLORS.primary : COLORS.text.secondary
-              }
-            />
-          }
-          isActive={state.index === index}
-          onPress={() => navigation.navigate(tab.route)}
-        />
-      ))}
-    </View>
+    <BottomSafeArea>
+      <View style={styles.container}>
+        {TABS.map((tab, index) => (
+          <Tab
+            key={tab.route}
+            label={tab.label}
+            icon={
+              <Ionicons
+                name={tab.icon}
+                size={24}
+                color={
+                  state.index === index ? COLORS.primary : COLORS.text.secondary
+                }
+              />
+            }
+            isActive={state.index === index}
+            onPress={() => navigation.navigate(tab.route)}
+          />
+        ))}
+      </View>
+    </BottomSafeArea>
   );
 }
 
