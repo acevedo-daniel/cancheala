@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Cancheala",
+    "name": "",
     "slug": "cancheala",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo-apertura-final.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -12,9 +12,7 @@
       "resizeMode": "cover",
       "backgroundColor": "#00C853"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -30,9 +28,6 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "cancheala",
-    "plugins": [
-      "expo-router",
-      "expo-font"
-    ]
+    "plugins": ["expo-router", "expo-font"]
   }
 }

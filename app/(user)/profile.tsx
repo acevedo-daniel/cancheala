@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,20 +7,23 @@ import {
   Pressable,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Modal from 'react-native-modal';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import Feather from '@expo/vector-icons/Feather';
-
-import FotoPerfil from '../../assets/FotoPerfil.png';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const FotoPerfil = require('../../assets/FotoPerfil.png');
 
+  const [profileImage, setProfileImage] = useState(FotoPerfil);
   const [isModalVisible, setModalVisible] = useState(false);
-  // Estados para editar campos
+
   const [isNameEditable, setIsNameEditable] = useState(false);
   const [isAgeEditable, setIsAgeEditable] = useState(false);
   const [isEmailEditable, setIsEmailEditable] = useState(false);
@@ -31,45 +34,130 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('Ej: correo@example.com');
   const [dni, setDni] = useState('Ej: 12345678');
 
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
+  const toggleModal = () => setModalVisible(!isModalVisible);
+
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('name');
+        const storedAge = await AsyncStorage.getItem('age');
+        const storedEmail = await AsyncStorage.getItem('email');
+        const storedDni = await AsyncStorage.getItem('dni');
+        const storedImage = await AsyncStorage.getItem('profileImage');
+
+        if (storedName) setName(storedName);
+        if (storedAge) setAge(storedAge);
+        if (storedEmail) setEmail(storedEmail);
+        if (storedDni) setDni(storedDni);
+        if (storedImage) setProfileImage({ uri: storedImage });
+      } catch (error) {
+        console.log('Error cargando datos:', error);
+      }
+    };
+
+    loadProfileData();
+  }, []);
+
+  const saveName = async (newName: string) => {
+    setName(newName);
+    await AsyncStorage.setItem('name', newName);
   };
 
-  const handleCambiarImagen = () => {
-    console.log('Cambiar Imagen');
-    toggleModal();
+  const saveAge = async (newAge: string) => {
+    setAge(newAge);
+    await AsyncStorage.setItem('age', newAge);
   };
 
-  const handleBorrarImagen = () => {
-    console.log('Borrar Imagen');
+  const saveEmail = async (newEmail: string) => {
+    setEmail(newEmail);
+    await AsyncStorage.setItem('email', newEmail);
+  };
+
+  const saveDni = async (newDni: string) => {
+    setDni(newDni);
+    await AsyncStorage.setItem('dni', newDni);
+  };
+
+  //Seleccionar desde galería
+  const pickImageFromGallery = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert(
+        'Permiso requerido',
+        'Se necesita permiso para acceder a la galería.',
+      );
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!pickerResult.canceled) {
+      const uri = pickerResult.assets[0].uri;
+      await AsyncStorage.setItem('profileImage', uri);
+      setProfileImage({ uri });
+      toggleModal();
+    }
+  };
+
+  //Tomar foto con la cámara
+  const takePhotoWithCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert(
+        'Permiso requerido',
+        'Se necesita permiso para usar la cámara.',
+      );
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!pickerResult.canceled) {
+      const uri = pickerResult.assets[0].uri;
+      await AsyncStorage.setItem('profileImage', uri);
+      setProfileImage({ uri });
+      toggleModal();
+    }
+  };
+
+  // Borrar imagen
+  const handleBorrarImagen = async () => {
+    await AsyncStorage.removeItem('profileImage');
+    setProfileImage(FotoPerfil);
     toggleModal();
   };
 
   return (
     <ScreenContainer>
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Título */}
         <View style={styles.header}>
           <Text style={styles.title}>Mi Perfil</Text>
         </View>
 
-        {/* Imagen */}
         <View style={styles.imageContainer}>
-          <Image source={FotoPerfil} style={styles.profileImage} />
+          <Image source={profileImage} style={styles.profileImage} />
           <TouchableOpacity style={styles.editImage} onPress={toggleModal}>
             <Feather name="edit" style={styles.editImage} />
           </TouchableOpacity>
         </View>
 
-        {/* Datos */}
         <View style={styles.DataContainer}>
-          {/* Nombre */}
           <Text style={styles.label}>Nombre y Apellido</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
               value={name}
-              onChangeText={setName}
+              onChangeText={saveName}
               editable={isNameEditable}
             />
             <TouchableOpacity
@@ -82,13 +170,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Edad */}
           <Text style={styles.label}>Edad</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
               value={age}
-              onChangeText={setAge}
+              onChangeText={saveAge}
               editable={isAgeEditable}
               keyboardType="numeric"
             />
@@ -100,13 +187,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Correo */}
           <Text style={styles.label}>Correo</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={saveEmail}
               editable={isEmailEditable}
               keyboardType="email-address"
             />
@@ -120,13 +206,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* DNI */}
           <Text style={styles.label}>DNI</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
               value={dni}
-              onChangeText={setDni}
+              onChangeText={saveDni}
               editable={isDniEditable}
               keyboardType="numeric"
             />
@@ -139,7 +224,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Modal Imagen */}
+        {/* Modal para cambiar imagen */}
         <Modal
           isVisible={isModalVisible}
           onBackdropPress={toggleModal}
@@ -147,14 +232,20 @@ export default function ProfileScreen() {
           style={styles.modalBottom}
         >
           <View style={styles.modalContainer}>
-            <Pressable style={styles.modalButton} onPress={handleCambiarImagen}>
-              <Text style={styles.modalButtonText}>Cambiar Imagen</Text>
+            <Pressable
+              style={styles.modalButton}
+              onPress={pickImageFromGallery}
+            >
+              <Text style={styles.modalButtonText}>Elegir desde galería</Text>
+            </Pressable>
+            <Pressable style={styles.modalButton} onPress={takePhotoWithCamera}>
+              <Text style={styles.modalButtonText}>Tomar una foto</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: '#ff4d4d' }]}
               onPress={handleBorrarImagen}
             >
-              <Text style={styles.modalButtonText}>Borrar Imagen</Text>
+              <Text style={styles.modalButtonText}>Borrar imagen</Text>
             </Pressable>
           </View>
         </Modal>
