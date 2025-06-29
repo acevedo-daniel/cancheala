@@ -345,6 +345,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginHorizontal: 3,
   },
+  // hola
   bannerDotActive: { backgroundColor: '#007bff' },
   banner: {
     width: SCREEN_WIDTH - 32,
