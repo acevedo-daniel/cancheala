@@ -7,14 +7,19 @@ import {
   Modal,
   TextInput,
   Image,
-  ScrollView,
   Alert,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import MapView, { Marker, Region } from 'react-native-maps';
 
 type Cancha = {
   id: string;
@@ -22,7 +27,8 @@ type Cancha = {
   imageUri: string | null;
   precio: string;
   descripcion: string;
-  direccion: string;
+  direccionTexto: string; // Dirección escrita
+  ubicacionMapa: { latitude: number; longitude: number } | null; // Coordenadas
   puntuacion: number;
 };
 
@@ -33,8 +39,22 @@ export default function OwnerHomeScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [precio, setPrecio] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [direccion, setDireccion] = useState('');
+  const [direccionTexto, setDireccionTexto] = useState('');
+  const [ubicacionMapa, setUbicacionMapa] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [puntuacion, setPuntuacion] = useState('');
+
+  const [modalMapaVisible, setModalMapaVisible] = useState(false);
+  const [region, setRegion] = useState<Region>({
+    latitude: -34.6037,
+    longitude: -58.3816,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
+
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadCanchas();
@@ -88,12 +108,13 @@ export default function OwnerHomeScreen() {
       !nombre.trim() ||
       !precio.trim() ||
       !descripcion.trim() ||
-      !direccion.trim() ||
+      !direccionTexto.trim() ||
       !puntuacion.trim()
     ) {
       Alert.alert('Error', 'Por favor, complete todos los campos.');
       return;
     }
+
     const puntuacionNum = Number(puntuacion);
     if (isNaN(puntuacionNum) || puntuacionNum < 1 || puntuacionNum > 10) {
       Alert.alert('Error', 'La puntuación debe ser un número entre 1 y 10.');
@@ -106,18 +127,20 @@ export default function OwnerHomeScreen() {
       imageUri,
       precio,
       descripcion,
-      direccion,
+      direccionTexto,
+      ubicacionMapa,
       puntuacion: puntuacionNum,
     };
+
     const newCanchas = [...canchas, newCancha];
     saveCanchas(newCanchas);
 
-    // Limpiar formulario
     setNombre('');
     setImageUri(null);
     setPrecio('');
     setDescripcion('');
-    setDireccion('');
+    setDireccionTexto('');
+    setUbicacionMapa(null);
     setPuntuacion('');
     setModalVisible(false);
   };
@@ -126,11 +149,31 @@ export default function OwnerHomeScreen() {
     router.replace('/(auth)');
   };
 
+  // Abrir modal selector de mapa
+  const abrirSelectorUbicacion = () => {
+    setModalMapaVisible(true);
+  };
+
+  // Confirmar ubicación seleccionada en el mapa
+  const confirmarUbicacion = () => {
+    if (region) {
+      setUbicacionMapa({
+        latitude: region.latitude,
+        longitude: region.longitude,
+      });
+      setModalMapaVisible(false);
+    } else {
+      alert('Por favor, seleccioná una ubicación en el mapa.');
+    }
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Flecha de retroceso */}
-      <TouchableOpacity style={styles.backIcon} onPress={handleBack}>
-        <Feather name="arrow-left" size={28} color="#2c6e49" />
+    <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={[styles.backIcon, { top: insets.top + 10 }]}
+        onPress={handleBack}
+      >
+        <Feather name="arrow-left" size={28} color="#00C853" />
       </TouchableOpacity>
 
       <Text style={styles.title}>¡Bienvenido, Propietario!</Text>
@@ -149,7 +192,7 @@ export default function OwnerHomeScreen() {
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <ScrollView>
+            <ScrollView keyboardShouldPersistTaps="handled">
               <Text style={styles.modalTitle}>Agregar Nueva Cancha</Text>
 
               <TextInput
@@ -188,12 +231,31 @@ export default function OwnerHomeScreen() {
                 onChangeText={setDescripcion}
               />
 
+              {/* Campo dirección texto */}
               <TextInput
-                placeholder="Dirección"
+                placeholder="Dirección (ej: Calle Falsa 123)"
                 style={styles.input}
-                value={direccion}
-                onChangeText={setDireccion}
+                value={direccionTexto}
+                onChangeText={setDireccionTexto}
               />
+
+              {/* Botón para abrir selector de mapa */}
+              <TouchableOpacity
+                style={[styles.button, { marginBottom: 10 }]}
+                onPress={abrirSelectorUbicacion}
+              >
+                <Text style={styles.buttonText}>
+                  Seleccionar ubicación en mapa
+                </Text>
+              </TouchableOpacity>
+
+              {/* Mostrar coordenadas seleccionadas */}
+              {ubicacionMapa && (
+                <Text style={styles.coordenadasText}>
+                  Ubicación seleccionada: {ubicacionMapa.latitude.toFixed(6)},{' '}
+                  {ubicacionMapa.longitude.toFixed(6)}
+                </Text>
+              )}
 
               <TextInput
                 placeholder="Puntuación (1-10)"
@@ -223,22 +285,66 @@ export default function OwnerHomeScreen() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+
+      {/* Modal mapa */}
+      <Modal
+        visible={modalMapaVisible}
+        animationType="slide"
+        transparent={false}
+      >
+        <View style={{ flex: 1 }}>
+          <MapView
+            style={{ flex: 1 }}
+            region={region}
+            onRegionChangeComplete={(reg) => setRegion(reg)}
+          >
+            <Marker coordinate={region} />
+          </MapView>
+
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 30,
+              left: 20,
+              right: 20,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+            }}
+          >
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { flex: 1, marginRight: 10, backgroundColor: '#999' },
+              ]}
+              onPress={() => setModalMapaVisible(false)}
+            >
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { flex: 1, backgroundColor: '#00C853' }]}
+              onPress={confirmarUbicacion}
+            >
+              <Text style={styles.buttonText}>Confirmar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
     paddingBottom: 40,
     backgroundColor: 'white',
-    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backIcon: {
     position: 'absolute',
-    top: 20,
     left: 20,
     zIndex: 10,
   },
@@ -247,7 +353,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
-    color: '#2c6e49',
+    color: '#3a8d59',
     textAlign: 'center',
   },
   subtitle: {
@@ -257,7 +363,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#3a8d59',
+    backgroundColor: '#00C853',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
@@ -286,7 +392,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
     textAlign: 'center',
-    color: '#2c6e49',
+    color: '#00C853',
   },
   imagePicker: {
     backgroundColor: '#e0e8df',
@@ -312,10 +418,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     marginBottom: 15,
-    color: '#2c6e49',
+    color: '#00C853',
   },
   modalButtons: {
     flexDirection: 'row',
     marginTop: 10,
+  },
+  coordenadasText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#555',
+    marginBottom: 15,
+    textAlign: 'center',
   },
 });
