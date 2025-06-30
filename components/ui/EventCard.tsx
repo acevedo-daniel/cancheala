@@ -10,9 +10,9 @@ interface EventCardProps {
 }
 
 const imageMap: Record<string, any> = {
-  'padel1.png': require('../../assets/padel1.png'),
-  'padel2.png': require('../../assets/padel2.png'),
-  'padel3.png': require('../../assets/padel3.png'),
+  'padel1.png': require('../../assets/images/padel1.png'),
+  'padel2.png': require('../../assets/images/padel2.png'),
+  'padel3.png': require('../../assets/images/padel3.png'),
 };
 
 const getEventTypeIcon = (type: EventType): keyof typeof Ionicons.glyphMap => {

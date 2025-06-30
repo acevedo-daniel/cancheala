@@ -14,8 +14,6 @@ import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import Feather from '@expo/vector-icons/Feather';
 
-import FotoPerfil from '../../assets/FotoPerfil.png';
-
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
 
@@ -55,7 +53,7 @@ export default function ProfileScreen() {
 
         {/* Imagen */}
         <View style={styles.imageContainer}>
-          <Image source={FotoPerfil} style={styles.profileImage} />
+          <Image source={require('../../assets/profiles/FotoPerfil.png')} style={styles.profileImage} />
           <TouchableOpacity style={styles.editImage} onPress={toggleModal}>
             <Feather name="edit" style={styles.editImage} />
           </TouchableOpacity>

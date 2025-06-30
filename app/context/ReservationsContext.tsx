@@ -7,8 +7,6 @@ export type Reservation = {
   time: string;
   location: string;
   image?: any; // Puedes usar ImageSourcePropType si prefieres
-
-
 };
 
 type ReservationsContextType = {
@@ -32,3 +30,6 @@ export const useReservations = () => {
   if (!context) throw new Error('useReservations must be used within ReservationsProvider');
   return context;
 };
+
+// Default export para evitar el warning de Expo Router
+export default ReservationsProvider;

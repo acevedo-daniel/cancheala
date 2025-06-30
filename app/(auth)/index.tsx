@@ -70,7 +70,7 @@ export default function AuthScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
         <ImageBackground
-          source={require('../../assets/background.jpg')}
+          source={require('../../assets/backgrounds/background.jpg')}
           style={styles.backgroundImage}
           imageStyle={styles.backgroundImageStyle}
         >

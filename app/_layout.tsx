@@ -67,11 +67,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#ffffff"
-        translucent={false}
-      />
+      <StatusBar hidden={true} />
       <ReservationsProvider>
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
