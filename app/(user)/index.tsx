@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
-import { useReservations, Reservation } from '../context/ReservationsContext';
 import ScreenContainer from '../../components/ui/ScreenContainer';
-import { SPACING } from '../../constants';
+import { SPACING, COLORS } from '../../constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,15 +29,6 @@ const availableHours = Array.from({ length: 13 }, (_, i) => {
   const hour = (14 + i) % 24;
   return `${hour.toString().padStart(2, '0')}:00`;
 });
-
-type GroupedReservation = {
-  id: string;
-  title: string;
-  date: string;
-  times: string[];
-  location: string;
-  image?: any;
-};
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -48,26 +39,12 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
 
-  const { reservations, setReservations } = useReservations();
-
-  // Agrupa reservas y guarda la imagen
-  const groupedReservationsObj = reservations.reduce((acc, curr) => {
-    const key = `${curr.title}-${curr.date}`;
-    if (!acc[key]) {
-      acc[key] = {
-        id: curr.id,
-        title: curr.title,
-        date: curr.date,
-        times: [curr.time],
-        location: curr.location,
-        image: curr.image,
-      };
-    } else {
-      acc[key].times.push(curr.time);
-    }
-    return acc;
-  }, {} as Record<string, GroupedReservation>);
-  const groupedReservationsArray = Object.values(groupedReservationsObj);
+  // Resetear categoría seleccionada cuando vuelvas al home
+  useFocusEffect(
+    React.useCallback(() => {
+      setSelectedCategory(null);
+    }, [])
+  );
 
   const handleReservePress = (space: Space) => {
     setSelectedSpace(space);
@@ -85,72 +62,128 @@ export default function HomeScreen() {
 
   const renderBanner = ({ item }: { item: Banner }) => (
     <View style={styles.banner}>
-      <Text style={styles.bannerText}>{item.title}</Text>
+      {item.image && (
+        <Image
+          source={item.image}
+          style={styles.bannerImage}
+          resizeMode="cover"
+        />
+      )}
+      <View style={styles.bannerOverlay}>
+        <Text style={styles.bannerText}>{item.title}</Text>
+      </View>
     </View>
   );
 
   const renderCategory = ({ item }: { item: Category }) => (
     <TouchableOpacity
-      style={[
-        styles.categoryCard,
-        selectedCategory === item.id && styles.selectedCategory,
-      ]}
-      onPress={() => setSelectedCategory(item.id)}
+      style={styles.categoryCardV2}
+      onPress={() => {
+        setSelectedCategory(item.id);
+        router.push({
+          pathname: '/search',
+          params: { filter: item.name }
+        });
+      }}
+      activeOpacity={0.85}
     >
-      <View style={styles.categoryIcon}>
-        <Ionicons name={item.icon as any} size={24} color="#000" />
+      <Image source={item.image} style={styles.categoryImageV2} />
+      <View style={styles.categoryOverlayV2} />
+      <View style={styles.categoryContentV2}>
+        <Ionicons name={item.icon as any} size={28} color="#fff" style={{ marginBottom: 6 }} />
+        <Text style={styles.categoryTextV2}>{item.name}</Text>
       </View>
-      <Text style={styles.categoryText}>{item.name}</Text>
     </TouchableOpacity>
   );
 
-  const renderSpace = ({ item }: { item: Space }) => (
-    <TouchableOpacity
-      style={styles.spaceCard}
-      onPress={() => handleReservePress(item)}
-    >
-      <Image source={item.image} style={styles.spaceImage} resizeMode="cover" />
-      <View style={styles.spaceInfo}>
-        <Text style={styles.spaceName}>{item.name}</Text>
-        <View style={styles.spaceRating}>
-          <Ionicons name="star" size={16} color="#FFD700" />
-          <Text style={styles.ratingText}>{item.rating}</Text>
+  const renderSpace = ({ item }: { item: typeof SPACES[0] }) => {
+    const formatDistance = (m: number) => m < 1000 ? `${m} m` : `${(m/1000).toFixed(1)} km`;
+    const price = '$1.500';
+    const promoColors = [
+      '#FFE066', // Amarillo
+      '#4ADE80', // Verde
+      '#60A5FA', // Azul
+      '#F472B6', // Rosa
+      '#A1A1B3', // Gris
+    ];
+
+    return (
+      <View style={{ marginBottom: 28 }}>
+        {/* Badge flotante como parte del flujo normal */}
+        {item.statusTag && (
+          <View style={styles.statusTagInline}>
+            <Text style={styles.statusTagTextV2} numberOfLines={1} ellipsizeMode="tail">{item.statusTag}</Text>
+          </View>
+        )}
+        <View style={styles.nearbyCardV3}>
+          <View style={{ position: 'relative', overflow: 'visible' }}>
+            <Image
+              source={item.image}
+              style={styles.nearbyImageV3}
+            />
+          </View>
+          <View style={styles.nearbyInfoV3}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.nearbyNameV2} numberOfLines={1}>{item.name}</Text>
+              <View style={{ flex: 1 }} />
+              <Ionicons name="star" size={16} color="#181829" style={{ marginRight: 2 }} />
+              <Text style={styles.nearbyRatingV2}>{item.rating.toFixed(1)}</Text>
+            </View>
+            <Text style={styles.nearbyTypeV2}>{item.type}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+              <Ionicons name="navigate-outline" size={14} color="#A1A1B3" style={{ marginRight: 2 }} />
+              <Text style={styles.nearbyDataV2}>{formatDistance(item.distance)}</Text>
+              <Text style={styles.nearbyDotV2}>·</Text>
+              <Ionicons name="pricetag-outline" size={14} color="#A1A1B3" style={{ marginRight: 2 }} />
+              <Text style={styles.nearbyDataV2}>{price}</Text>
+            </View>
+            {/* Promos chips */}
+            <View style={{ flexDirection: 'row', marginTop: 6, flexWrap: 'wrap' }}>
+              {item.promos && item.promos.map((promo, idx) => (
+                <View
+                  key={promo}
+                  style={[styles.promoChipV2, { backgroundColor: promoColors[idx % promoColors.length] }]}
+                >
+                  <Text style={styles.promoChipTextV2} numberOfLines={1}>{promo}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
-        <Text style={styles.spaceLocation}>{item.location}</Text>
       </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <ScreenContainer>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.locationButton}
-            onPress={() => router.push('/(user)/location-selection')}
-          >
-            <Ionicons name="location" size={20} color="#000" />
-            <Text style={styles.locationText}>Falucho 257</Text>
-            <Ionicons name="chevron-down" size={20} color="#000" />
+      <View style={{ backgroundColor: '#fff', paddingBottom: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingTop: 18, marginBottom: 10 }}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => router.push('/(user)/location-selection')}>
+            <Text style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}>C. Falucho 265</Text>
+            <Ionicons name="chevron-down" size={20} color="#181028" style={{ marginLeft: 4 }} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => router.push('/(user)/notifications')}
-          >
-            <Ionicons name="notifications-outline" size={24} color="#000" />
+          <TouchableOpacity onPress={() => router.push('/(user)/notifications')}>
+            <Ionicons name="notifications-outline" size={24} color="#181028" />
           </TouchableOpacity>
         </View>
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Search bar */}
+        <View style={{ paddingHorizontal: SPACING.md }}>
           <TouchableOpacity
-            style={styles.searchBar}
-            onPress={() => router.push('/(user)/advanced-search')}
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 32, paddingHorizontal: 20, paddingVertical: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: '#e5e5e5' }}
+            onPress={() => router.push('/search')}
+            activeOpacity={0.8}
           >
-            <Ionicons name="search" size={20} color="#666" />
-            <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
+            <Text
+              style={{ flex: 1, color: '#888999', fontSize: 17, fontWeight: '500', marginRight: 8 }}
+              numberOfLines={1}
+            >
+              Buscar canchas, deportes...
+            </Text>
+            <Ionicons name="search" size={20} color="#888999" />
           </TouchableOpacity>
-
+        </View>
+      </View>
+      <View style={styles.container}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Banners */}
           <View style={styles.bannerContainer}>
             <FlatList
@@ -176,54 +209,37 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Mis Reservas */}
-          {groupedReservationsArray.length > 0 && (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={styles.sectionTitle}>Mis Reservas</Text>
-              <FlatList
-                data={groupedReservationsArray}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.spaceCard} onPress={() => {}}>
-                    <Image
-                      source={
-                        item.image || require('../../assets/placeholder.png')
-                      }
-                      style={styles.spaceImage}
-                      resizeMode="cover"
-                    />
-                    <View style={styles.spaceInfo}>
-                      <Text style={styles.spaceName}>
-                        {`${item.title} (${item.times.join(', ')})`}
-                      </Text>
-                      <Text style={styles.spaceLocation}>{item.location}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-                scrollEnabled={false}
-              />
-            </View>
-          )}
-
           {/* Quick Access */}
           <View style={styles.quickAccess}>
-            <TouchableOpacity style={styles.quickAccessCard}>
-              <View style={styles.quickAccessIcon}>
-                <Ionicons name="map-outline" size={24} color="#000" />
-              </View>
-              <Text style={styles.quickAccessText}>Espacios</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickAccessCard}>
-              <View style={styles.quickAccessIcon}>
-                <Ionicons name="people-outline" size={24} color="#000" />
-              </View>
+            <View style={styles.quickAccessItem}>
+              <TouchableOpacity 
+                style={styles.quickAccessCard}
+                onPress={() => router.push('/(user)/canchas')}
+              >
+                <Image
+                  source={require('../../assets/images/red-negra-tennis-tennis.jpg')}
+                  style={styles.quickAccessImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+              <Text style={styles.quickAccessText}>Canchas</Text>
+            </View>
+            
+            <View style={styles.quickAccessItem}>
+              <TouchableOpacity style={styles.quickAccessCard}>
+                <Image
+                  source={require('../../assets/images/chica-espaldas-tennis.jpg')}
+                  style={styles.quickAccessImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
               <Text style={styles.quickAccessText}>Matchmaking</Text>
-            </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Categorías */}
+          {/* Filtros rápidos */}
           <View style={styles.categoriesSection}>
-            <Text style={styles.sectionTitle}>Categorías</Text>
+            <Text style={styles.sectionTitle}>Explora por</Text>
             <FlatList
               data={CATEGORIES}
               renderItem={renderCategory}
@@ -234,11 +250,11 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* Canchas Disponibles */}
+          {/* Cerca de ti */}
           <View style={styles.spacesSection}>
-            <Text style={styles.sectionTitle}>Canchas Disponibles</Text>
+            <Text style={styles.sectionTitle}>Cerca de ti</Text>
             <FlatList
-              data={SPACES}
+              data={SPACES.slice(0, 3)}
               keyExtractor={(item) => item.id}
               renderItem={renderSpace}
               scrollEnabled={false}
@@ -294,17 +310,6 @@ export default function HomeScreen() {
                 <Button
                   title="Reservar"
                   onPress={() => {
-                    const newReservations: Reservation[] = selectedHours.map(
-                      (hour) => ({
-                        id: `${Date.now().toString()}-${hour}`,
-                        title: `Reserva en ${selectedSpace.name}`,
-                        date: new Date().toISOString().split('T')[0],
-                        time: hour,
-                        location: selectedSpace.location,
-                        image: selectedSpace.image,
-                      }),
-                    );
-                    setReservations((prev) => [...prev, ...newReservations]);
                     setModalVisible(false);
                     setSelectedHours([]);
                     alert('Reserva confirmada');
@@ -332,60 +337,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    marginBottom: SPACING.sm,
-  },
-
-  locationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  locationText: {
-    marginHorizontal: 8,
-    fontSize: 16,
-    color: '#000',
-    fontWeight: '500',
-  },
-
-  notificationButton: {
-    padding: 8,
-  },
-
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.md,
   },
 
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginVertical: 16,
+    backgroundColor: '#fff',
+    borderRadius: 32,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginVertical: SPACING.sm,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   searchText: {
     marginLeft: 8,
-    color: '#666',
-    fontSize: 16,
+    color: '#888',
+    fontSize: 15,
+    fontWeight: '400',
   },
 
   bannerContainer: {
-    marginBottom: 20,
+    marginBottom: SPACING.md,
   },
 
   bannerList: {
@@ -401,8 +385,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
   },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 24,
+  },
   bannerText: {
-    color: '#000',
+    color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -410,7 +410,8 @@ const styles = StyleSheet.create({
   bannerPagination: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 12,
+    marginTop: 14,
+    marginBottom: 10,
     alignItems: 'center',
   },
   bannerDot: {
@@ -427,73 +428,105 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 16,
   },
 
   quickAccess: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    marginBottom: 24,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+
+  quickAccessItem: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginHorizontal: 0,
   },
 
   quickAccessCard: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginHorizontal: 8,
+    width: 145,
+    height: 120,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
   },
 
-  quickAccessIcon: {
-    width: 48,
-    height: 48,
+  quickAccessImage: {
+    width: '100%',
+    height: '100%',
     borderRadius: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 
   quickAccessText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000',
-    marginTop: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 10,
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   categoriesSection: {
-    marginBottom: 20,
+    marginBottom: SPACING.md,
   },
 
   categoriesList: {
-    marginBottom: 10,
+    marginBottom: 14,
   },
 
-  categoryCard: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
+  categoryCardV2: {
+    width: 90,
+    height: 90,
+    borderRadius: 16,
+    overflow: 'hidden',
     marginRight: 16,
-    flexDirection: 'column',
-    minWidth: 80,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
-  selectedCategory: {
-    backgroundColor: '#007bff',
+  categoryImageV2: {
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+    resizeMode: 'cover',
   },
-  categoryIcon: {
-    marginBottom: 6,
+  categoryOverlayV2: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.38)',
   },
-  categoryText: {
-    fontSize: 14,
-    color: '#000',
-    fontWeight: '500',
-    marginTop: 8,
+  categoryContentV2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  categoryTextV2: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   spacesSection: {
-    marginBottom: 20,
+    marginBottom: SPACING.md,
   },
 
   spaceCard: {
@@ -576,5 +609,116 @@ const styles = StyleSheet.create({
 
   hourButtonSelected: {
     backgroundColor: '#007bff',
+  },
+
+  statusTagBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    marginTop: 4,
+    marginLeft: 4,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    zIndex: 2,
+    minWidth: 60,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+    maxWidth: 200,
+    overflow: 'hidden',
+  },
+  nearbyCardV3: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    minHeight: 80,
+    position: 'relative',
+  },
+  nearbyImageV3: {
+    width: 90,
+    height: 90,
+    borderRadius: 14,
+    marginRight: 16,
+    backgroundColor: '#eee',
+    resizeMode: 'cover',
+  },
+  nearbyInfoV3: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  nearbyNameV2: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#181829',
+    maxWidth: '70%',
+  },
+  nearbyTypeV2: {
+    fontSize: 14,
+    color: '#A1A1B3',
+    marginBottom: 2,
+    marginTop: 1,
+  },
+  nearbyRatingV2: {
+    fontSize: 14,
+    color: '#181829',
+    fontWeight: 'bold',
+  },
+  nearbyDataV2: {
+    fontSize: 13,
+    color: '#181829',
+    marginRight: 2,
+  },
+  nearbyDotV2: {
+    color: '#A1A1B3',
+    marginHorizontal: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  promoChipV2: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  promoChipTextV2: {
+    color: '#181829',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  statusTagTextV2: {
+    color: '#181829',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  statusTagInline: {
+    alignSelf: 'flex-start',
+    marginLeft: 18,
+    marginBottom: 2,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    minWidth: 60,
+    maxWidth: 200,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+    overflow: 'hidden',
   },
 });

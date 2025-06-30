@@ -7,8 +7,6 @@ export type Reservation = {
   time: string;
   location: string;
   image?: any; // Puedes usar ImageSourcePropType si prefieres
-
-
 };
 
 type ReservationsContextType = {
@@ -16,9 +14,13 @@ type ReservationsContextType = {
   setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
 };
 
-const ReservationsContext = createContext<ReservationsContextType | undefined>(undefined);
+const ReservationsContext = createContext<ReservationsContextType | undefined>(
+  undefined,
+);
 
-export const ReservationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ReservationsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   return (
     <ReservationsContext.Provider value={{ reservations, setReservations }}>
@@ -29,6 +31,10 @@ export const ReservationsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 export const useReservations = () => {
   const context = useContext(ReservationsContext);
-  if (!context) throw new Error('useReservations must be used within ReservationsProvider');
+  if (!context)
+    throw new Error('useReservations must be used within ReservationsProvider');
   return context;
 };
+
+// Default export para evitar el warning de Expo Router
+export default ReservationsProvider;

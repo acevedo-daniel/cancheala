@@ -14,7 +14,6 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import { ReservationsProvider } from './context/ReservationsContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
@@ -67,18 +66,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#ffffff"
-        translucent={false}
-      />
-      <ReservationsProvider>
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(user)" options={{ headerShown: false }} />
-          <Stack.Screen name="(owner)" options={{ headerShown: false }} />
-        </Stack>
-      </ReservationsProvider>
+      <StatusBar hidden={true} />
+      <Stack>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false }} />
+        <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+      </Stack>
     </SafeAreaProvider>
   );
 }

@@ -18,13 +18,13 @@ const getSafeAreaMargins = () => {
     // iOS: valores típicos para iPhone con notch
     return {
       top: statusBarHeight + 8, // Status bar + 8px extra
-      horizontal: 8,
+      horizontal: 16,
     };
   } else {
     // Android: valores adaptativos
     return {
       top: statusBarHeight + 8, // Status bar + 8px extra
-      horizontal: 8,
+      horizontal: 16,
     };
   }
 };
