@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
+import { Picker } from '@react-native-picker/picker';
 
 type Cancha = {
   id: string;
@@ -27,12 +28,20 @@ type Cancha = {
   direccionTexto: string; // dirección escrita
   ubicacionMapa: { latitude: number; longitude: number } | null; // coordenadas mapa
   puntuacion: number;
+  suelo?: 'césped' | 'hormigón' | 'madera'; // NUEVO campo opcional
 };
 
 export default function CanchasScreen() {
   const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [modalDetalleVisible, setModalDetalleVisible] = useState(false);
   const [canchaDetalle, setCanchaDetalle] = useState<Cancha | null>(null);
+  const [filtroPrecio, setFiltroPrecio] = useState('todos');
+  const [sueloEdit, setSueloEdit] = useState<
+    'césped' | 'hormigón' | 'madera' | undefined
+  >(undefined);
+  const [filtroSuelo, setFiltroSuelo] = useState<
+    'todos' | 'césped' | 'hormigón' | 'madera'
+  >('todos');
 
   // Estados para edición
   const [modalEditarVisible, setModalEditarVisible] = useState(false);
@@ -46,6 +55,42 @@ export default function CanchasScreen() {
   const [latEdit, setLatEdit] = useState('');
   const [lngEdit, setLngEdit] = useState('');
   const [puntuacionEdit, setPuntuacionEdit] = useState('');
+
+  // Al inicio del componente
+  const [busqueda, setBusqueda] = useState('');
+
+  // Función para filtrar canchas
+  const filtrarCanchas = () => {
+    return canchas.filter((cancha) => {
+      const coincideBusqueda = cancha.nombre
+        .toLowerCase()
+        .includes(busqueda.toLowerCase());
+
+      const precioNum = Number(cancha.precio);
+      let coincidePrecio = true;
+
+      switch (filtroPrecio) {
+        case '<5000':
+          coincidePrecio = precioNum < 5000;
+          break;
+        case '5000-10000':
+          coincidePrecio = precioNum >= 5000 && precioNum <= 10000;
+          break;
+        case '>10000':
+          coincidePrecio = precioNum > 10000;
+          break;
+        default:
+          coincidePrecio = true; // todos
+      }
+
+      let coincideSuelo = true;
+      if (filtroSuelo !== 'todos') {
+        coincideSuelo = cancha.suelo === filtroSuelo;
+      }
+
+      return coincideBusqueda && coincidePrecio && coincideSuelo;
+    });
+  };
 
   useEffect(() => {
     loadCanchas();
@@ -93,6 +138,7 @@ export default function CanchasScreen() {
     setDescripcionEdit(cancha.descripcion);
     setDireccionTextoEdit(cancha.direccionTexto);
     setPuntuacionEdit(cancha.puntuacion.toString());
+    setSueloEdit(cancha.suelo);
 
     if (cancha.ubicacionMapa) {
       setLatEdit(cancha.ubicacionMapa.latitude.toString());
@@ -200,6 +246,9 @@ export default function CanchasScreen() {
         <Text style={styles.direccion} numberOfLines={1}>
           {item.direccionTexto}
         </Text>
+        {item.suelo && (
+          <Text style={styles.sueloText}>Suelo: {item.suelo}</Text>
+        )}
         <View style={styles.puntuacionContainer}>
           <Ionicons name="star" size={16} color="#f4c10f" />
           <Text style={styles.puntuacionText}>{item.puntuacion}/10</Text>
@@ -233,13 +282,88 @@ export default function CanchasScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <TextInput
+          style={{
+            backgroundColor: 'white',
+            borderRadius: 10,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderWidth: 1,
+            borderColor: '#ccc',
+            marginBottom: 16,
+            fontSize: 16,
+          }}
+          placeholder="Buscar cancha por nombre..."
+          value={busqueda}
+          onChangeText={setBusqueda}
+        />
+        <Text
+          style={{
+            marginBottom: 6,
+            fontSize: 16,
+            color: '#222',
+            fontWeight: '600',
+          }}
+        >
+          Filtrar por precio:
+        </Text>
+        <View
+          style={{
+            backgroundColor: 'white',
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: '#ccc',
+            marginBottom: 16,
+          }}
+        >
+          <Picker
+            selectedValue={filtroPrecio}
+            onValueChange={(itemValue) => setFiltroPrecio(itemValue)}
+          >
+            <Picker.Item label="Todos" value="todos" />
+            <Picker.Item label="Menos de $5000" value="<5000" />
+            <Picker.Item label="Entre $5000 y $10000" value="5000-10000" />
+            <Picker.Item label="Más de $10000" value=">10000" />
+          </Picker>
+        </View>
+
+        <Text
+          style={{
+            marginBottom: 6,
+            fontSize: 16,
+            color: '#222',
+            fontWeight: '600',
+          }}
+        >
+          Filtrar por suelo:
+        </Text>
+        <View
+          style={{
+            backgroundColor: 'white',
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: '#ccc',
+            marginBottom: 16,
+          }}
+        >
+          <Picker
+            selectedValue={filtroSuelo}
+            onValueChange={(itemValue) => setFiltroSuelo(itemValue)}
+          >
+            <Picker.Item label="Todos" value="todos" />
+            <Picker.Item label="Césped" value="cesped" />
+            <Picker.Item label="Hormigón" value="hormigon" />
+            <Picker.Item label="Madera" value="madera" />
+          </Picker>
+        </View>
+
         {canchas.length === 0 ? (
           <Text style={styles.emptyText}>
             No está ofreciendo ninguna cancha en este momento.
           </Text>
         ) : (
           <FlatList
-            data={canchas}
+            data={filtrarCanchas()} // ← reemplaza canchas por esto
             keyExtractor={(item) => item.id}
             renderItem={renderCancha}
             contentContainerStyle={styles.listContainer}
@@ -284,6 +408,16 @@ export default function CanchasScreen() {
                   <Text style={styles.detalleDireccion}>
                     Dirección: {canchaDetalle.direccionTexto}
                   </Text>
+                  {canchaDetalle.suelo && (
+                    <Text
+                      style={[
+                        styles.detalleSuelo,
+                        { textAlign: 'center', marginBottom: 10 },
+                      ]}
+                    >
+                      Suelo: {canchaDetalle.suelo}
+                    </Text>
+                  )}
                   <View style={styles.puntuacionContainer}>
                     <Ionicons name="star" size={20} color="#f4c10f" />
                     <Text style={[styles.puntuacionText, { fontSize: 18 }]}>
@@ -360,6 +494,18 @@ export default function CanchasScreen() {
                 placeholder="Descripción"
                 multiline
               />
+
+              <Text style={styles.label}>Suelo</Text>
+              <Picker
+                selectedValue={sueloEdit}
+                onValueChange={(value) => setSueloEdit(value)}
+                style={{ marginBottom: 12 }}
+              >
+                <Picker.Item label="Ninguno" value={undefined} />
+                <Picker.Item label="Césped" value="césped" />
+                <Picker.Item label="Hormigón" value="hormigón" />
+                <Picker.Item label="Madera" value="madera" />
+              </Picker>
 
               <Text style={styles.label}>Dirección (texto)</Text>
               <TextInput
@@ -592,5 +738,17 @@ const styles = StyleSheet.create({
   buttonsRow: {
     flexDirection: 'row',
     marginTop: 8,
+  },
+  sueloText: {
+    fontSize: 14,
+    color: '#00796b',
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+
+  detalleSuelo: {
+    fontSize: 16,
+    color: '#00796b',
+    fontWeight: '700',
   },
 });

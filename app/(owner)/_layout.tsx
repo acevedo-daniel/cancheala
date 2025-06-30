@@ -31,6 +31,28 @@ export default function OwnerLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="estadisticas"
+        options={{
+          title: 'Estadisticas',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="chart-bar"
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="CrearCanchaForm"
+        options={{
+          title: 'Publicar',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="plus" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

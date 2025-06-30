@@ -20,6 +20,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import MapView, { Marker, Region } from 'react-native-maps';
+import { Picker } from '@react-native-picker/picker';
 
 type Cancha = {
   id: string;
@@ -30,6 +31,7 @@ type Cancha = {
   direccionTexto: string; // Dirección escrita
   ubicacionMapa: { latitude: number; longitude: number } | null; // Coordenadas
   puntuacion: number;
+  suelo: string; // NUEVO campo suelo
 };
 
 export default function OwnerHomeScreen() {
@@ -45,6 +47,7 @@ export default function OwnerHomeScreen() {
     longitude: number;
   } | null>(null);
   const [puntuacion, setPuntuacion] = useState('');
+  const [suelo, setSuelo] = useState('cesped'); // Estado para suelo
 
   const [modalMapaVisible, setModalMapaVisible] = useState(false);
   const [region, setRegion] = useState<Region>({
@@ -109,7 +112,8 @@ export default function OwnerHomeScreen() {
       !precio.trim() ||
       !descripcion.trim() ||
       !direccionTexto.trim() ||
-      !puntuacion.trim()
+      !puntuacion.trim() ||
+      !suelo.trim()
     ) {
       Alert.alert('Error', 'Por favor, complete todos los campos.');
       return;
@@ -130,6 +134,7 @@ export default function OwnerHomeScreen() {
       direccionTexto,
       ubicacionMapa,
       puntuacion: puntuacionNum,
+      suelo,
     };
 
     const newCanchas = [...canchas, newCancha];
@@ -142,6 +147,7 @@ export default function OwnerHomeScreen() {
     setDireccionTexto('');
     setUbicacionMapa(null);
     setPuntuacion('');
+    setSuelo('cesped');
     setModalVisible(false);
   };
 
@@ -149,12 +155,10 @@ export default function OwnerHomeScreen() {
     router.replace('/(auth)');
   };
 
-  // Abrir modal selector de mapa
   const abrirSelectorUbicacion = () => {
     setModalMapaVisible(true);
   };
 
-  // Confirmar ubicación seleccionada en el mapa
   const confirmarUbicacion = () => {
     if (region) {
       setUbicacionMapa({
@@ -231,7 +235,6 @@ export default function OwnerHomeScreen() {
                 onChangeText={setDescripcion}
               />
 
-              {/* Campo dirección texto */}
               <TextInput
                 placeholder="Dirección (ej: Calle Falsa 123)"
                 style={styles.input}
@@ -239,7 +242,6 @@ export default function OwnerHomeScreen() {
                 onChangeText={setDireccionTexto}
               />
 
-              {/* Botón para abrir selector de mapa */}
               <TouchableOpacity
                 style={[styles.button, { marginBottom: 10 }]}
                 onPress={abrirSelectorUbicacion}
@@ -249,13 +251,43 @@ export default function OwnerHomeScreen() {
                 </Text>
               </TouchableOpacity>
 
-              {/* Mostrar coordenadas seleccionadas */}
               {ubicacionMapa && (
                 <Text style={styles.coordenadasText}>
                   Ubicación seleccionada: {ubicacionMapa.latitude.toFixed(6)},{' '}
                   {ubicacionMapa.longitude.toFixed(6)}
                 </Text>
               )}
+
+              {/* NUEVO selector suelo */}
+              <Text
+                // eslint-disable-next-line react-native/no-inline-styles
+                style={{
+                  color: '#00C853',
+                  fontWeight: 'bold',
+                  marginBottom: 6,
+                }}
+              >
+                Seleccione tipo de suelo
+              </Text>
+              <View
+                // eslint-disable-next-line react-native/no-inline-styles
+                style={{
+                  backgroundColor: '#f5f8f5',
+                  borderRadius: 8,
+                  marginBottom: 15,
+                }}
+              >
+                <Picker
+                  selectedValue={suelo}
+                  onValueChange={(itemValue) => setSuelo(itemValue)}
+                  mode="dropdown"
+                  style={{ color: '#00C853' }}
+                >
+                  <Picker.Item label="Césped" value="cesped" />
+                  <Picker.Item label="Hormigón" value="hormigon" />
+                  <Picker.Item label="Madera" value="madera" />
+                </Picker>
+              </View>
 
               <TextInput
                 placeholder="Puntuación (1-10)"
@@ -302,6 +334,7 @@ export default function OwnerHomeScreen() {
           </MapView>
 
           <View
+            // eslint-disable-next-line react-native/no-inline-styles
             style={{
               position: 'absolute',
               bottom: 30,
