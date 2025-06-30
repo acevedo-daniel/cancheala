@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { SplashScreen, router } from 'expo-router';
-import { Stack } from 'expo-router';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { 
+import { SplashScreen, router, Stack } from 'expo-router';
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  StatusBar,
+  Platform,
+} from 'react-native';
+import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import { ReservationsProvider } from './context/ReservationsContext'; // <--- AGREGA ESTA LÍNEA
+import { ReservationsProvider } from './context/ReservationsContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,7 +35,7 @@ export default function RootLayout() {
       try {
         if (!fontsLoaded) return;
         await SplashScreen.hideAsync();
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         setUserRole(null);
         setIsLoading(false);
       } catch (e) {
@@ -54,24 +60,26 @@ export default function RootLayout() {
   if (!fontsLoaded || isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator 
-          size="large" 
-          color="#FFFFFF" 
-          style={styles.loader}
-        />
+        <ActivityIndicator size="large" color="#FFFFFF" style={styles.loader} />
       </View>
     );
   }
 
-  // ENVUELVE EL STACK CON EL PROVIDER
   return (
-    <ReservationsProvider>
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(user)" options={{ headerShown: false }} />
-        <Stack.Screen name="(owner)" options={{ headerShown: false }} />
-      </Stack>
-    </ReservationsProvider>
+    <SafeAreaProvider>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
+      <ReservationsProvider>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(user)" options={{ headerShown: false }} />
+          <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+        </Stack>
+      </ReservationsProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -81,6 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#00C853',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   loader: {
     transform: [{ scale: 1.5 }],

@@ -139,4 +139,4 @@ export const TEXTS = {
     CATEGORIES: 'Categorías',
     NEARBY_SPACES: 'Espacios cerca de ti',
   },
-} as const; 
+} as const;

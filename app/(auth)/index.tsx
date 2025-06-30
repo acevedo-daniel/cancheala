@@ -8,10 +8,17 @@ import {
   Image,
   ImageBackground,
   Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../../constants';
+import {
+  COLORS,
+  SPACING,
+  BORDER_RADIUS,
+  TYPOGRAPHY,
+  SHADOWS,
+} from '../../constants';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,8 +39,8 @@ export default function AuthScreen() {
             email: 'usuario@gmail.com',
             firstName: 'Usuario',
             lastName: 'Google',
-            isGoogleUser: 'true'
-          }
+            isGoogleUser: 'true',
+          },
         });
       } else {
         // Si es un usuario existente, lo enviamos al home
@@ -60,56 +67,58 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('../../assets/background.jpg')}
-        style={styles.backgroundImage}
-        imageStyle={styles.backgroundImageStyle}
-      >
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={handleGuestAccess}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <ImageBackground
+          source={require('../../assets/background.jpg')}
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImageStyle}
         >
-          <Text style={styles.skipText}>Omitir por ahora</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleGuestAccess}
+          >
+            <Text style={styles.skipText}>Omitir por ahora</Text>
+          </TouchableOpacity>
 
-        {/* <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Cancheala</Text>
-        </View> */}
-      </ImageBackground>
+          {/* <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>Cancheala</Text>
+          </View> */}
+        </ImageBackground>
 
-      <View style={styles.content}>
-        <TouchableOpacity
-          style={[styles.button, styles.googleButton]}
-          onPress={handleGoogleLogin}
-        >
-          <Image
-            source={{ uri: 'https://www.google.com/favicon.ico' }}
-            style={styles.googleIcon}
-            resizeMode="contain"
-          />
-          <Text style={styles.buttonText}>Continuar con Google</Text>
-        </TouchableOpacity>
+        <View style={styles.content}>
+          <TouchableOpacity
+            style={[styles.button, styles.googleButton]}
+            onPress={handleGoogleLogin}
+          >
+            <Image
+              source={{ uri: 'https://www.google.com/favicon.ico' }}
+              style={styles.googleIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.buttonText}>Continuar con Google</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.emailButton]}
-          onPress={handleEmailLogin}
-        >
-          <Text style={[styles.buttonText, styles.emailButtonText]}>
-            Continuar con correo electrónico
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.emailButton]}
+            onPress={handleEmailLogin}
+          >
+            <Text style={[styles.buttonText, styles.emailButtonText]}>
+              Continuar con correo electrónico
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.providerButton}
-          onPress={handleProviderAccess}
-        >
-          <Text style={styles.providerText}>
-            Acceso para proveedores de servicios
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.providerButton}
+            onPress={handleProviderAccess}
+          >
+            <Text style={styles.providerText}>
+              Acceso para proveedores de servicios
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -134,6 +143,7 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: BORDER_RADIUS.full,
+    marginTop: SPACING.sm,
   },
   skipText: {
     color: COLORS.text.light,
