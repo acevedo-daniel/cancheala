@@ -70,7 +70,7 @@ export default function HomeScreen() {
         />
       )}
       <View style={styles.bannerOverlay}>
-        <Text style={styles.bannerText}>{item.title}</Text>
+      <Text style={styles.bannerText}>{item.title}</Text>
       </View>
     </View>
   );
@@ -151,7 +151,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
-    );
+  );
   };
 
   return (
@@ -175,7 +175,7 @@ export default function HomeScreen() {
             <Text
               style={{ flex: 1, color: '#888999', fontSize: 17, fontWeight: '500', marginRight: 8 }}
               numberOfLines={1}
-            >
+          >
               Buscar canchas, deportes...
             </Text>
             <Ionicons name="search" size={20} color="#888999" />
@@ -226,13 +226,13 @@ export default function HomeScreen() {
             </View>
             
             <View style={styles.quickAccessItem}>
-              <TouchableOpacity style={styles.quickAccessCard}>
+            <TouchableOpacity style={styles.quickAccessCard}>
                 <Image
                   source={require('../../assets/images/chica-espaldas-tennis.jpg')}
                   style={styles.quickAccessImage}
                   resizeMode="cover"
                 />
-              </TouchableOpacity>
+            </TouchableOpacity>
               <Text style={styles.quickAccessText}>Matchmaking</Text>
             </View>
           </View>
