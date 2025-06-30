@@ -35,3 +35,6 @@ export const useReservations = () => {
     throw new Error('useReservations must be used within ReservationsProvider');
   return context;
 };
+
+// Default export para evitar el warning de Expo Router
+export default ReservationsProvider;

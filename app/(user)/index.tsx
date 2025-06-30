@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
@@ -49,6 +50,13 @@ export default function HomeScreen() {
   const [currentBanner, setCurrentBanner] = useState(0);
 
   const { reservations, setReservations } = useReservations();
+
+  // Resetear categoría seleccionada cuando vuelvas al home
+  useFocusEffect(
+    React.useCallback(() => {
+      setSelectedCategory(null);
+    }, [])
+  );
 
   // Agrupa reservas y guarda la imagen
   const groupedReservationsObj = reservations.reduce((acc, curr) => {
@@ -85,7 +93,16 @@ export default function HomeScreen() {
 
   const renderBanner = ({ item }: { item: Banner }) => (
     <View style={styles.banner}>
-      <Text style={styles.bannerText}>{item.title}</Text>
+      {item.image && (
+        <Image
+          source={item.image}
+          style={styles.bannerImage}
+          resizeMode="cover"
+        />
+      )}
+      <View style={styles.bannerOverlay}>
+        <Text style={styles.bannerText}>{item.title}</Text>
+      </View>
     </View>
   );
 
@@ -95,12 +112,27 @@ export default function HomeScreen() {
         styles.categoryCard,
         selectedCategory === item.id && styles.selectedCategory,
       ]}
-      onPress={() => setSelectedCategory(item.id)}
+      onPress={() => {
+        setSelectedCategory(item.id);
+        router.push({
+          pathname: '/(user)/search',
+          params: { filter: item.name }
+        });
+      }}
     >
       <View style={styles.categoryIcon}>
-        <Ionicons name={item.icon as any} size={24} color="#000" />
+        <Ionicons 
+          name={item.icon as any} 
+          size={24} 
+          color={selectedCategory === item.id ? "#007AFF" : "#000"} 
+        />
       </View>
-      <Text style={styles.categoryText}>{item.name}</Text>
+      <Text style={[
+        styles.categoryText,
+        selectedCategory === item.id && styles.selectedCategoryText
+      ]}>
+        {item.name}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -109,7 +141,13 @@ export default function HomeScreen() {
       style={styles.spaceCard}
       onPress={() => handleReservePress(item)}
     >
-      <Image source={item.image} style={styles.spaceImage} resizeMode="cover" />
+      <Image
+        source={
+          item.image || require('../../assets/images/placeholder.png')
+        }
+        style={styles.spaceImage}
+        resizeMode="cover"
+      />
       <View style={styles.spaceInfo}>
         <Text style={styles.spaceName}>{item.name}</Text>
         <View style={styles.spaceRating}>
@@ -145,7 +183,7 @@ export default function HomeScreen() {
           {/* Search bar */}
           <TouchableOpacity
             style={styles.searchBar}
-            onPress={() => router.push('/(user)/advanced-search')}
+            onPress={() => router.push('/(user)/search')}
           >
             <Ionicons name="search" size={20} color="#666" />
             <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
@@ -187,7 +225,7 @@ export default function HomeScreen() {
                   <TouchableOpacity style={styles.spaceCard} onPress={() => {}}>
                     <Image
                       source={
-                        item.image || require('../../assets/placeholder.png')
+                        item.image || require('../../assets/images/placeholder.png')
                       }
                       style={styles.spaceImage}
                       resizeMode="cover"
@@ -207,23 +245,35 @@ export default function HomeScreen() {
 
           {/* Quick Access */}
           <View style={styles.quickAccess}>
-            <TouchableOpacity style={styles.quickAccessCard}>
-              <View style={styles.quickAccessIcon}>
-                <Ionicons name="map-outline" size={24} color="#000" />
-              </View>
-              <Text style={styles.quickAccessText}>Espacios</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickAccessCard}>
-              <View style={styles.quickAccessIcon}>
-                <Ionicons name="people-outline" size={24} color="#000" />
-              </View>
+            <View style={styles.quickAccessItem}>
+              <TouchableOpacity 
+                style={styles.quickAccessCard}
+                onPress={() => router.push('/(user)/canchas')}
+              >
+                <Image
+                  source={require('../../assets/images/red-negra-tennis-tennis.jpg')}
+                  style={styles.quickAccessImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+              <Text style={styles.quickAccessText}>Canchas</Text>
+            </View>
+            
+            <View style={styles.quickAccessItem}>
+              <TouchableOpacity style={styles.quickAccessCard}>
+                <Image
+                  source={require('../../assets/images/chica-espaldas-tennis.jpg')}
+                  style={styles.quickAccessImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
               <Text style={styles.quickAccessText}>Matchmaking</Text>
-            </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Categorías */}
+          {/* Filtros rápidos */}
           <View style={styles.categoriesSection}>
-            <Text style={styles.sectionTitle}>Categorías</Text>
+            <Text style={styles.sectionTitle}>Filtros rápidos</Text>
             <FlatList
               data={CATEGORIES}
               renderItem={renderCategory}
@@ -234,9 +284,9 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* Canchas Disponibles */}
+          {/* Cerca de ti */}
           <View style={styles.spacesSection}>
-            <Text style={styles.sectionTitle}>Canchas Disponibles</Text>
+            <Text style={styles.sectionTitle}>Cerca de ti</Text>
             <FlatList
               data={SPACES}
               keyExtractor={(item) => item.id}
@@ -372,11 +422,21 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     marginVertical: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   searchText: {
     marginLeft: 8,
@@ -401,8 +461,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
   },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+  },
   bannerText: {
-    color: '#000',
+    color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -437,29 +513,43 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
-  quickAccessCard: {
+  quickAccessItem: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-    borderRadius: 12,
+    flexDirection: 'column',
     alignItems: 'center',
     marginHorizontal: 8,
   },
 
-  quickAccessIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+  quickAccessCard: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  quickAccessImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
 
   quickAccessText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000',
-    marginTop: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 10,
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   categoriesSection: {
@@ -490,6 +580,10 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '500',
     marginTop: 8,
+  },
+  selectedCategoryText: {
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
 
   spacesSection: {

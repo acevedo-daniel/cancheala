@@ -13,11 +13,11 @@ import Modal from 'react-native-modal';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import Feather from '@expo/vector-icons/Feather';
-
-import FotoPerfil from '../../assets/FotoPerfil.png';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const [isModalVisible, setModalVisible] = useState(false);
   // Estados para editar campos
@@ -45,6 +45,12 @@ export default function ProfileScreen() {
     toggleModal();
   };
 
+  // Función para cerrar sesión
+  const handleLogout = () => {
+    console.log('Cerrar sesión pulsado');
+    router.replace('/(auth)');
+  };
+
   return (
     <ScreenContainer>
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -55,7 +61,10 @@ export default function ProfileScreen() {
 
         {/* Imagen */}
         <View style={styles.imageContainer}>
-          <Image source={FotoPerfil} style={styles.profileImage} />
+          <Image
+            source={require('../../assets/profiles/FotoPerfil.png')}
+            style={styles.profileImage}
+          />
           <TouchableOpacity style={styles.editImage} onPress={toggleModal}>
             <Feather name="edit" style={styles.editImage} />
           </TouchableOpacity>
@@ -139,6 +148,11 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Botón Cerrar Sesión */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
+
         {/* Modal Imagen */}
         <Modal
           isVisible={isModalVisible}
@@ -169,6 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     padding: SPACING.lg,
     paddingTop: 16,
+    alignItems: 'center', // centrado horizontal
   },
   header: {
     flexDirection: 'row',
@@ -186,8 +201,8 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     width: 130,
-    marginLeft: 0,
     marginBottom: SPACING.xl,
+    alignSelf: 'center', // centra la imagen
   },
   profileImage: {
     width: 130,
@@ -242,10 +257,11 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   DataContainer: {
-    marginLeft: 0,
     marginTop: SPACING.xl,
     fontFamily: TYPOGRAPHY.fontFamily.bold,
     justifyContent: 'center',
+    alignItems: 'center', // centrar horizontal
+    width: '90%',
   },
   inputRow: {
     flexDirection: 'row',
@@ -268,5 +284,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     margin: 5,
     marginBottom: 15,
+  },
+  logoutButton: {
+    marginTop: SPACING.xl,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

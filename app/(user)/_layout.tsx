@@ -25,15 +25,15 @@ export default function UserLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Perfil',
-          }}
-        />
-        <Tabs.Screen
           name="canchas"
           options={{
             title: 'Canchas',
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Perfil',
           }}
         />
       </Tabs>

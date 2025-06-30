@@ -1,467 +1,145 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Image,
-  Alert,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
-import { Feather } from '@expo/vector-icons';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-import MapView, { Marker, Region } from 'react-native-maps';
-import { Picker } from '@react-native-picker/picker';
+// HomeAdministracion.tsx
+import React from 'react';
+import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BarChart, LineChart } from 'react-native-chart-kit';
 
-type Cancha = {
-  id: string;
-  nombre: string;
-  imageUri: string | null;
-  precio: string;
-  descripcion: string;
-  direccionTexto: string; // Dirección escrita
-  ubicacionMapa: { latitude: number; longitude: number } | null; // Coordenadas
-  puntuacion: number;
-  suelo: string; // NUEVO campo suelo
-};
+const screenWidth = Dimensions.get('window').width;
 
-export default function OwnerHomeScreen() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [canchas, setCanchas] = useState<Cancha[]>([]);
-  const [nombre, setNombre] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [precio, setPrecio] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [direccionTexto, setDireccionTexto] = useState('');
-  const [ubicacionMapa, setUbicacionMapa] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [puntuacion, setPuntuacion] = useState('');
-  const [suelo, setSuelo] = useState('cesped'); // Estado para suelo
-
-  const [modalMapaVisible, setModalMapaVisible] = useState(false);
-  const [region, setRegion] = useState<Region>({
-    latitude: -34.6037,
-    longitude: -58.3816,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  });
-
-  const insets = useSafeAreaInsets();
-
-  useEffect(() => {
-    loadCanchas();
-  }, []);
-
-  const loadCanchas = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem('@canchas');
-      if (jsonValue != null) {
-        setCanchas(JSON.parse(jsonValue));
-      }
-    } catch (e) {
-      console.error('Error loading canchas', e);
-    }
-  };
-
-  const saveCanchas = async (newCanchas: Cancha[]) => {
-    try {
-      await AsyncStorage.setItem('@canchas', JSON.stringify(newCanchas));
-      setCanchas(newCanchas);
-    } catch (e) {
-      console.error('Error saving canchas', e);
-    }
-  };
-
-  const pickImage = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permiso para acceder a la galería es necesario!');
-        return;
-      }
-    }
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.7,
-        allowsEditing: true,
-      });
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-      }
-    } catch (e) {
-      console.error('Error picking image:', e);
-    }
-  };
-
-  const handleSaveCancha = () => {
-    if (
-      !nombre.trim() ||
-      !precio.trim() ||
-      !descripcion.trim() ||
-      !direccionTexto.trim() ||
-      !puntuacion.trim() ||
-      !suelo.trim()
-    ) {
-      Alert.alert('Error', 'Por favor, complete todos los campos.');
-      return;
-    }
-
-    const puntuacionNum = Number(puntuacion);
-    if (isNaN(puntuacionNum) || puntuacionNum < 1 || puntuacionNum > 10) {
-      Alert.alert('Error', 'La puntuación debe ser un número entre 1 y 10.');
-      return;
-    }
-
-    const newCancha: Cancha = {
-      id: Date.now().toString(),
-      nombre,
-      imageUri,
-      precio,
-      descripcion,
-      direccionTexto,
-      ubicacionMapa,
-      puntuacion: puntuacionNum,
-      suelo,
-    };
-
-    const newCanchas = [...canchas, newCancha];
-    saveCanchas(newCanchas);
-
-    setNombre('');
-    setImageUri(null);
-    setPrecio('');
-    setDescripcion('');
-    setDireccionTexto('');
-    setUbicacionMapa(null);
-    setPuntuacion('');
-    setSuelo('cesped');
-    setModalVisible(false);
-  };
-
-  const handleBack = () => {
-    router.replace('/(auth)');
-  };
-
-  const abrirSelectorUbicacion = () => {
-    setModalMapaVisible(true);
-  };
-
-  const confirmarUbicacion = () => {
-    if (region) {
-      setUbicacionMapa({
-        latitude: region.latitude,
-        longitude: region.longitude,
-      });
-      setModalMapaVisible(false);
-    } else {
-      alert('Por favor, seleccioná una ubicación en el mapa.');
-    }
-  };
-
+const HomeAdministracion = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        style={[styles.backIcon, { top: insets.top + 10 }]}
-        onPress={handleBack}
-      >
-        <Feather name="arrow-left" size={28} color="#00C853" />
-      </TouchableOpacity>
-
-      <Text style={styles.title}>¡Bienvenido, Propietario!</Text>
-      <Text style={styles.subtitle}>
-        Aquí puedes gestionar tus canchas y reservas.
-      </Text>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.buttonText}>Agregar Cancha</Text>
-      </TouchableOpacity>
-
-      {/* Modal Form */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <Text style={styles.modalTitle}>Agregar Nueva Cancha</Text>
-
-              <TextInput
-                placeholder="Nombre"
-                style={styles.input}
-                value={nombre}
-                onChangeText={setNombre}
-              />
-
-              <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                {imageUri ? (
-                  <Image
-                    source={{ uri: imageUri }}
-                    style={styles.imagePreview}
-                  />
-                ) : (
-                  <Text style={styles.imagePickerText}>
-                    Tocar para seleccionar imagen
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              <TextInput
-                placeholder="Precio"
-                style={styles.input}
-                keyboardType="numeric"
-                value={precio}
-                onChangeText={setPrecio}
-              />
-
-              <TextInput
-                placeholder="Descripción"
-                style={[styles.input, { height: 80 }]}
-                multiline
-                value={descripcion}
-                onChangeText={setDescripcion}
-              />
-
-              <TextInput
-                placeholder="Dirección (ej: Calle Falsa 123)"
-                style={styles.input}
-                value={direccionTexto}
-                onChangeText={setDireccionTexto}
-              />
-
-              <TouchableOpacity
-                style={[styles.button, { marginBottom: 10 }]}
-                onPress={abrirSelectorUbicacion}
-              >
-                <Text style={styles.buttonText}>
-                  Seleccionar ubicación en mapa
-                </Text>
-              </TouchableOpacity>
-
-              {ubicacionMapa && (
-                <Text style={styles.coordenadasText}>
-                  Ubicación seleccionada: {ubicacionMapa.latitude.toFixed(6)},{' '}
-                  {ubicacionMapa.longitude.toFixed(6)}
-                </Text>
-              )}
-
-              {/* NUEVO selector suelo */}
-              <Text
-                // eslint-disable-next-line react-native/no-inline-styles
-                style={{
-                  color: '#00C853',
-                  fontWeight: 'bold',
-                  marginBottom: 6,
-                }}
-              >
-                Seleccione tipo de suelo
-              </Text>
-              <View
-                // eslint-disable-next-line react-native/no-inline-styles
-                style={{
-                  backgroundColor: '#f5f8f5',
-                  borderRadius: 8,
-                  marginBottom: 15,
-                }}
-              >
-                <Picker
-                  selectedValue={suelo}
-                  onValueChange={(itemValue) => setSuelo(itemValue)}
-                  mode="dropdown"
-                  style={{ color: '#00C853' }}
-                >
-                  <Picker.Item label="Césped" value="cesped" />
-                  <Picker.Item label="Hormigón" value="hormigon" />
-                  <Picker.Item label="Madera" value="madera" />
-                </Picker>
-              </View>
-
-              <TextInput
-                placeholder="Puntuación (1-10)"
-                style={styles.input}
-                keyboardType="numeric"
-                value={puntuacion}
-                onChangeText={setPuntuacion}
-                maxLength={2}
-              />
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.button, { flex: 1, marginRight: 10 }]}
-                  onPress={handleSaveCancha}
-                >
-                  <Text style={styles.buttonText}>Guardar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.button, { flex: 1, backgroundColor: '#999' }]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.buttonText}>Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Bienvenido Administrador</Text>
+          <Text style={styles.subtitle}>Resumen general del sistema</Text>
         </View>
-      </Modal>
 
-      {/* Modal mapa */}
-      <Modal
-        visible={modalMapaVisible}
-        animationType="slide"
-        transparent={false}
-      >
-        <View style={{ flex: 1 }}>
-          <MapView
-            style={{ flex: 1 }}
-            region={region}
-            onRegionChangeComplete={(reg) => setRegion(reg)}
-          >
-            <Marker coordinate={region} />
-          </MapView>
+        <View style={styles.statCard}>
+          <Text style={styles.statTitle}>Usuarios Registrados</Text>
+          <Text style={styles.statValue}>1,284</Text>
+        </View>
 
-          <View
-            // eslint-disable-next-line react-native/no-inline-styles
-            style={{
-              position: 'absolute',
-              bottom: 30,
-              left: 20,
-              right: 20,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>Ingresos Semanales (ARS)</Text>
+          <BarChart
+            data={{
+              labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+              datasets: [
+                {
+                  data: [12000, 14500, 9000, 15500, 18000, 22000, 17500],
+                },
+              ],
             }}
-          >
-            <TouchableOpacity
-              style={[
-                styles.button,
-                { flex: 1, marginRight: 10, backgroundColor: '#999' },
-              ]}
-              onPress={() => setModalMapaVisible(false)}
-            >
-              <Text style={styles.buttonText}>Cancelar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { flex: 1, backgroundColor: '#00C853' }]}
-              onPress={confirmarUbicacion}
-            >
-              <Text style={styles.buttonText}>Confirmar</Text>
-            </TouchableOpacity>
-          </View>
+            width={screenWidth - 32}
+            height={220}
+            yAxisLabel="$"
+            chartConfig={chartConfig}
+            style={styles.chart}
+          />
         </View>
-      </Modal>
+
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>
+            Ingresos Estimados del Mes (ARS)
+          </Text>
+          <LineChart
+            data={{
+              labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+              datasets: [
+                {
+                  data: [50000, 65000, 72000, 80000],
+                },
+              ],
+            }}
+            width={screenWidth - 32}
+            height={220}
+            yAxisLabel="$"
+            chartConfig={chartConfig}
+            style={styles.chart}
+          />
+        </View>
+
+        {/* Puedes agregar más secciones o gráficos aquí */}
+      </ScrollView>
     </SafeAreaView>
   );
-}
+};
+
+const chartConfig = {
+  backgroundGradientFrom: '#fff',
+  backgroundGradientTo: '#fff',
+  decimalPlaces: 0,
+  color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  propsForDots: {
+    r: '5',
+    strokeWidth: '2',
+    stroke: '#2196F3',
+  },
+  barPercentage: 0.7,
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 20,
-    paddingBottom: 40,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#f5f7fa',
   },
-  backIcon: {
-    position: 'absolute',
-    left: 20,
-    zIndex: 10,
+  scrollContainer: {
+    padding: 16,
+    flexGrow: 1,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    color: '#3a8d59',
-    textAlign: 'center',
+    color: '#333',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#3a8d59',
-    marginBottom: 20,
-    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 4,
   },
-  button: {
-    backgroundColor: '#00C853',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
+  statCard: {
+    backgroundColor: '#2196F3',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
     alignItems: 'center',
-    marginBottom: 20,
   },
-  buttonText: {
+  statTitle: {
+    fontSize: 16,
     color: '#fff',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  chartContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  chartTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#333',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
-    color: '#00C853',
-  },
-  imagePicker: {
-    backgroundColor: '#e0e8df',
-    height: 150,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  imagePickerText: {
-    color: '#3a8d59',
-    fontSize: 16,
-  },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-  },
-  input: {
-    backgroundColor: '#f5f8f5',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 15,
-    color: '#00C853',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    marginTop: 10,
-  },
-  coordenadasText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    color: '#555',
-    marginBottom: 15,
-    textAlign: 'center',
+  chart: {
+    borderRadius: 12,
   },
 });
+
+export default HomeAdministracion;

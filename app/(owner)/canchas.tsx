@@ -18,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { Picker } from '@react-native-picker/picker';
-import CrearCanchaForm from './CrearCanchaForm';
 
 type Cancha = {
   id: string;
@@ -219,69 +218,72 @@ export default function CanchasScreen() {
 
   const renderCancha = ({ item }: { item: Cancha }) => (
     <TouchableOpacity
-      style={styles.canchaItem}
-      activeOpacity={0.8}
+      style={styles.cardContainer}
+      activeOpacity={0.9}
       onPress={() => handleMostrarDetalle(item)}
     >
-      <View style={styles.imageContainer}>
+      <View style={styles.cardImageWrapper}>
         {item.imageUri ? (
-          <Image
-            source={{ uri: item.imageUri }}
-            style={styles.canchaImage}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: item.imageUri }} style={styles.cardImage} />
         ) : (
-          <View style={[styles.canchaImage, styles.noImage]}>
+          <View style={[styles.cardImage, styles.noImage]}>
             <Text style={{ color: '#999' }}>Sin imagen</Text>
           </View>
         )}
+
+        {/* Badge de puntuación sobre la imagen */}
+        <View style={styles.ratingBadge}>
+          <Ionicons name="star" size={14} color="#fff" />
+          <Text style={styles.ratingText}>{item.puntuacion}/10</Text>
+        </View>
       </View>
-      <View style={styles.canchaInfo}>
-        <Text style={styles.canchaNombre} numberOfLines={1}>
+
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle} numberOfLines={1}>
           {item.nombre}
         </Text>
-        <Text style={styles.precio}>${item.precio}</Text>
-        <Text style={styles.descripcion} numberOfLines={2}>
-          {item.descripcion}
-        </Text>
-        <Text style={styles.direccion} numberOfLines={1}>
+        <Text style={styles.cardDireccion} numberOfLines={1}>
           {item.direccionTexto}
         </Text>
-        {item.suelo && (
-          <Text style={styles.sueloText}>Suelo: {item.suelo}</Text>
-        )}
-        <View style={styles.puntuacionContainer}>
-          <Ionicons name="star" size={16} color="#f4c10f" />
-          <Text style={styles.puntuacionText}>{item.puntuacion}/10</Text>
-        </View>
 
-        {/* Botones editar y eliminar */}
-        <View style={styles.accionesContainer}>
-          <TouchableOpacity
-            style={styles.botonEditar}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleEditarCancha(item);
-            }}
-          >
-            <Feather name="edit-3" size={16} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.botonEliminar}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleEliminarCancha(item.id);
-            }}
-          >
-            <Feather name="trash-2" size={16} color="white" />
-          </TouchableOpacity>
+        {item.suelo && (
+          <View style={styles.cardRow}>
+            <Ionicons name="layers-outline" size={16} color="#2196f3" />
+            <Text style={styles.cardText}>Suelo: {item.suelo}</Text>
+          </View>
+        )}
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardPrecio}>${item.precio}</Text>
+
+          <View style={styles.cardButtons}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleEditarCancha(item);
+              }}
+            >
+              <Feather name="edit" size={16} color="#fff" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleEliminarCancha(item.id);
+              }}
+            >
+              <Feather name="trash" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <TextInput
           style={{
@@ -373,6 +375,7 @@ export default function CanchasScreen() {
       </View>
 
       {/* Modal Detalle */}
+      {/* Modal Detalle Mejorado */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -380,8 +383,18 @@ export default function CanchasScreen() {
         onRequestClose={() => setModalDetalleVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, { padding: 20 }]}>
-            <ScrollView>
+          <View style={styles.modalDetalleContainer}>
+            {/* Botón cerrar en esquina superior derecha */}
+            <TouchableOpacity
+              style={[styles.modalCloseButton, { backgroundColor: '#f44336' }]}
+              onPress={() => setModalDetalleVisible(false)}
+            >
+              <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
+
+            <ScrollView
+              contentContainerStyle={{ paddingBottom: 30, paddingTop: 40 }}
+            >
               {canchaDetalle && (
                 <>
                   <View style={styles.detalleImageContainer}>
@@ -396,35 +409,40 @@ export default function CanchasScreen() {
                         <Text style={{ color: '#999' }}>Sin imagen</Text>
                       </View>
                     )}
+                    {/* Badge puntuación */}
+                    <View style={styles.detalleRatingBadge}>
+                      <Ionicons name="star" size={18} color="#fff" />
+                      <Text style={styles.detalleRatingText}>
+                        {canchaDetalle.puntuacion}/10
+                      </Text>
+                    </View>
                   </View>
+
                   <Text style={styles.detalleNombre}>
                     {canchaDetalle.nombre}
                   </Text>
+
                   <Text style={styles.detallePrecio}>
                     ${canchaDetalle.precio}
                   </Text>
+
                   <Text style={styles.detalleDescripcion}>
                     {canchaDetalle.descripcion}
                   </Text>
-                  <Text style={styles.detalleDireccion}>
-                    Dirección: {canchaDetalle.direccionTexto}
-                  </Text>
-                  {canchaDetalle.suelo && (
-                    <Text
-                      style={[
-                        styles.detalleSuelo,
-                        { textAlign: 'center', marginBottom: 10 },
-                      ]}
-                    >
-                      Suelo: {canchaDetalle.suelo}
-                    </Text>
-                  )}
-                  <View style={styles.puntuacionContainer}>
-                    <Ionicons name="star" size={20} color="#f4c10f" />
-                    <Text style={[styles.puntuacionText, { fontSize: 18 }]}>
-                      {canchaDetalle.puntuacion}/10
+
+                  <View style={styles.infoBox}>
+                    <Text style={styles.infoLabel}>Dirección:</Text>
+                    <Text style={styles.infoText}>
+                      {canchaDetalle.direccionTexto}
                     </Text>
                   </View>
+
+                  {canchaDetalle.suelo && (
+                    <View style={styles.infoBox}>
+                      <Text style={styles.infoLabel}>Suelo:</Text>
+                      <Text style={styles.infoText}>{canchaDetalle.suelo}</Text>
+                    </View>
+                  )}
 
                   {canchaDetalle.ubicacionMapa && (
                     <View style={styles.mapaContainer}>
@@ -441,13 +459,6 @@ export default function CanchasScreen() {
                       </MapView>
                     </View>
                   )}
-
-                  <TouchableOpacity
-                    style={[styles.modalBtnCancelar, { marginTop: 20 }]}
-                    onPress={() => setModalDetalleVisible(false)}
-                  >
-                    <Text style={styles.modalBtnText}>Cerrar</Text>
-                  </TouchableOpacity>
                 </>
               )}
             </ScrollView>
@@ -570,91 +581,139 @@ export default function CanchasScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f2f2f2' },
-  container: { flex: 1, padding: 20 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f9f9f9',
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
   emptyText: {
     fontSize: 18,
-    color: '#2c6e49',
+    color: '#888',
     textAlign: 'center',
-    marginTop: 50,
+    marginTop: 60,
   },
-  listContainer: { paddingBottom: 20 },
-  canchaItem: {
-    backgroundColor: '#fff',
+  listContainer: {
+    paddingBottom: 80,
+  },
+  cardContainer: {
+    backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 16,
     marginBottom: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cardImageWrapper: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#f0f0f0',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  noImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#f4c10f',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-  imageContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginRight: 16,
-    backgroundColor: '#eee',
-  },
-  canchaImage: { width: '100%', height: '100%' },
-  noImage: { justifyContent: 'center', alignItems: 'center' },
-  canchaInfo: { flex: 1 },
-  canchaNombre: {
-    fontSize: 22,
+  ratingText: {
+    marginLeft: 4,
+    color: '#fff',
     fontWeight: '700',
-    color: '#222',
-    marginBottom: 6,
+    fontSize: 13,
   },
-  precio: {
+  cardContent: {
+    padding: 14,
+  },
+  cardTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#00C853',
-    marginBottom: 6,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 4,
   },
-  descripcion: { fontSize: 14, color: '#444', marginBottom: 4 },
-  direccion: {
+  cardDireccion: {
     fontSize: 13,
     color: '#666',
     fontStyle: 'italic',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  puntuacionContainer: {
+  cardRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
   },
-  puntuacionText: {
+  cardText: {
     marginLeft: 6,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
+    fontSize: 14,
+    color: '#333',
   },
-  accionesContainer: {
+  cardFooter: {
     flexDirection: 'row',
-    marginTop: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
   },
-  botonEditar: {
+  cardPrecio: {
+    backgroundColor: '#00C853',
+    color: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    fontSize: 16,
+    fontWeight: '700',
+    overflow: 'hidden',
+  },
+  cardButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  editButton: {
     backgroundColor: '#3D8BFF',
     padding: 10,
-    borderRadius: 10,
-    marginRight: 12,
+    borderRadius: 8,
+    marginRight: 10,
   },
-  botonEliminar: {
+  deleteButton: {
     backgroundColor: '#E14434',
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     padding: 20,
   },
-  modalContainer: { backgroundColor: 'white', borderRadius: 14, padding: 24 },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 24,
+    maxHeight: '90%',
+  },
   detalleImageContainer: {
     width: '100%',
     height: 220,
@@ -663,51 +722,42 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginBottom: 16,
   },
-  detalleImage: { width: '100%', height: '100%' },
+  detalleImage: {
+    width: '100%',
+    height: '100%',
+  },
   detalleNombre: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#111',
     marginBottom: 8,
     textAlign: 'center',
   },
   detallePrecio: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#00C853',
-    marginBottom: 12,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#00c853',
+    marginBottom: 10,
     textAlign: 'center',
   },
   detalleDescripcion: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#333',
     marginBottom: 12,
     textAlign: 'justify',
   },
   detalleDireccion: {
-    fontSize: 14,
+    fontSize: 13,
     fontStyle: 'italic',
-    color: '#555',
-    marginBottom: 20,
+    color: '#666',
+    marginBottom: 16,
     textAlign: 'center',
   },
-  modalBtnCancelar: {
-    backgroundColor: '#E14434',
-    padding: 14,
-    borderRadius: 8,
-    flex: 1,
-  },
-  modalBtnGuardar: {
-    backgroundColor: '#3D8BFF',
-    padding: 14,
-    borderRadius: 8,
-    flex: 1,
-  },
-  modalBtnText: {
-    color: 'white',
+  detalleSuelo: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#388e3c',
     textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   mapaContainer: {
     height: 200,
@@ -715,17 +765,34 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 10,
   },
+  modalBtnCancelar: {
+    backgroundColor: '#f44336',
+    padding: 14,
+    borderRadius: 8,
+  },
+  modalBtnGuardar: {
+    backgroundColor: '#2196f3',
+    padding: 14,
+    borderRadius: 8,
+  },
+  modalBtnText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 16,
+  },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     marginBottom: 16,
     textAlign: 'center',
+    color: '#333',
   },
   label: {
     fontWeight: '600',
     marginBottom: 6,
     fontSize: 14,
-    color: '#222',
+    color: '#444',
   },
   input: {
     borderWidth: 1,
@@ -735,21 +802,84 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 12,
     fontSize: 16,
+    backgroundColor: '#fff',
   },
   buttonsRow: {
     flexDirection: 'row',
-    marginTop: 8,
+    marginTop: 12,
   },
-  sueloText: {
-    fontSize: 14,
-    color: '#00796b',
-    fontWeight: '600',
-    marginBottom: 6,
+  modalDetalleContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    maxHeight: '85%',
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
   },
-
-  detalleSuelo: {
-    fontSize: 16,
-    color: '#00796b',
+  detalleRatingBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#f4c10f',
+    borderRadius: 25,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  detalleRatingText: {
+    color: '#fff',
     fontWeight: '700',
+    fontSize: 16,
+    marginLeft: 6,
+  },
+  infoBox: {
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 14,
+  },
+  infoLabel: {
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+    fontSize: 15,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  modalBtnCerrar: {
+    backgroundColor: '#2196f3',
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: '#e0e0e0',
+    opacity: 0.9,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
   },
 });

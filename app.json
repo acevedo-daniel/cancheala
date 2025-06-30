@@ -8,11 +8,11 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/background.jpg",
+      "image": "./assets/backgrounds/background.jpg",
       "resizeMode": "cover",
       "backgroundColor": "#00C853"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": ["*/"],
     "ios": {
       "supportsTablet": true
     },

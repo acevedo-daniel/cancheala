@@ -16,6 +16,7 @@ import { Picker } from '@react-native-picker/picker';
 import MapView, { Marker, Region } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router'; // <-- Importa useRouter
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type Cancha = {
   id: string;
@@ -157,7 +158,7 @@ export default function CrearCanchaForm() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 20 }}
@@ -302,7 +303,7 @@ export default function CrearCanchaForm() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -378,5 +379,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 10,
     paddingHorizontal: 0,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#ffffff',
   },
 });

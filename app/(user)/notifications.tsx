@@ -149,7 +149,7 @@ export default function NotificationsScreen() {
                   {selectedEvent.image && (
                     <View style={styles.eventImageContainer}>
                       <Image 
-                        source={require('../../assets/padel1.png')} 
+                        source={selectedEvent.image as any} 
                         style={styles.eventImage}
                         resizeMode="cover"
                       />
