@@ -22,6 +22,7 @@ import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { SPACING, COLORS } from '../../constants';
+import { useAppStore } from '../../store';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const [selectedHours, setSelectedHours] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
+  const location = useAppStore(state => state.location);
 
   // Resetear categoría seleccionada cuando vuelvas al home
   useFocusEffect(
@@ -159,7 +161,9 @@ export default function HomeScreen() {
       <View style={{ backgroundColor: '#fff', paddingBottom: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingTop: 18, marginBottom: 10 }}>
           <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => router.push('/(user)/location-selection')}>
-            <Text style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}>C. Falucho 265</Text>
+            <Text style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}>
+              {location?.address || 'Selecciona tu ubicación'}
+            </Text>
             <Ionicons name="chevron-down" size={20} color="#181028" style={{ marginLeft: 4 }} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/(user)/notifications')}>
