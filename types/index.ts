@@ -1,5 +1,4 @@
-
- // Tipos de navegación
+// Tipos de navegación
 export type RootStackParamList = {
   '(auth)': undefined;
   '(user)': undefined;
@@ -71,6 +70,12 @@ export type Space = {
   location: string;
   address: string;
   image: ImageSourcePropType; // ✅ Tipo correcto
+  specs?: {
+    price: number;
+    available: boolean;
+    reviews: number;
+    services: { icon: string; label: string }[];
+  };
 };
 
 

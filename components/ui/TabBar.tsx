@@ -35,24 +35,42 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <BottomSafeArea>
-      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-        {TABS.map((tab, index) => (
-          <Tab
-            key={tab.route}
-            label={tab.label}
-            icon={
-              <Ionicons
-                name={tab.icon}
-                size={24}
-                color={
-                  state.index === index ? COLORS.primary : COLORS.text.secondary
-                }
-              />
-            }
-            isActive={state.index === index}
-            onPress={() => navigation.navigate(tab.route)}
-          />
-        ))}
+      <View style={{
+        alignItems: 'center',
+        marginBottom: 12,
+      }}>
+        <View style={[
+          styles.container,
+          {
+            paddingBottom: Math.max(insets.bottom, 8),
+            borderRadius: 24,
+            marginHorizontal: 16,
+            width: '92%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 12,
+            elevation: 8,
+          },
+        ]}>
+          {TABS.map((tab, index) => (
+            <Tab
+              key={tab.route}
+              label={tab.label}
+              icon={
+                <Ionicons
+                  name={tab.icon}
+                  size={24}
+                  color={
+                    state.index === index ? COLORS.primary : COLORS.text.secondary
+                  }
+                />
+              }
+              isActive={state.index === index}
+              onPress={() => navigation.navigate(tab.route)}
+            />
+          ))}
+        </View>
       </View>
     </BottomSafeArea>
   );

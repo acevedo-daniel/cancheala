@@ -63,6 +63,16 @@ export const SPACES = [
     location: 'San Lorenzo 555, Resistencia Chaco',
     address: 'Faluco 257',
     image: require('../assets/padel1.png'),
+    specs: {
+      price: 10000,
+      available: true,
+      reviews: 24,
+      services: [
+        { icon: 'ios-shirt', label: 'Vestuarios' },
+        { icon: 'ios-bulb', label: 'Iluminación LED' },
+        { icon: 'ios-car', label: 'Estacionamiento gratuito' },
+      ],
+    },
   },
   {
     id: '2',
@@ -71,6 +81,17 @@ export const SPACES = [
     location: 'Jose Hernandez 567, Resistencia Chaco',
     address: 'Av. Rivadavia 1234',
     image: require('../assets/padel2.png'),
+    specs: {
+      price: 12000,
+      available: true,
+      reviews: 12,
+      services: [
+        { icon: 'ios-shirt', label: 'Vestuarios' },
+        { icon: 'ios-bulb', label: 'Iluminación LED' },
+        { icon: 'ios-wifi', label: 'Wi-Fi gratis' },
+        { icon: 'ios-water', label: 'Hidratación' },
+      ],
+    },
   },
   {
     id: '3',
@@ -79,6 +100,15 @@ export const SPACES = [
     location: 'Av Hernandarias, Resistencia Chaco',
     address: 'Calle Principal 789',
     image: require('../assets/padel3.png'),
+    specs: {
+      price: 9000,
+      available: false,
+      reviews: 8,
+      services: [
+        { icon: 'ios-shirt', label: 'Vestuarios' },
+        { icon: 'ios-bulb', label: 'Iluminación LED' },
+      ],
+    },
   },
 ];
 
