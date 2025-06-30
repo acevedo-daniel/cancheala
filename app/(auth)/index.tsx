@@ -9,6 +9,7 @@ import {
   ImageBackground,
   Dimensions,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -86,6 +87,7 @@ export default function AuthScreen() {
         </ImageBackground>
 
         <View style={styles.content}>
+          <Text style={styles.loginTitle}>Elegí cómo querés ingresar</Text>
           <TouchableOpacity
             style={[styles.button, styles.googleButton]}
             onPress={handleGoogleLogin}
@@ -102,13 +104,12 @@ export default function AuthScreen() {
             style={[styles.button, styles.emailButton]}
             onPress={handleEmailLogin}
           >
-            <Text style={[styles.buttonText, styles.emailButtonText]}>
-              Continuar con correo electrónico
-            </Text>
+            <Ionicons name="mail-outline" size={20} color="#fff" style={styles.leftIcon} />
+            <Text style={[styles.buttonText, styles.emailButtonText]}>Continuar con correo electrónico</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.providerButton}
+            style={styles.providerTextButton}
             onPress={handleProviderAccess}
           >
             <Text style={styles.providerText}>
@@ -164,48 +165,67 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: SPACING.xl,
+    paddingHorizontal: 24,
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: '#fff',
+  },
+  loginTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#18102B',
+    textAlign: 'center',
+    marginBottom: 28,
+    letterSpacing: 0.1,
   },
   button: {
     width: '100%',
-    padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
+    borderRadius: 32,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    marginBottom: 18,
+    minHeight: 56,
+    shadowColor: 'transparent',
   },
   googleButton: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#f6f6f8',
   },
   emailButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#00C853',
+  },
+  providerTextButton: {
+    marginTop: 2,
+    paddingVertical: 6,
+    width: '100%',
   },
   buttonText: {
-    fontSize: TYPOGRAPHY.fontSize.md,
-    fontFamily: TYPOGRAPHY.fontFamily.semiBold,
-    color: COLORS.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#18102B',
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    letterSpacing: 0.1,
   },
   emailButtonText: {
-    color: COLORS.text.light,
-  },
-  googleIcon: {
-    width: 18,
-    height: 18,
-    marginRight: SPACING.md,
-  },
-  providerButton: {
-    marginTop: SPACING.md,
+    color: '#fff',
   },
   providerText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    fontFamily: TYPOGRAPHY.fontFamily.medium,
-    color: COLORS.text.secondary,
+    color: '#444',
     textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '400',
+    textDecorationLine: 'none',
+  },
+  googleIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 12,
+  },
+  leftIcon: {
+    marginRight: 12,
   },
 });
