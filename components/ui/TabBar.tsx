@@ -40,15 +40,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
           <Tab
             key={tab.route}
             label={tab.label}
-            icon={
-              <Ionicons
-                name={tab.icon}
-                size={24}
-                color={
-                  state.index === index ? COLORS.primary : COLORS.text.secondary
-                }
-              />
-            }
+            icon={tab.icon}
             isActive={state.index === index}
             onPress={() => navigation.navigate(tab.route)}
           />
@@ -61,9 +53,12 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: COLORS.background,
+    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    ...SHADOWS.sm,
+    borderTopColor: '#EDEDF0',
+    minHeight: 48,
+    paddingVertical: 4,
+    shadowColor: 'transparent',
+    elevation: 0,
   },
 });

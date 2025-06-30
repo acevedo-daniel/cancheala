@@ -13,16 +13,14 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // Valores calculados para el área segura inferior
 const getBottomSafeAreaMargins = () => {
   if (Platform.OS === 'ios') {
-    // iOS: Home indicator + margen extra
     return {
-      bottom: 34 + 8, // Home indicator + 8px extra
-      horizontal: 8,
+      bottom: 16, // Restaurado
+      horizontal: 16,
     };
   } else {
-    // Android: Navigation bar + margen extra
     return {
-      bottom: 16 + 8, // Navigation bar + 8px extra
-      horizontal: 8,
+      bottom: 8, // Restaurado
+      horizontal: 16,
     };
   }
 };
