@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Cancheala",
+    "name": "",
     "slug": "cancheala",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,7 +12,8 @@
       "resizeMode": "cover",
       "backgroundColor": "#00C853"
     },
-    "assetBundlePatterns": ["*/"],
+    "assetBundlePatterns": ["**/*"],
+
     "ios": {
       "supportsTablet": true
     },
