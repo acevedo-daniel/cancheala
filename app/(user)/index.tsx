@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
 import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
@@ -63,7 +64,7 @@ export default function HomeScreen() {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedDetailSpace, setSelectedDetailSpace] = useState<Space | null>(null);
 
-  const { reservas, favoritos: favoritosCtx, addReserva } = useContext(ReservationsContext);
+  const { reservations, setReservations } = useReservations();
 
   // Agrupa reservas y guarda la imagen
   const groupedReservationsObj = reservas.reduce((acc, curr) => {
@@ -111,40 +112,45 @@ export default function HomeScreen() {
 
   const renderBanner = ({ item }: { item: Banner }) => (
     <View style={styles.banner}>
-      <Text style={styles.bannerText}>{item.title}</Text>
+      {item.image && (
+        <Image
+          source={item.image}
+          style={styles.bannerImage}
+          resizeMode="cover"
+        />
+      )}
+      <View style={styles.bannerOverlay}>
+        <Text style={styles.bannerText}>{item.title}</Text>
+      </View>
     </View>
   );
 
+  const renderCategory = ({ item }: { item: Category }) => (
+    <TouchableOpacity
+      style={[
+        styles.categoryCard,
+        selectedCategory === item.id && styles.selectedCategory,
+      ]}
+      onPress={() => setSelectedCategory(item.id)}
+    >
+      <View style={styles.categoryIcon}>
+        <Ionicons name={item.icon as any} size={24} color="#000" />
+      </View>
+      <Text style={styles.categoryText}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
   const renderSpace = ({ item }: { item: Space }) => (
-    <TouchableOpacity activeOpacity={0.93} onPress={() => handleCardPress(item)}>
-      <View style={styles.spaceCard}>
-        <Image source={item.image} style={styles.spaceImage} resizeMode="cover" />
-        <View style={{ flex: 1, justifyContent: 'center', marginRight: 8 }}>
-          <Text style={styles.spaceName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.spaceLocation} numberOfLines={2}>{item.location}</Text>
-          <View style={styles.spaceActionsRowNew}>
-            <TouchableOpacity
-              style={styles.reservarBtn}
-              onPress={(e) => {
-                e.stopPropagation && e.stopPropagation();
-                handleReservePress(item);
-              }}
-            >
-              <Text style={styles.reservarBtnText}>Reservar</Text>
-            </TouchableOpacity>
-            <View style={styles.ratingRow}>
-              <Ionicons name="star" size={18} color="#FFD700" style={{ marginRight: 2 }} />
-              <Text style={styles.ratingText}>{item.rating}</Text>
-            </View>
-            <TouchableOpacity onPress={() => handleToggleFavorito(item.id)}>
-              <Ionicons
-                name={favoritos.includes(item.id) ? 'heart' : 'heart-outline'}
-                size={22}
-                color={favoritos.includes(item.id) ? '#e53935' : '#bbb'}
-                style={{ marginLeft: 8 }}
-              />
-            </TouchableOpacity>
-          </View>
+    <TouchableOpacity
+      style={styles.spaceCard}
+      onPress={() => handleReservePress(item)}
+    >
+      <Image source={item.image} style={styles.spaceImage} resizeMode="cover" />
+      <View style={styles.spaceInfo}>
+        <Text style={styles.spaceName}>{item.name}</Text>
+        <View style={styles.spaceRating}>
+          <Ionicons name="star" size={16} color="#FFD700" />
+          <Text style={styles.ratingText}>{item.rating}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -174,7 +180,7 @@ export default function HomeScreen() {
           {/* Search bar */}
           <TouchableOpacity
             style={styles.searchBar}
-            onPress={() => router.push('/buscar')}
+            onPress={() => router.push('/(user)/advanced-search')}
           >
             <Ionicons name="search" size={20} color="#666" />
             <Text style={styles.searchText}>Buscar canchas, deportes...</Text>
@@ -260,7 +266,7 @@ export default function HomeScreen() {
                   <TouchableOpacity style={styles.spaceCard} onPress={() => router.push(`/cancha/${item.id}`)}>
                     <Image
                       source={
-                        item.image || require('../../assets/placeholder.png')
+                        item.image || require('../../assets/images/placeholder.png')
                       }
                       style={styles.spaceImage}
                       resizeMode="cover"
@@ -280,23 +286,48 @@ export default function HomeScreen() {
 
           {/* Quick Access */}
           <View style={styles.quickAccess}>
-            <TouchableOpacity style={styles.quickAccessCard}>
-              <View style={styles.quickAccessIcon}>
-                <Ionicons name="map-outline" size={24} color="#000" />
-              </View>
-              <Text style={styles.quickAccessText}>Espacios</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickAccessCard}>
-              <View style={styles.quickAccessIcon}>
-                <Ionicons name="people-outline" size={24} color="#000" />
-              </View>
+            <View style={styles.quickAccessItem}>
+              <TouchableOpacity 
+                style={styles.quickAccessCard}
+                onPress={() => router.push('/(user)/canchas')}
+              >
+                <Image
+                  source={require('../../assets/images/red-negra-tennis-tennis.jpg')}
+                  style={styles.quickAccessImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+              <Text style={styles.quickAccessText}>Canchas</Text>
+            </View>
+            
+            <View style={styles.quickAccessItem}>
+              <TouchableOpacity style={styles.quickAccessCard}>
+                <Image
+                  source={require('../../assets/images/chica-espaldas-tennis.jpg')}
+                  style={styles.quickAccessImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
               <Text style={styles.quickAccessText}>Matchmaking</Text>
-            </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Canchas Disponibles */}
+          {/* Categorías */}
+          <View style={styles.categoriesSection}>
+            <Text style={styles.sectionTitle}>Categorías</Text>
+            <FlatList
+              data={CATEGORIES}
+              renderItem={renderCategory}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoriesList}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
+
+          {/* Cerca de ti */}
           <View style={styles.spacesSection}>
-            <Text style={styles.sectionTitle}>Canchas Disponibles</Text>
+            <Text style={styles.sectionTitle}>Cerca de ti</Text>
             <FlatList
               data={SPACES}
               keyExtractor={(item) => item.id}
@@ -509,11 +540,21 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     marginVertical: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   searchText: {
     marginLeft: 8,
@@ -538,8 +579,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
   },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+  },
   bannerText: {
-    color: '#000',
+    color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -575,28 +632,72 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
-  quickAccessCard: {
+  quickAccessItem: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-    borderRadius: 12,
+    flexDirection: 'column',
     alignItems: 'center',
     marginHorizontal: 8,
   },
 
-  quickAccessIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+  quickAccessCard: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  quickAccessImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
 
   quickAccessText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 10,
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  categoriesSection: {
+    marginBottom: 20,
+  },
+
+  categoriesList: {
+    marginBottom: 10,
+  },
+
+  categoryCard: {
+    backgroundColor: '#f2f2f2',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    marginRight: 16,
+    flexDirection: 'column',
+    minWidth: 80,
+  },
+  selectedCategory: {
+    backgroundColor: '#007bff',
+  },
+  categoryIcon: {
+    marginBottom: 6,
+  },
+  categoryText: {
     fontSize: 14,
-    fontWeight: '500',
     color: '#000',
+    fontWeight: '500',
     marginTop: 8,
   },
 

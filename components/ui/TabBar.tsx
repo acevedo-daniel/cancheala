@@ -19,14 +19,14 @@ const TABS = [
     route: 'my-reservations',
   },
   {
-    label: 'Perfil',
-    icon: 'person',
-    route: 'profile',
-  },
-  {
     label: 'Canchas',
     icon: 'tennisball', // Icono para canchas
     route: 'canchas',
+  },
+  {
+    label: 'Perfil',
+    icon: 'person',
+    route: 'profile',
   },
 ] as const;
 

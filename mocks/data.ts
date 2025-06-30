@@ -43,15 +43,32 @@ export const MOCK_LOCATIONS: Location[] = [
 ];
 
 export const BANNERS: Banner[] = [
-  { id: '1', title: 'Promociones destacadas', image: null },
-  { id: '2', title: 'Nuevos espacios', image: null },
-  { id: '3', title: 'Eventos especiales', image: null },
-  { id: '4', title: 'Espacios populares', image: null },
+  { 
+    id: '1', 
+    title: 'Promociones destacadas', 
+    image: require('../assets/images/chica-posando-lentes-tennis.jpg') 
+  },
+  { 
+    id: '2', 
+    title: 'Nuevos espacios', 
+    image: require('../assets/images/chica-espaldas-tennis.jpg') 
+  },
+  { 
+    id: '3', 
+    title: 'Eventos especiales', 
+    image: require('../assets/images/chica-vestido-tennis.jpg') 
+  },
+  { 
+    id: '4', 
+    title: 'Espacios populares', 
+    image: require('../assets/images/alejandro-galan-federico-chingotto-qatar-major-padel-2025.avif') 
+  },
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: '2', name: 'Tenis', icon: 'tennisball-outline' },
-  { id: '4', name: 'Pádel', icon: 'baseball-outline' },
+  { id: '1', name: 'Más cerca', icon: 'location-outline' },
+  { id: '2', name: 'Mejor precio', icon: 'pricetag-outline' },
+  { id: '3', name: 'Disponible ahora', icon: 'time-outline' },
 ];
 
 
@@ -63,16 +80,6 @@ export const SPACES = [
     location: 'San Lorenzo 555, Resistencia Chaco',
     address: 'Faluco 257',
     image: require('../assets/padel1.png'),
-    specs: {
-      price: 10000,
-      available: true,
-      reviews: 24,
-      services: [
-        { icon: 'ios-shirt', label: 'Vestuarios' },
-        { icon: 'ios-bulb', label: 'Iluminación LED' },
-        { icon: 'ios-car', label: 'Estacionamiento gratuito' },
-      ],
-    },
   },
   {
     id: '2',
@@ -81,17 +88,6 @@ export const SPACES = [
     location: 'Jose Hernandez 567, Resistencia Chaco',
     address: 'Av. Rivadavia 1234',
     image: require('../assets/padel2.png'),
-    specs: {
-      price: 12000,
-      available: true,
-      reviews: 12,
-      services: [
-        { icon: 'ios-shirt', label: 'Vestuarios' },
-        { icon: 'ios-bulb', label: 'Iluminación LED' },
-        { icon: 'ios-wifi', label: 'Wi-Fi gratis' },
-        { icon: 'ios-water', label: 'Hidratación' },
-      ],
-    },
   },
   {
     id: '3',
@@ -100,15 +96,6 @@ export const SPACES = [
     location: 'Av Hernandarias, Resistencia Chaco',
     address: 'Calle Principal 789',
     image: require('../assets/padel3.png'),
-    specs: {
-      price: 9000,
-      available: false,
-      reviews: 8,
-      services: [
-        { icon: 'ios-shirt', label: 'Vestuarios' },
-        { icon: 'ios-bulb', label: 'Iluminación LED' },
-      ],
-    },
   },
 ];
 
@@ -119,7 +106,7 @@ export const EVENTS: Event[] = [
     title: '🎾 Torneo de Pádel Primavera 2025',
     description: '¡Participa en nuestro torneo de pádel de primavera! Premios para los ganadores y descuentos especiales para participantes. Inscripciones abiertas hasta el 15 de marzo.',
     type: EventType.TOURNAMENT,
-    image: require('../assets/padel1.png'),
+    image: require('../assets/images/padel1.png'),
     date: '2025-03-20',
     startDate: '2025-03-20',
     endDate: '2025-03-22',
@@ -133,7 +120,7 @@ export const EVENTS: Event[] = [
     title: '🔥 50% OFF en Canchas Premium',
     description: 'Aprovecha nuestro descuento especial del 50% en todas las canchas premium durante los fines de semana. Válido hasta el 28 de febrero.',
     type: EventType.PROMOTION,
-    image: require('../assets/padel2.png'),
+    image: require('../assets/images/padel2.png'),
     date: '2025-02-28',
     startDate: '2025-02-01',
     endDate: '2025-02-28',
@@ -146,7 +133,7 @@ export const EVENTS: Event[] = [
     title: '🏆 Liga Amateur de Pádel 2025',
     description: 'Inscríbete en nuestra liga amateur de pádel. Compite durante 8 semanas y gana premios increíbles. Niveles: principiante, intermedio y avanzado.',
     type: EventType.TOURNAMENT,
-    image: require('../assets/padel3.png'),
+    image: require('../assets/images/padel3.png'),
     date: '2025-04-01',
     startDate: '2025-04-01',
     endDate: '2025-05-20',
@@ -160,7 +147,7 @@ export const EVENTS: Event[] = [
     title: '🆕 Nuevas Canchas de Pádel',
     description: '¡Estrenamos 4 nuevas canchas de pádel con tecnología de última generación! Reserva tu turno inaugural con un 25% de descuento.',
     type: EventType.NEWS,
-    image: require('../assets/padel1.png'),
+    image: require('../assets/images/padel1.png'),
     date: '2025-02-15',
     startDate: '2025-02-15',
     endDate: '2025-03-15',
@@ -174,7 +161,7 @@ export const EVENTS: Event[] = [
     title: '⚡ Oferta Flash: 2x1 en Reservas',
     description: '¡Oferta flash por tiempo limitado! Reserva 2 horas y paga solo 1. Válido solo para hoy de 18:00 a 22:00.',
     type: EventType.SPECIAL_OFFER,
-    image: require('../assets/padel2.png'),
+    image: require('../assets/images/padel2.png'),
     date: '2025-01-25',
     startDate: '2025-01-25T18:00:00Z',
     endDate: '2025-01-25T22:00:00Z',

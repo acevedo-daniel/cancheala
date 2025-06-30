@@ -62,15 +62,14 @@ export default function AuthScreen() {
   };
 
   const handleProviderAccess = () => {
-    // Por ahora este botón no hace nada, como se especifica en el documento
-    console.log('Acceso para proveedores - No implementado en esta fase');
+    router.replace('/(owner)');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
         <ImageBackground
-          source={require('../../assets/background.jpg')}
+          source={require('../../assets/backgrounds/background.jpg')}
           style={styles.backgroundImage}
           imageStyle={styles.backgroundImageStyle}
         >

@@ -49,10 +49,12 @@ export interface Location {
   };
 }
 
+import { ImageSourcePropType } from 'react-native';
+
 export interface Banner {
   id: string;
   title: string;
-  image: string | null;
+  image: ImageSourcePropType | null;
 }
 
 export interface Category {
@@ -60,8 +62,6 @@ export interface Category {
   name: string;
   icon: string;
 }
-
-import { ImageSourcePropType } from 'react-native';
 
 export type Space = {
   id: string;
@@ -77,7 +77,6 @@ export type Space = {
     services: { icon: string; label: string }[];
   };
 };
-
 
 export interface Reservation {
   id: string;

@@ -1,5 +1,6 @@
 import React, { createContext, useState } from 'react';
 
+<<<<<<< HEAD
 export const ReservationsContext = createContext({
   reservas: [],
   favoritos: [],
@@ -38,6 +39,16 @@ const mockCanchas = [
 export function ReservationsProvider({ children }) {
   const [reservas, setReservas] = useState([]);
   const [favoritos, setFavoritos] = useState([1, 2]);
+=======
+export type Reservation = {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  image?: any; // Puedes usar ImageSourcePropType si prefieres
+};
+>>>>>>> origin/main
 
   const addReserva = (reserva) => {
     setReservas((prev) => [
@@ -46,6 +57,7 @@ export function ReservationsProvider({ children }) {
     ]);
   };
 
+<<<<<<< HEAD
   const cancelarReserva = (reserva) => {
     setReservas((prev) => prev.filter((r) => r.id !== reserva.id));
   };
@@ -58,6 +70,16 @@ export function ReservationsProvider({ children }) {
     );
   };
 
+=======
+const ReservationsContext = createContext<ReservationsContextType | undefined>(
+  undefined,
+);
+
+export const ReservationsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+>>>>>>> origin/main
   return (
     <ReservationsContext.Provider
       value={{ reservas, favoritos, addReserva, cancelarReserva, toggleFavorito, mockCanchas }}
@@ -65,4 +87,18 @@ export function ReservationsProvider({ children }) {
       {children}
     </ReservationsContext.Provider>
   );
+<<<<<<< HEAD
 }
+=======
+};
+
+export const useReservations = () => {
+  const context = useContext(ReservationsContext);
+  if (!context)
+    throw new Error('useReservations must be used within ReservationsProvider');
+  return context;
+};
+
+// Default export para evitar el warning de Expo Router
+export default ReservationsProvider;
+>>>>>>> origin/main
