@@ -4,37 +4,34 @@ import {
   Text,
   StyleSheet,
   Image,
-  Pressable,
-  TextInput,
+  ScrollView,
   TouchableOpacity,
+  Pressable,
   Alert,
+  SafeAreaView,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
-import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
-import ScreenContainer from '../../components/ui/ScreenContainer';
-import Feather from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+
+const AVATAR_SIZE = 90;
+const AVATAR_RADIUS = AVATAR_SIZE / 2;
+const EDIT_ICON_RIGHT_OFFSET = AVATAR_RADIUS - 10;
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const FotoPerfil = require('../../assets/FotoPerfil.png');
   const router = useRouter();
+  const FotoPerfil = require('../../assets/profiles/FotoPerfil.png');
 
   const [profileImage, setProfileImage] = useState(FotoPerfil);
   const [isModalVisible, setModalVisible] = useState(false);
-
-  const [isNameEditable, setIsNameEditable] = useState(false);
-  const [isAgeEditable, setIsAgeEditable] = useState(false);
-  const [isEmailEditable, setIsEmailEditable] = useState(false);
-  const [isDniEditable, setIsDniEditable] = useState(false);
-
-  const [name, setName] = useState('Ej: Lautaro Perez');
-  const [age, setAge] = useState('Ej: 23');
-  const [email, setEmail] = useState('Ej: correo@example.com');
-  const [dni, setDni] = useState('Ej: 12345678');
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [email, setEmail] = useState('');
+  const [dni, setDni] = useState('');
 
   const toggleModal = () => setModalVisible(!isModalVisible);
 
@@ -60,27 +57,6 @@ export default function ProfileScreen() {
     loadProfileData();
   }, []);
 
-  const saveName = async (newName: string) => {
-    setName(newName);
-    await AsyncStorage.setItem('name', newName);
-  };
-
-  const saveAge = async (newAge: string) => {
-    setAge(newAge);
-    await AsyncStorage.setItem('age', newAge);
-  };
-
-  const saveEmail = async (newEmail: string) => {
-    setEmail(newEmail);
-    await AsyncStorage.setItem('email', newEmail);
-  };
-
-  const saveDni = async (newDni: string) => {
-    setDni(newDni);
-    await AsyncStorage.setItem('dni', newDni);
-  };
-
-  //Seleccionar desde galería
   const pickImageFromGallery = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -107,7 +83,6 @@ export default function ProfileScreen() {
     }
   };
 
-  //Tomar foto con la cámara
   const takePhotoWithCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissionResult.granted) {
@@ -132,112 +107,79 @@ export default function ProfileScreen() {
     }
   };
 
-  // Borrar imagen
   const handleBorrarImagen = async () => {
     await AsyncStorage.removeItem('profileImage');
     setProfileImage(FotoPerfil);
     toggleModal();
   };
 
-  // Función para cerrar sesión
   const handleLogout = () => {
     console.log('Cerrar sesión pulsado');
     router.replace('/(auth)');
   };
 
+  const renderItem = (label: string, value: string) => (
+    <View style={styles.item}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value || '—'}</Text>
+    </View>
+  );
+
   return (
-    <ScreenContainer>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView>
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Mi Perfil</Text>
+          <Text style={styles.headerText}>Mi Perfil</Text>
         </View>
 
-        <View style={styles.imageContainer}>
-          <Image source={profileImage} style={styles.profileImage} />
-          <TouchableOpacity style={styles.editImage} onPress={toggleModal}>
-            <Feather name="edit" style={styles.editImage} />
+        {/* Avatar */}
+        <View style={styles.avatarContainer}>
+          <Image source={profileImage} style={styles.avatar} />
+          <TouchableOpacity style={styles.editIcon} onPress={toggleModal}>
+            <Feather name="edit-2" size={16} color="white" />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.DataContainer}>
-          <Text style={styles.label}>Nombre y Apellido</Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={saveName}
-              editable={isNameEditable}
-            />
-            <TouchableOpacity
-              onPress={() => setIsNameEditable(!isNameEditable)}
-            >
-              <Feather
-                name={isNameEditable ? 'check-square' : 'edit'}
-                style={isNameEditable ? styles.saveIcon : styles.editIcon}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.label}>Edad</Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              value={age}
-              onChangeText={saveAge}
-              editable={isAgeEditable}
-              keyboardType="numeric"
-            />
-            <TouchableOpacity onPress={() => setIsAgeEditable(!isAgeEditable)}>
-              <Feather
-                name={isAgeEditable ? 'check-square' : 'edit'}
-                style={isAgeEditable ? styles.saveIcon : styles.editIcon}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.label}>Correo</Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={saveEmail}
-              editable={isEmailEditable}
-              keyboardType="email-address"
-            />
-            <TouchableOpacity
-              onPress={() => setIsEmailEditable(!isEmailEditable)}
-            >
-              <Feather
-                name={isEmailEditable ? 'check-square' : 'edit'}
-                style={isEmailEditable ? styles.saveIcon : styles.editIcon}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.label}>DNI</Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              value={dni}
-              onChangeText={saveDni}
-              editable={isDniEditable}
-              keyboardType="numeric"
-            />
-            <TouchableOpacity onPress={() => setIsDniEditable(!isDniEditable)}>
-              <Feather
-                name={isDniEditable ? 'check-square' : 'edit'}
-                style={isDniEditable ? styles.saveIcon : styles.editIcon}
-              />
-            </TouchableOpacity>
-          </View>
+        {/* Info */}
+        <View style={styles.infoContainer}>
+          {renderItem('Nombre y Apellido', name)}
+          {renderItem('Correo electrónico', email)}
+          {renderItem('Edad', age)}
+          {renderItem('DNI', dni)}
         </View>
-        
-        {/* Botón Cerrar Sesión */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-        </TouchableOpacity>
 
-        {/* Modal Imagen */}
+        {/* Configuraciones */}
+        <View style={styles.settingsContainer}>
+          <Text style={styles.sectionTitle}>Configuraciones</Text>
+          <TouchableOpacity
+            style={styles.configItem}
+            onPress={() => router.push('/(user)/favourites')}
+          >
+            <Ionicons name="heart-outline" size={18} color="gray" />
+            <Text style={styles.configText}>Favoritos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.configItem}
+            onPress={() => router.push('/(user)/configNotifications')}
+          >
+            <Ionicons name="notifications-outline" size={18} color="gray" />
+            <Text style={styles.configText}>Notificaciones</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.configItem}
+            onPress={() => router.push('/(user)/forgotPassword')}
+          >
+            <MaterialIcons name="password" size={18} color="gray" />
+            <Text style={styles.configText}>Cambiar Contraseña</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="exit-outline" size={20} color="#fff" />
+            <Text style={styles.logoutText}>Cerrar Sesión</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modal */}
         <Modal
           isVisible={isModalVisible}
           onBackdropPress={toggleModal}
@@ -262,58 +204,108 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
         </Modal>
-      </View>
-    </ScreenContainer>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SPACING.lg,
-    paddingTop: 16,
-    alignItems: 'center', // centrado horizontal
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.md,
-    marginLeft: 0,
-    backgroundColor: '#fff',
+    marginTop: 20,
+    marginBottom: 10,
   },
-  title: {
-    fontSize: TYPOGRAPHY.fontSize.xxl,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-    color: COLORS.text.primary,
+  headerText: {
+    fontSize: 20,
+    fontWeight: '600',
   },
-  imageContainer: {
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
     position: 'relative',
-    width: 130,
-    marginBottom: SPACING.xl,
-    alignSelf: 'center', // centra la imagen
   },
-  profileImage: {
-    width: 130,
-    height: 130,
-    borderRadius: 60,
-    resizeMode: 'cover',
+  avatar: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_RADIUS,
   },
-  editImage: {
+  editIcon: {
     position: 'absolute',
     bottom: 0,
-    right: 0,
-    backgroundColor: COLORS.primary,
-    fontSize: 20,
+    right: EDIT_ICON_RIGHT_OFFSET,
+    backgroundColor: '#f57c00',
+    borderRadius: 12,
+    padding: 5,
+  },
+  infoContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 20,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
+  item: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  label: {
+    color: '#888',
+    fontSize: 13,
+  },
+  value: {
+    color: '#000',
+    fontSize: 14,
+    marginTop: 2,
+  },
+  settingsContainer: {
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  configItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  configText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  logoutButton: {
+    marginTop: 20,
+    backgroundColor: '#ff4d4d',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 12,
     borderRadius: 10,
-    padding: 6,
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   modalContainer: {
     backgroundColor: '#fff',
     borderRadius: 10,
-    borderBottomStartRadius: 0,
-    borderBottomEndRadius: 0,
     padding: 20,
   },
   modalButton: {
@@ -330,62 +322,5 @@ const styles = StyleSheet.create({
   modalBottom: {
     justifyContent: 'flex-end',
     margin: 0,
-  },
-  input: {
-    borderWidth: 3,
-    backgroundColor: '#fff',
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    width: 210,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
-  },
-  DataContainer: {
-    marginTop: SPACING.xl,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-    justifyContent: 'center',
-    alignItems: 'center', // centrar horizontal
-    width: '90%',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  editIcon: {
-    fontSize: 20,
-    color: '#fff',
-    backgroundColor: '#9b9b9b',
-    padding: 5,
-    borderRadius: 10,
-    margin: 5,
-    marginBottom: 15,
-  },
-  saveIcon: {
-    fontSize: 20,
-    color: '#fff',
-    backgroundColor: COLORS.primary,
-    padding: 5,
-    borderRadius: 10,
-    margin: 5,
-    marginBottom: 15,
-  },
-  logoutButton: {
-    marginTop: SPACING.xl,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });

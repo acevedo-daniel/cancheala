@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import { SplashScreen, router, Stack } from 'expo-router';
 import {
   View,
@@ -29,6 +30,7 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
+  // Redireccionamiento
   useEffect(() => {
     async function prepare() {
       try {
@@ -43,7 +45,6 @@ export default function RootLayout() {
     }
     prepare();
   }, [fontsLoaded]);
-
   useEffect(() => {
     if (!isLoading && fontsLoaded) {
       if (userRole === 'user') {
