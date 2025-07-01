@@ -82,7 +82,7 @@ export default function AuthScreen() {
   };
 
   const handleProviderAccess = () => {
-    router.replace('/(owner)');
+    router.push('/(owner)/login');
   };
 
   return (

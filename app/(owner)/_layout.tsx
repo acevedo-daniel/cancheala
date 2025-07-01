@@ -53,6 +53,21 @@ export default function OwnerLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="account-circle-outline"
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen name="login" options={{ href: null }} />
+      <Tabs.Screen name="register" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "648569611606-ris4il20nog48b0p4imfrifevhpttrla.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cancheala.app",
+            "certificate_hash": "385ec2603ff3042a0b399a6d9363d12e45c43b10"
+          }
+        },
+        {
           "client_id": "648569611606-l966vbagm0r0p4qgs8256s6k081h4rm8.apps.googleusercontent.com",
           "client_type": 3
         }
