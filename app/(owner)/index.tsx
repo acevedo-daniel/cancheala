@@ -1,170 +1,232 @@
 // HomeAdministracion.tsx
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { BarChart, LineChart, PieChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BarChart, LineChart } from 'react-native-chart-kit';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
+const chartWidth = screenWidth - 80;
 
-const HomeAdministracion = () => {
-  const router = useRouter();
+export default function HomeAdministracion() {
+  const chartConfig = {
+    backgroundGradientFrom: '#fff',
+    backgroundGradientTo: '#fff',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(0, 150, 136, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    style: { borderRadius: 16 },
+    propsForDots: { r: '4', strokeWidth: '2', stroke: '#00796b' },
+  };
+
+  const reservasPorDia = {
+    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    datasets: [{ data: [8, 12, 10, 15, 14, 18, 9] }],
+  };
+
+  const ingresosPorMes = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+    datasets: [{ data: [15000, 17000, 16000, 20000, 22000, 21000] }],
+  };
+
+  const tiposDeCancha = [
+    {
+      name: 'Césped sintético',
+      population: 50,
+      color: '#009688',
+      legendFontColor: '#333',
+      legendFontSize: 14,
+    },
+    {
+      name: 'Hormigón',
+      population: 30,
+      color: '#00796b',
+      legendFontColor: '#333',
+      legendFontSize: 14,
+    },
+    {
+      name: 'Madera',
+      population: 20,
+      color: '#4db6ac',
+      legendFontColor: '#333',
+      legendFontSize: 14,
+    },
+  ];
+
+  const reservasPorHora = {
+    labels: ['08h', '10h', '12h', '14h', '16h', '18h', '20h'],
+    datasets: [{ data: [4, 6, 9, 12, 14, 10, 5] }],
+  };
+
+  const ocupacionPorCancha = {
+    labels: ['Cancha 1', 'Cancha 2', 'Cancha 3'],
+    datasets: [{ data: [80, 60, 90] }],
+  };
+
+  const jugadoresFrecuentes = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+    datasets: [{ data: [20, 23, 27, 30, 33, 35] }],
+  };
+
+  const ausenciasPorSemana = {
+    labels: ['S1', 'S2', 'S3', 'S4'],
+    datasets: [{ data: [2, 1, 4, 3] }],
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.replace('/(auth)')}
-          >
-            <Ionicons name="arrow-back" size={28} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Bienvenido Administrador</Text>
-          <Text style={styles.subtitle}>Resumen general del sistema</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statTitle}>Usuarios Registrados</Text>
-          <Text style={styles.statValue}>1,284</Text>
-        </View>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Estadísticas Generales</Text>
 
         <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Ingresos Semanales (ARS)</Text>
+          <Text style={styles.subtitle}>Reservas por día</Text>
           <BarChart
-            data={{
-              labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-              datasets: [
-                {
-                  data: [12000, 14500, 9000, 15500, 18000, 22000, 17500],
-                },
-              ],
-            }}
-            width={screenWidth - 32}
-            height={220}
-            yAxisLabel="$"
-            yAxisSuffix=""
+            data={reservasPorDia}
+            width={chartWidth}
+            height={160}
             chartConfig={chartConfig}
-            style={styles.chart}
+            verticalLabelRotation={30}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chartStyle}
+            yAxisLabel=""
+            yAxisSuffix=""
           />
         </View>
 
         <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>
-            Ingresos Estimados del Mes (ARS)
-          </Text>
+          <Text style={styles.subtitle}>Ingresos por mes (en $)</Text>
           <LineChart
-            data={{
-              labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-              datasets: [
-                {
-                  data: [50000, 65000, 72000, 80000],
-                },
-              ],
-            }}
-            width={screenWidth - 32}
-            height={220}
+            data={ingresosPorMes}
+            width={chartWidth}
+            height={160}
+            chartConfig={chartConfig}
+            bezier
+            fromZero
+            style={styles.chartStyle}
             yAxisLabel="$"
             yAxisSuffix=""
-            chartConfig={chartConfig}
-            style={styles.chart}
           />
         </View>
 
-        {/* Puedes agregar más secciones o gráficos aquí */}
+        <View style={styles.chartContainer}>
+          <Text style={styles.subtitle}>Tipos de piso de cancha</Text>
+          <PieChart
+            data={tiposDeCancha}
+            width={chartWidth}
+            height={160}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="20"
+            absolute
+            style={styles.chartStyle}
+          />
+        </View>
+
+        <View style={styles.chartContainer}>
+          <Text style={styles.subtitle}>Reservas por hora del día</Text>
+          <BarChart
+            data={reservasPorHora}
+            width={chartWidth}
+            height={160}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chartStyle}
+            yAxisLabel=""
+            yAxisSuffix=""
+          />
+        </View>
+
+        <View style={styles.chartContainer}>
+          <Text style={styles.subtitle}>Ocupación por cancha (%)</Text>
+          <BarChart
+            data={ocupacionPorCancha}
+            width={chartWidth}
+            height={160}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chartStyle}
+            yAxisLabel=""
+            yAxisSuffix="%"
+          />
+        </View>
+
+        <View style={styles.chartContainer}>
+          <Text style={styles.subtitle}>Usuarios frecuentes por mes</Text>
+          <LineChart
+            data={jugadoresFrecuentes}
+            width={chartWidth}
+            height={160}
+            chartConfig={chartConfig}
+            bezier
+            fromZero
+            style={styles.chartStyle}
+            yAxisLabel=""
+            yAxisSuffix=""
+          />
+        </View>
+
+        <View style={styles.chartContainer}>
+          <Text style={styles.subtitle}>Cancelaciones por semana</Text>
+          <BarChart
+            data={ausenciasPorSemana}
+            width={chartWidth}
+            height={160}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chartStyle}
+            yAxisLabel=""
+            yAxisSuffix=""
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
-};
-
-const chartConfig = {
-  backgroundGradientFrom: '#fff',
-  backgroundGradientTo: '#fff',
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  propsForDots: {
-    r: '5',
-    strokeWidth: '2',
-    stroke: '#2196F3',
-  },
-  barPercentage: 0.7,
-};
+}
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#ffffff',
   },
-  scrollContainer: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  header: {
+  container: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  statCard: {
-    backgroundColor: '#2196F3',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  statTitle: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
+    backgroundColor: '#fff',
   },
   chartContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#f7f7f7',
+    borderRadius: 16,
     padding: 12,
-    marginBottom: 20,
-    elevation: 3,
+    marginBottom: 24,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    shadowRadius: 6,
+    elevation: 4,
+    width: '100%',
+    alignItems: 'center',
   },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  chartStyle: {
+    borderRadius: 16,
+    alignSelf: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 24,
+    color: '#004d40',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: '700',
     marginBottom: 12,
-    color: '#333',
-  },
-  chart: {
-    borderRadius: 12,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    padding: 8,
-    zIndex: 10,
+    color: '#00796b',
+    alignSelf: 'flex-start',
   },
 });
-
-export default HomeAdministracion;

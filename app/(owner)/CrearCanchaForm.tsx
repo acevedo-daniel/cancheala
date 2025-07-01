@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   Modal,
+  Switch,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
@@ -17,6 +18,7 @@ import MapView, { Marker, Region } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router'; // <-- Importa useRouter
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export type Cancha = {
   id: string;
@@ -54,6 +56,11 @@ export default function CrearCanchaForm() {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
+
+  const [disponible, setDisponible] = useState(true);
+  const [horarios, setHorarios] = useState('');
+  const [especificacion, setEspecificacion] = useState('');
+  const [especificaciones, setEspecificaciones] = useState<string[]>([]);
 
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
@@ -106,6 +113,10 @@ export default function CrearCanchaForm() {
     setUbicacionMapa(null);
     setPuntuacion('');
     setSuelo('cesped');
+    setDisponible(true);
+    setHorarios('');
+    setEspecificacion('');
+    setEspecificaciones([]);
   };
 
   const handleSave = async () => {
@@ -155,6 +166,17 @@ export default function CrearCanchaForm() {
       console.error('Error guardando cancha:', error);
       Alert.alert('Error', 'No se pudo guardar la cancha.');
     }
+  };
+
+  const agregarEspecificacion = () => {
+    if (especificacion.trim()) {
+      setEspecificaciones([...especificaciones, especificacion.trim()]);
+      setEspecificacion('');
+    }
+  };
+
+  const quitarEspecificacion = (index: number) => {
+    setEspecificaciones(especificaciones.filter((_, i) => i !== index));
   };
 
   return (
@@ -241,6 +263,86 @@ export default function CrearCanchaForm() {
           onChangeText={setPuntuacion}
           maxLength={2}
         />
+
+        <Text style={styles.label}>Disponibilidad</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 15,
+          }}
+        >
+          <Switch
+            value={disponible}
+            onValueChange={setDisponible}
+            trackColor={{ false: '#ccc', true: '#00C853' }}
+            thumbColor={disponible ? '#00C853' : '#ccc'}
+          />
+          <Text
+            style={{
+              marginLeft: 10,
+              color: disponible ? '#00C853' : '#888',
+              fontWeight: 'bold',
+            }}
+          >
+            {disponible ? 'Disponible' : 'Ocupada'}
+          </Text>
+        </View>
+
+        <TextInput
+          placeholder="Horarios (ej: 8:00 - 22:00)"
+          style={styles.input}
+          value={horarios}
+          onChangeText={setHorarios}
+        />
+
+        <Text style={styles.label}>Especificaciones</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 10,
+          }}
+        >
+          <TextInput
+            placeholder="Agregar especificación"
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+            value={especificacion}
+            onChangeText={setEspecificacion}
+          />
+          <TouchableOpacity
+            style={{
+              marginLeft: 8,
+              backgroundColor: '#00C853',
+              borderRadius: 8,
+              padding: 10,
+            }}
+            onPress={agregarEspecificacion}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Agregar</Text>
+          </TouchableOpacity>
+        </View>
+        {especificaciones.length > 0 && (
+          <View style={{ marginBottom: 15 }}>
+            {especificaciones.map((esp, idx) => (
+              <View
+                key={idx}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 4,
+                }}
+              >
+                <Text style={{ color: '#333', fontSize: 15, flex: 1 }}>
+                  • {esp}
+                </Text>
+                <TouchableOpacity onPress={() => quitarEspecificacion(idx)}>
+                  <Ionicons name="close-circle" size={20} color="#ff4d4d" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.buttonsRow}>
           <TouchableOpacity

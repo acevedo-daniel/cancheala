@@ -32,15 +32,11 @@ export default function OwnerLayout() {
         }}
       />
       <Tabs.Screen
-        name="estadisticas"
+        name="CrearEventoForm"
         options={{
-          title: 'Estadisticas',
+          title: 'Evento',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="chart-bar"
-              color={color}
-              size={size}
-            />
+            <MaterialCommunityIcons name="calendar" color={color} size={size} />
           ),
         }}
       />
