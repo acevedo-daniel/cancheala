@@ -13,11 +13,18 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, TYPOGRAPHY, SHADOWS, BORDER_RADIUS } from '../../constants';
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  SHADOWS,
+  BORDER_RADIUS,
+} from '../../constants';
 import { Event, EventType } from '../../types';
 import { EVENTS } from '../../mocks/data';
 import EventCard from '../../components/ui/EventCard';
 import ScreenContainer from '../../components/ui/ScreenContainer';
+import * as Notifications from 'expo-notifications';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -40,7 +47,9 @@ export default function NotificationsScreen() {
     setSelectedEvent(null);
   };
 
-  const getEventTypeIcon = (type: EventType): keyof typeof Ionicons.glyphMap => {
+  const getEventTypeIcon = (
+    type: EventType,
+  ): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case EventType.PROMOTION:
         return 'pricetag';
@@ -98,10 +107,15 @@ export default function NotificationsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="notifications-off-outline" size={64} color={COLORS.text.secondary} />
+      <Ionicons
+        name="notifications-off-outline"
+        size={64}
+        color={COLORS.text.secondary}
+      />
       <Text style={styles.emptyStateTitle}>No hay notificaciones</Text>
       <Text style={styles.emptyStateText}>
-        Cuando tengas eventos, promociones o noticias importantes, aparecerán aquí.
+        Cuando tengas eventos, promociones o noticias importantes, aparecerán
+        aquí.
       </Text>
     </View>
   );
@@ -138,29 +152,45 @@ export default function NotificationsScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                  <Ionicons name="close" size={24} color={COLORS.text.primary} />
+                <TouchableOpacity
+                  onPress={closeModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons
+                    name="close"
+                    size={24}
+                    color={COLORS.text.primary}
+                  />
                 </TouchableOpacity>
               </View>
 
               {selectedEvent && (
-                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  style={styles.modalBody}
+                  showsVerticalScrollIndicator={false}
+                >
                   {/* Imagen del evento */}
                   {selectedEvent.image && (
                     <View style={styles.eventImageContainer}>
-                      <Image 
-                        source={selectedEvent.image as any} 
+                      <Image
+                        source={selectedEvent.image as any}
                         style={styles.eventImage}
                         resizeMode="cover"
                       />
-                      <View style={[
-                        styles.eventTypeBadge, 
-                        { backgroundColor: getEventTypeColor(selectedEvent.type) }
-                      ]}>
-                        <Ionicons 
-                          name={getEventTypeIcon(selectedEvent.type)} 
-                          size={16} 
-                          color="#FFF" 
+                      <View
+                        style={[
+                          styles.eventTypeBadge,
+                          {
+                            backgroundColor: getEventTypeColor(
+                              selectedEvent.type,
+                            ),
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={getEventTypeIcon(selectedEvent.type)}
+                          size={16}
+                          color="#FFF"
                         />
                       </View>
                     </View>
@@ -169,35 +199,53 @@ export default function NotificationsScreen() {
                   {/* Información del evento */}
                   <View style={styles.eventInfo}>
                     <Text style={styles.eventTitle}>{selectedEvent.title}</Text>
-                    
+
                     <View style={styles.eventMeta}>
                       <View style={styles.metaItem}>
-                        <Ionicons name="calendar-outline" size={16} color={COLORS.text.secondary} />
-                        <Text style={styles.metaText}>{formatDate(selectedEvent.date)}</Text>
+                        <Ionicons
+                          name="calendar-outline"
+                          size={16}
+                          color={COLORS.text.secondary}
+                        />
+                        <Text style={styles.metaText}>
+                          {formatDate(selectedEvent.date)}
+                        </Text>
                       </View>
-                      
+
                       {selectedEvent.location && (
                         <View style={styles.metaItem}>
-                          <Ionicons name="location-outline" size={16} color={COLORS.text.secondary} />
-                          <Text style={styles.metaText}>{selectedEvent.location}</Text>
+                          <Ionicons
+                            name="location-outline"
+                            size={16}
+                            color={COLORS.text.secondary}
+                          />
+                          <Text style={styles.metaText}>
+                            {selectedEvent.location}
+                          </Text>
                         </View>
                       )}
                     </View>
 
-                    <Text style={styles.eventDescription}>{selectedEvent.description}</Text>
+                    <Text style={styles.eventDescription}>
+                      {selectedEvent.description}
+                    </Text>
 
                     {/* Información adicional */}
                     {(selectedEvent.startDate || selectedEvent.endDate) && (
                       <View style={styles.additionalInfo}>
-                        <Text style={styles.additionalInfoTitle}>Horarios:</Text>
+                        <Text style={styles.additionalInfoTitle}>
+                          Horarios:
+                        </Text>
                         {selectedEvent.startDate && (
                           <Text style={styles.additionalInfoText}>
-                            Inicio: {formatDate(selectedEvent.startDate)} {formatTime(selectedEvent.startDate)}
+                            Inicio: {formatDate(selectedEvent.startDate)}{' '}
+                            {formatTime(selectedEvent.startDate)}
                           </Text>
                         )}
                         {selectedEvent.endDate && (
                           <Text style={styles.additionalInfoText}>
-                            Fin: {formatDate(selectedEvent.endDate)} {formatTime(selectedEvent.endDate)}
+                            Fin: {formatDate(selectedEvent.endDate)}{' '}
+                            {formatTime(selectedEvent.endDate)}
                           </Text>
                         )}
                       </View>
@@ -207,20 +255,31 @@ export default function NotificationsScreen() {
                     {(selectedEvent.price || selectedEvent.discount) && (
                       <View style={styles.pricingInfo}>
                         {selectedEvent.discount && (
-                          <View style={[
-                            styles.discountContainer, 
-                            { backgroundColor: getEventTypeColor(selectedEvent.type) + '20' }
-                          ]}>
-                            <Text style={[
-                              styles.discountText, 
-                              { color: getEventTypeColor(selectedEvent.type) }
-                            ]}>
+                          <View
+                            style={[
+                              styles.discountContainer,
+                              {
+                                backgroundColor:
+                                  getEventTypeColor(selectedEvent.type) + '20',
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.discountText,
+                                {
+                                  color: getEventTypeColor(selectedEvent.type),
+                                },
+                              ]}
+                            >
                               ¡{selectedEvent.discount}% de descuento!
                             </Text>
                           </View>
                         )}
                         {selectedEvent.price && (
-                          <Text style={styles.priceText}>Precio: ${selectedEvent.price}</Text>
+                          <Text style={styles.priceText}>
+                            Precio: ${selectedEvent.price}
+                          </Text>
                         )}
                       </View>
                     )}
@@ -230,20 +289,26 @@ export default function NotificationsScreen() {
 
               {/* Botones de acción */}
               <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.actionButton} onPress={closeModal}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={closeModal}
+                >
                   <Text style={styles.actionButtonText}>Cerrar</Text>
                 </TouchableOpacity>
                 {selectedEvent && (
-                  <TouchableOpacity 
-                    style={[styles.actionButton, styles.primaryActionButton]} 
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.primaryActionButton]}
                     onPress={() => {
                       closeModal();
                       // Aquí podrías navegar a la reserva o acción específica
                     }}
                   >
                     <Text style={styles.primaryActionButtonText}>
-                      {selectedEvent.type === EventType.TOURNAMENT ? 'Inscribirse' : 
-                       selectedEvent.type === EventType.PROMOTION ? 'Reservar' : 'Más información'}
+                      {selectedEvent.type === EventType.TOURNAMENT
+                        ? 'Inscribirse'
+                        : selectedEvent.type === EventType.PROMOTION
+                        ? 'Reservar'
+                        : 'Más información'}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -438,4 +503,4 @@ const styles = StyleSheet.create({
     fontFamily: TYPOGRAPHY.fontFamily.medium,
     color: COLORS.text.light,
   },
-}); 
+});

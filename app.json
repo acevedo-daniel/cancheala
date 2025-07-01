@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "",
+    "name": "Cancheala",
     "slug": "cancheala",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo-apertura-final.png",
+    "icon": "./assets/icons/iconSplash.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icons/iconSplash.png",
         "backgroundColor": "#00C853"
       },
       "edgeToEdgeEnabled": true,
