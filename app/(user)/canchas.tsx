@@ -769,74 +769,13 @@ export default function CanchasScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
-  },
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 60,
-  },
-  listContainer: {
-    paddingBottom: 80,
-  },
-  cardContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    marginBottom: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  cardImageWrapper: {
-    width: '100%',
-    height: 160,
-    backgroundColor: '#f0f0f0',
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
-  noImage: {
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
-  ratingBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#f4c10f',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  ratingText: {
-    marginLeft: 4,
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  cardContent: {
-    padding: 14,
-  },
-  cardTitle: {
+  text: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#222',
