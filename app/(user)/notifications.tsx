@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   Image,
   Platform,
   Dimensions,
+  Animated,
+  Picker,
+  PanResponder,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,13 +21,51 @@ import { Event, EventType } from '../../types';
 import { EVENTS } from '../../mocks/data';
 import EventCard from '../../components/ui/EventCard';
 import ScreenContainer from '../../components/ui/ScreenContainer';
+import { Picker as ReactNativePicker } from '@react-native-picker/picker';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const FILTER_OPTIONS = [
+  { label: 'Todos', value: 'all' },
+  { label: 'Promociones', value: EventType.PROMOTION },
+  { label: 'Torneos', value: EventType.TOURNAMENT },
+  { label: 'Noticias', value: EventType.NEWS },
+  { label: 'Mantenimiento', value: EventType.MAINTENANCE },
+  { label: 'Leídos', value: 'read' },
+];
+
+// Contexto global para notificaciones leídas
+export const NotificationsContext = createContext<{
+  readEvents: Event[];
+  setReadEvents: React.Dispatch<React.SetStateAction<Event[]>>;
+  events: Event[];
+  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
+} | undefined>(undefined);
+
+export function NotificationsProvider({ children }: { children: React.ReactNode }) {
+  const [events, setEvents] = useState(EVENTS);
+  const [readEvents, setReadEvents] = useState<Event[]>([]);
+  return (
+    <NotificationsContext.Provider value={{ readEvents, setReadEvents, events, setEvents }}>
+      {children}
+    </NotificationsContext.Provider>
+  );
+}
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const { events, readEvents, setEvents, setReadEvents } = useContext(NotificationsContext);
+
+  const filteredEvents = filter === 'all'
+    ? events
+    : filter === 'read'
+      ? readEvents
+      : events.filter(e => e.type === filter);
 
   const handleBackPress = () => {
     router.back();
@@ -92,9 +133,67 @@ export default function NotificationsScreen() {
     });
   };
 
-  const renderEventCard = ({ item }: { item: Event }) => (
-    <EventCard event={item} onPress={() => handleEventPress(item)} />
+  const renderTabs = () => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ margin: 16, marginBottom: 0 }} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
+      {FILTER_OPTIONS.map(opt => (
+        <TouchableOpacity
+          key={opt.value}
+          onPress={() => setFilter(opt.value)}
+          style={{
+            alignSelf: 'flex-start',
+            paddingVertical: 8,
+            paddingHorizontal: 14,
+            borderRadius: 20,
+            backgroundColor: filter === opt.value ? '#181028' : '#f0f0f0',
+            marginRight: 8,
+            minWidth: 0,
+          }}
+        >
+          <Text style={{ color: filter === opt.value ? '#fff' : '#181028', fontWeight: 'bold', fontSize: 14 }}>
+            {opt.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
+
+  const renderEventCard = ({ item, index }: { item: Event, index: number }) => {
+    const fadeAnim = new Animated.Value(1);
+    const isReadSection = filter === 'read';
+    const handleMarkRead = () => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setEvents(prev => prev.filter(e => e.id !== item.id));
+        setReadEvents(prev => [...prev, item]);
+      });
+    };
+    const handleRestore = () => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setReadEvents(prev => prev.filter(e => e.id !== item.id));
+        setEvents(prev => [item, ...prev]);
+      });
+    };
+    return isReadSection ? (
+      <SwipeableRowRestore onRestore={handleRestore}>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <EventCard event={item} onPress={() => handleEventPress(item)} backgroundColor="#f0f0f0" />
+        </Animated.View>
+      </SwipeableRowRestore>
+    ) : (
+      <SwipeableRow onDelete={handleMarkRead}>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <EventCard event={item} onPress={() => handleEventPress(item)} backgroundColor="#fff" />
+        </Animated.View>
+      </SwipeableRow>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -115,15 +214,14 @@ export default function NotificationsScreen() {
             <Ionicons name="arrow-back" size={24} color={COLORS.text.primary} />
           </TouchableOpacity>
           <Text style={styles.title}>Notificaciones</Text>
-          <View style={styles.placeholder} />
         </View>
-
+        {renderTabs()}
         {/* Content */}
         <FlatList
-          data={EVENTS}
+          data={filteredEvents}
           renderItem={renderEventCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={{ ...styles.listContainer, alignItems: 'stretch', paddingTop: 0, flexGrow: 0 }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={renderEmptyState}
         />
@@ -145,27 +243,6 @@ export default function NotificationsScreen() {
 
               {selectedEvent && (
                 <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-                  {/* Imagen del evento */}
-                  {selectedEvent.image && (
-                    <View style={styles.eventImageContainer}>
-                      <Image 
-                        source={selectedEvent.image as any} 
-                        style={styles.eventImage}
-                        resizeMode="cover"
-                      />
-                      <View style={[
-                        styles.eventTypeBadge, 
-                        { backgroundColor: getEventTypeColor(selectedEvent.type) }
-                      ]}>
-                        <Ionicons 
-                          name={getEventTypeIcon(selectedEvent.type)} 
-                          size={16} 
-                          color="#FFF" 
-                        />
-                      </View>
-                    </View>
-                  )}
-
                   {/* Información del evento */}
                   <View style={styles.eventInfo}>
                     <Text style={styles.eventTitle}>{selectedEvent.title}</Text>
@@ -328,25 +405,6 @@ const styles = StyleSheet.create({
   modalBody: {
     paddingHorizontal: SPACING.md,
   },
-  eventImageContainer: {
-    position: 'relative',
-    marginBottom: SPACING.md,
-  },
-  eventImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: BORDER_RADIUS.md,
-  },
-  eventTypeBadge: {
-    position: 'absolute',
-    top: SPACING.sm,
-    right: SPACING.sm,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   eventInfo: {
     paddingBottom: SPACING.md,
   },
@@ -438,4 +496,60 @@ const styles = StyleSheet.create({
     fontFamily: TYPOGRAPHY.fontFamily.medium,
     color: COLORS.text.light,
   },
-}); 
+});
+
+function SwipeableRow({ children, onDelete }: { children: React.ReactNode, onDelete: () => void }) {
+  const pan = React.useRef(new Animated.ValueXY()).current;
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
+      onPanResponderMove: Animated.event([
+        null,
+        { dx: pan.x }
+      ], { useNativeDriver: false }),
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -100) {
+          onDelete();
+        } else {
+          Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+        }
+      },
+    })
+  ).current;
+  return (
+    <Animated.View
+      style={{ transform: [{ translateX: pan.x }] }}
+      {...panResponder.panHandlers}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+function SwipeableRowRestore({ children, onRestore }: { children: React.ReactNode, onRestore: () => void }) {
+  const pan = React.useRef(new Animated.ValueXY()).current;
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
+      onPanResponderMove: Animated.event([
+        null,
+        { dx: pan.x }
+      ], { useNativeDriver: false }),
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 100) {
+          onRestore();
+        } else {
+          Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+        }
+      },
+    })
+  ).current;
+  return (
+    <Animated.View
+      style={{ transform: [{ translateX: pan.x }] }}
+      {...panResponder.panHandlers}
+    >
+      {children}
+    </Animated.View>
+  );
+} 

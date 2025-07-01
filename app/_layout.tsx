@@ -15,6 +15,7 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NotificationsProvider } from './(user)/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -65,15 +66,17 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar hidden={true} />
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(user)" options={{ headerShown: false }} />
-        <Stack.Screen name="(owner)" options={{ headerShown: false }} />
-        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
-      </Stack>
-    </SafeAreaProvider>
+    <NotificationsProvider>
+      <SafeAreaProvider>
+        <StatusBar hidden={true} />
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(user)" options={{ headerShown: false }} />
+          <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+          <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+        </Stack>
+      </SafeAreaProvider>
+    </NotificationsProvider>
   );
 }
 
