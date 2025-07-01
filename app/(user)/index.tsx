@@ -19,9 +19,11 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
-import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
+import { BANNERS, CATEGORIES, SPACES, EVENTS } from '../../mocks/data';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { SPACING, COLORS } from '../../constants';
+import { useAppStore } from '../../store';
+import { NotificationsContext } from './notifications';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -38,6 +40,10 @@ export default function HomeScreen() {
   const [selectedHours, setSelectedHours] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
+  const location = useAppStore((state) => state.location);
+  const [readEvents, setReadEvents] = useState([]);
+  const notificationsCtx = React.useContext(NotificationsContext);
+  const unreadCount = notificationsCtx ? notificationsCtx.events.length : 0;
 
   // Resetear categoría seleccionada cuando vuelvas al home
   useFocusEffect(
@@ -220,7 +226,7 @@ export default function HomeScreen() {
             <Text
               style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}
             >
-              C. Falucho 265
+              {location?.address || 'Selecciona tu ubicación'}
             </Text>
             <Ionicons
               name="chevron-down"
@@ -231,8 +237,32 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push('/(user)/notifications')}
+            style={{ position: 'relative' }}
           >
             <Ionicons name="notifications-outline" size={24} color="#181028" />
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  backgroundColor: 'red',
+                  borderRadius: 10,
+                  minWidth: 18,
+                  height: 18,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 4,
+                  zIndex: 1,
+                }}
+              >
+                <Text
+                  style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}
+                >
+                  {unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
         <View style={{ paddingHorizontal: SPACING.md }}>
