@@ -13,6 +13,8 @@ import {
   Button,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -64,6 +66,17 @@ export default function HomeScreen() {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(contentOffset / SCREEN_WIDTH);
     setCurrentBanner(currentIndex);
+  };
+
+  const handleToggleFavorito = (id: string) => {
+    setFavoritos((prev) =>
+      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+    );
+  };
+
+  const handleCardPress = (space: Space) => {
+    setSelectedDetailSpace(space);
+    setDetailModalVisible(true);
   };
 
   const renderBanner = ({ item }: { item: Banner }) => (
@@ -262,7 +275,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Filtros rápidos */}
+          {/* Categorías */}
           <View style={styles.categoriesSection}>
             <Text style={styles.sectionTitle}>Explora por</Text>
             <FlatList
@@ -296,11 +309,20 @@ export default function HomeScreen() {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                Reservar en {selectedSpace?.name || ''}
-              </Text>
-              <Text style={{ marginBottom: 10 }}>Selecciona horarios:</Text>
+            <View style={styles.modalReservaBox}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <Image source={selectedSpace?.image} style={styles.modalImg} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.modalTitle}>{selectedSpace?.name || ''}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 2 }}>
+                    <Ionicons name="star" size={16} color="#FFD700" />
+                    <Text style={{ marginLeft: 4, fontWeight: 'bold' }}>{selectedSpace?.rating}</Text>
+                  </View>
+                  <Text style={{ color: '#666', fontSize: 13 }}>{selectedSpace?.location}</Text>
+                  <Text style={{ color: '#888', fontSize: 13, marginTop: 2 }}>Precio por hora: ${SPACE_PRICE.toLocaleString()}</Text>
+                </View>
+              </View>
+              <Text style={{ marginBottom: 10, fontWeight: '600', fontSize: 15 }}>Selecciona los horarios disponibles</Text>
               <View style={styles.hoursContainer}>
                 {availableHours.map((hour) => {
                   const selected = selectedHours.includes(hour);
@@ -320,9 +342,10 @@ export default function HomeScreen() {
                       ]}
                     >
                       <Text
-                        style={{
-                          color: selected ? '#fff' : '#000',
-                        }}
+                        style={[
+                          styles.hourButtonText,
+                          selected && styles.hourButtonTextSelected,
+                        ]}
                       >
                         {hour}
                       </Text>
@@ -330,7 +353,9 @@ export default function HomeScreen() {
                   );
                 })}
               </View>
-
+              <Text style={{ color: '#888', fontSize: 12, marginTop: 6, marginBottom: 2 }}>
+                De 19hs en adelante +$2.000 por luz
+              </Text>
               {selectedHours.length > 0 && selectedSpace && (
                 <Button
                   title="Reservar"
@@ -348,6 +373,43 @@ export default function HomeScreen() {
                   onPress={() => setModalVisible(false)}
                 />
               </View>
+              {selectedDetailSpace && (
+                <>
+                  <Image source={selectedDetailSpace.image} style={styles.modalImg} resizeMode="cover" />
+                  {selectedDetailSpace.specs?.available && (
+                    <View style={styles.badgeDisponible}><Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Disponible</Text></View>
+                  )}
+                  <Text style={styles.modalTitle}>{selectedDetailSpace.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                    <Ionicons name="star" size={16} color="#FFD700" />
+                    <Text style={{ marginLeft: 4, fontWeight: 'bold' }}>{selectedDetailSpace.rating}</Text>
+                    <Text style={{ color: '#888', marginLeft: 6, fontSize: 13 }}>({selectedDetailSpace.specs?.reviews} reseñas)</Text>
+                    <View style={styles.priceBadge}><Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>{`$${selectedDetailSpace.specs?.price.toLocaleString()}/hora`}</Text></View>
+                  </View>
+                  <Text style={{ color: '#666', fontSize: 14, marginBottom: 2 }}><Ionicons name="location-outline" size={14} color="#888" /> {selectedDetailSpace.location}</Text>
+                  <Text style={{ color: '#888', fontSize: 13, marginBottom: 2 }}>Dirección: {selectedDetailSpace.address}</Text>
+                  <Text style={{ fontWeight: 'bold', marginTop: 8, marginBottom: 2 }}>Servicios incluidos:</Text>
+                  {selectedDetailSpace.specs?.services?.map((serv, idx) => (
+                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                      <Ionicons name={serv.icon} size={18} color="#00C853" style={{ marginRight: 6 }} />
+                      <Text style={{ color: '#444', fontSize: 14 }}>{serv.label}</Text>
+                    </View>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.reservarBtnModal}
+                    onPress={() => {
+                      setDetailModalVisible(false);
+                      setTimeout(() => {
+                        setSelectedSpace(selectedDetailSpace);
+                        setModalVisible(true);
+                        setSelectedHours([]);
+                      }, 300); // Espera a que cierre el modal de detalles
+                    }}
+                  >
+                    <Text style={styles.reservarBtnTextModal}>Reservar Ahora</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         </Modal>
@@ -443,6 +505,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+
     backgroundColor: '#e0e0e0',
     marginHorizontal: 4,
   },
@@ -556,11 +619,13 @@ const styles = StyleSheet.create({
 
   spaceCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f9f9f9',
     borderRadius: 12,
     marginBottom: 14,
     overflow: 'hidden',
     elevation: 1,
+    padding: 10,
   },
   spaceImage: {
     width: 90,
@@ -577,22 +642,42 @@ const styles = StyleSheet.create({
   spaceName: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  spaceRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  ratingText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#000',
-    fontWeight: '500',
+    marginBottom: 2,
+    color: '#222',
+    maxWidth: 160,
   },
   spaceLocation: {
     fontSize: 13,
     color: '#666',
+    marginBottom: 4,
+  },
+  spaceActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+    gap: 6,
+  },
+  reservarBtn: {
+    backgroundColor: '#00C853',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginRight: 6,
+  },
+  reservarBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 6,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#000',
+    fontWeight: '500',
   },
 
   modalOverlay: {
@@ -602,13 +687,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
 
-  modalContent: {
+  modalReservaBox: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '85%',
+    borderRadius: 18,
+    padding: 24,
+    marginHorizontal: 16,
+    marginTop: 60,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
   },
-
+  modalImg: {
+    width: 54,
+    height: 54,
+    borderRadius: 10,
+    backgroundColor: '#eee',
+  },
   modalTitle: {
     fontWeight: 'bold',
     fontSize: 18,
@@ -618,18 +715,20 @@ const styles = StyleSheet.create({
   hoursContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     marginBottom: 10,
+    gap: 8,
   },
 
   hourButton: {
-    backgroundColor: '#eee',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 5,
-    marginRight: 10,
-    marginBottom: 10,
-    minWidth: 70,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    margin: 4,
+    minWidth: 64,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 
   hourButtonSelected: {

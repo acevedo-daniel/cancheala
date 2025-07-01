@@ -24,7 +24,7 @@ const EDIT_ICON_RIGHT_OFFSET = AVATAR_RADIUS - 10;
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const FotoPerfil = require('../../assets/profiles/FotoPerfil.png');
+  const FotoPerfil = require('../assets/images/blindex1.png');
 
   const [profileImage, setProfileImage] = useState(FotoPerfil);
   const [isModalVisible, setModalVisible] = useState(false);
