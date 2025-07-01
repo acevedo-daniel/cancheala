@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Cancheala",
+    "slug": "cancheala",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/iconSplash.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/backgrounds/background.jpg",
+      "resizeMode": "cover",
+      "backgroundColor": "#00C853"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/iconSplash.png",
+        "backgroundColor": "#00C853"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.cancheala"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "cancheala",
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d5688a93-7fbd-4de8-8d7d-cf0e9fd82d8e"
+      }
+    }
+  }
+}

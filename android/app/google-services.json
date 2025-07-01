@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "648569611606",
+    "project_id": "cancheala",
+    "storage_bucket": "cancheala.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:648569611606:android:1fa3a93ec935583234a2f7",
+        "android_client_info": {
+          "package_name": "com.cancheala.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "648569611606-ris4il20nog48b0p4imfrifevhpttrla.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cancheala.app",
+            "certificate_hash": "385ec2603ff3042a0b399a6d9363d12e45c43b10"
+          }
+        },
+        {
+          "client_id": "648569611606-l966vbagm0r0p4qgs8256s6k081h4rm8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApyh2qvRhKJgA5MbRqYMBJJtzxbEEFPPY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "648569611606-l966vbagm0r0p4qgs8256s6k081h4rm8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
