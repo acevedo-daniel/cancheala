@@ -6,13 +6,12 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  Pressable,
   Alert,
   SafeAreaView,
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,17 +19,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import FotoPerfil from '../../assets/profile/FotoPerfil.png';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const AVATAR_SIZE = 90;
 const AVATAR_RADIUS = AVATAR_SIZE / 2;
 const EDIT_ICON_RIGHT_OFFSET = AVATAR_RADIUS - 10;
 
-export default function ProfileScreen() {
+export default function OwnerProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -38,9 +34,7 @@ export default function ProfileScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [age, setAge] = useState('');
   const [email, setEmail] = useState('');
-  const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -64,9 +58,7 @@ export default function ProfileScreen() {
           const data = userDoc.data();
           setName(data.name || '');
           setLastName(data.lastName || '');
-          setAge(data.age || '');
           setEmail(data.email || user.email || '');
-          setDni(data.dni || '');
           if (data.photoURL) {
             setProfileImage({ uri: data.photoURL });
           } else {
@@ -95,17 +87,15 @@ export default function ProfileScreen() {
       );
       return;
     }
-
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
-
     if (!pickerResult.canceled) {
       const uri = pickerResult.assets[0].uri;
-      await AsyncStorage.setItem('profileImage', uri);
+      await AsyncStorage.setItem('ownerProfileImage', uri);
       setProfileImage({ uri });
       toggleModal();
     }
@@ -120,23 +110,21 @@ export default function ProfileScreen() {
       );
       return;
     }
-
     const pickerResult = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
-
     if (!pickerResult.canceled) {
       const uri = pickerResult.assets[0].uri;
-      await AsyncStorage.setItem('profileImage', uri);
+      await AsyncStorage.setItem('ownerProfileImage', uri);
       setProfileImage({ uri });
       toggleModal();
     }
   };
 
   const handleBorrarImagen = async () => {
-    await AsyncStorage.removeItem('profileImage');
+    await AsyncStorage.removeItem('ownerProfileImage');
     setProfileImage(FotoPerfil);
     toggleModal();
   };
@@ -163,8 +151,6 @@ export default function ProfileScreen() {
         {
           name,
           lastName,
-          age,
-          dni,
           email: email || user.email || '',
         },
         { merge: true },
@@ -177,13 +163,6 @@ export default function ProfileScreen() {
     }
     setSaving(false);
   };
-
-  const renderItem = (label: string, value: string) => (
-    <View style={styles.item}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value || '\u2014'}</Text>
-    </View>
-  );
 
   if (loading || isAuthenticated === null) {
     return (
@@ -207,18 +186,18 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.unauthTitle}>¡Bienvenido a Cancheala!</Text>
           <Text style={styles.unauthSubtitle}>
-            Inicia sesión o regístrate para acceder a tu perfil y reservas.
+            Inicia sesión o regístrate para acceder a tu perfil de proveedor.
           </Text>
           <TouchableOpacity
             style={[styles.authButton, styles.loginButton]}
-            onPress={() => router.replace('/(auth)/email')}
+            onPress={() => router.replace('/(owner)/login')}
             activeOpacity={0.85}
           >
             <Text style={styles.authButtonText}>Iniciar sesión</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.authButton, styles.registerButton]}
-            onPress={() => router.replace('/(auth)/register')}
+            onPress={() => router.replace('/(owner)/register')}
             activeOpacity={0.85}
           >
             <Text style={styles.authButtonText}>Registrarse</Text>
@@ -233,7 +212,7 @@ export default function ProfileScreen() {
       <ScrollView>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerText}>Mi Perfil</Text>
+          <Text style={styles.headerText}>Mi Perfil de Proveedor</Text>
           <TouchableOpacity onPress={() => setEditMode(!editMode)}>
             <Feather name={editMode ? 'x' : 'edit-2'} size={20} color="#333" />
           </TouchableOpacity>
@@ -274,22 +253,6 @@ export default function ProfileScreen() {
                 editable={false}
                 selectTextOnFocus={false}
               />
-              <Text style={styles.label}>Edad</Text>
-              <TextInput
-                style={styles.input}
-                value={age}
-                onChangeText={setAge}
-                placeholder="Edad"
-                keyboardType="numeric"
-              />
-              <Text style={styles.label}>DNI</Text>
-              <TextInput
-                style={styles.input}
-                value={dni}
-                onChangeText={setDni}
-                placeholder="DNI"
-                keyboardType="numeric"
-              />
               <TouchableOpacity
                 style={styles.saveButton}
                 onPress={handleSave}
@@ -316,48 +279,15 @@ export default function ProfileScreen() {
                 <Text style={styles.label}>Correo electrónico</Text>
                 <Text style={styles.value}>{email || '\u2014'}</Text>
               </View>
-              <View style={styles.item}>
-                <Text style={styles.label}>Edad</Text>
-                <Text style={styles.value}>{age || '\u2014'}</Text>
-              </View>
-              <View style={styles.item}>
-                <Text style={styles.label}>DNI</Text>
-                <Text style={styles.value}>{dni || '\u2014'}</Text>
-              </View>
             </>
           )}
-          {renderItem('Nombre y Apellido', name)}
-          {renderItem('Correo electrónico', email)}
-          {renderItem('DNI', dni)}
-          {renderItem('Edad', age)}
         </View>
 
         {/* Configuraciones */}
         <View style={styles.settingsContainer}>
           <Text style={styles.sectionTitle}>Configuraciones</Text>
-          <TouchableOpacity
-            style={styles.configItem}
-            onPress={() => router.push('/(user)/favourites')}
-          >
-            <Ionicons name="heart-outline" size={18} color="gray" />
-            <Text style={styles.configText}>Favoritos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.configItem}
-            onPress={() => router.push('/(user)/configNotifications')}
-          >
-            <Ionicons name="notifications-outline" size={18} color="gray" />
-            <Text style={styles.configText}>Notificaciones</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.configItem}
-            onPress={() => router.push('/(auth)/forgotPassword')}
-          >
-            <MaterialIcons name="password" size={18} color="gray" />
-            <Text style={styles.configText}>Cambiar Contraseña</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="exit-outline" size={20} color="#fff" />
+            <Feather name="log-out" size={20} color="#fff" />
             <Text style={styles.logoutText}>Cerrar Sesión</Text>
           </TouchableOpacity>
         </View>
@@ -431,7 +361,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: EDIT_ICON_RIGHT_OFFSET,
-    backgroundColor: '#f57c00',
+    backgroundColor: '#3a8d59',
     borderRadius: 12,
     padding: 5,
   },
@@ -470,18 +400,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 10,
   },
-  configItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  configText: {
-    fontSize: 14,
-    color: '#333',
-  },
   logoutButton: {
     marginTop: 20,
     backgroundColor: '#ff4d4d',
@@ -496,91 +414,59 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 8,
   },
-  modalContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
+  unauthContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  modalButton: {
-    backgroundColor: '#333',
-    padding: 15,
-    borderRadius: 8,
-    marginVertical: 8,
+  unauthTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#3a8d59',
   },
-  modalButtonText: {
-    color: '#fff',
+  unauthSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    marginBottom: 20,
     textAlign: 'center',
-    fontSize: 16,
   },
-  modalBottom: {
-    justifyContent: 'flex-end',
-    margin: 0,
+  authButton: {
+    width: 180,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  loginButton: {
+    backgroundColor: '#3a8d59',
+  },
+  registerButton: {
+    backgroundColor: '#f57c00',
+  },
+  authButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   input: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    padding: 10,
     marginBottom: 12,
+    fontSize: 15,
     backgroundColor: '#fff',
   },
   saveButton: {
-    backgroundColor: '#007AFF',
-    padding: 14,
+    backgroundColor: '#3a8d59',
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 16,
+    marginTop: 10,
   },
   saveButtonText: {
     color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  unauthContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  unauthTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#222',
-    marginTop: 12,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  unauthSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  authButton: {
-    width: 220,
-    paddingVertical: 14,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  loginButton: {
-    backgroundColor: '#007AFF',
-  },
-  registerButton: {
-    backgroundColor: '#4CAF50',
-    marginBottom: 0,
-  },
-  authButtonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
   },
 });

@@ -20,37 +20,56 @@ import {
   TYPOGRAPHY,
   SHADOWS,
 } from '../../constants';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/firebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
+WebBrowser.maybeCompleteAuthSession();
+
 export default function AuthScreen() {
   const router = useRouter();
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId:
+      '648569611606-l966vbagm0r0p4qgs8256s6k081h4rm8.apps.googleusercontent.com',
+    androidClientId:
+      '648569611606-l966vbagm0r0p4qgs8256s6k081h4rm8.apps.googleusercontent.com',
+    iosClientId:
+      '648569611606-2v6k7v6q7v6k7v6k7v6k7v6k7v6k7v6k.apps.googleusercontent.com', // Cambia esto si tienes un clientId de iOS
+  });
+
+  React.useEffect(() => {
+    const signInWithGoogle = async () => {
+      if (response?.type === 'success') {
+        const { id_token } = response.params;
+        const credential = GoogleAuthProvider.credential(id_token);
+        try {
+          const userCredential = await signInWithCredential(auth, credential);
+          const user = userCredential.user;
+          // Verificar si el usuario ya existe en Firestore
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (!userDoc.exists()) {
+            // Si es nuevo, guardar datos básicos
+            await setDoc(doc(db, 'users', user.uid), {
+              name: user.displayName || '',
+              email: user.email || '',
+              role: 'user',
+            });
+          }
+          router.replace('/(user)');
+        } catch (e) {
+          alert('Error al iniciar sesión con Google: ' + (e as any).message);
+        }
+      }
+    };
+    signInWithGoogle();
+  }, [response]);
 
   const handleGoogleLogin = async () => {
-    try {
-      // TODO: Implementar autenticación con Google
-      // Por ahora simulamos que el usuario es nuevo y necesita registrarse
-      const isNewUser = true; // Esto vendría de la respuesta de Google
-
-      if (isNewUser) {
-        // Si es un usuario nuevo, lo enviamos al registro con datos mock de Google
-        router.push({
-          pathname: '/(auth)/register',
-          params: {
-            email: 'usuario@gmail.com',
-            firstName: 'Usuario',
-            lastName: 'Google',
-            isGoogleUser: 'true',
-          },
-        });
-      } else {
-        // Si es un usuario existente, lo enviamos al home
-        router.replace('/(user)');
-      }
-    } catch (error) {
-      console.error('Error en login con Google:', error);
-      // TODO: Mostrar mensaje de error al usuario
-    }
+    promptAsync();
   };
 
   const handleEmailLogin = () => {
@@ -63,7 +82,7 @@ export default function AuthScreen() {
   };
 
   const handleProviderAccess = () => {
-    router.replace('/(owner)');
+    router.push('/(owner)/login');
   };
 
   return (
@@ -104,8 +123,15 @@ export default function AuthScreen() {
             style={[styles.button, styles.emailButton]}
             onPress={handleEmailLogin}
           >
-            <Ionicons name="mail-outline" size={20} color="#fff" style={styles.leftIcon} />
-            <Text style={[styles.buttonText, styles.emailButtonText]}>Continuar con correo electrónico</Text>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color="#fff"
+              style={styles.leftIcon}
+            />
+            <Text style={[styles.buttonText, styles.emailButtonText]}>
+              Continuar con correo electrónico
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -114,6 +140,18 @@ export default function AuthScreen() {
           >
             <Text style={styles.providerText}>
               Acceso para proveedores de servicios
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.registerTextButton}
+            onPress={() => router.push('/(auth)/register')}
+          >
+            <Text style={styles.registerText}>
+              ¿No tienes cuenta?{' '}
+              <Text style={{ color: '#00C853', fontWeight: 'bold' }}>
+                Regístrate
+              </Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -227,5 +265,16 @@ const styles = StyleSheet.create({
   },
   leftIcon: {
     marginRight: 12,
+  },
+  registerTextButton: {
+    marginTop: 18,
+    width: '100%',
+    alignItems: 'center',
+  },
+  registerText: {
+    color: '#444',
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '400',
   },
 });

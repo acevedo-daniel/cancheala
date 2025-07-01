@@ -32,15 +32,11 @@ export default function OwnerLayout() {
         }}
       />
       <Tabs.Screen
-        name="estadisticas"
+        name="CrearEventoForm"
         options={{
-          title: 'Estadisticas',
+          title: 'Evento',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="chart-bar"
-              color={color}
-              size={size}
-            />
+            <MaterialCommunityIcons name="calendar" color={color} size={size} />
           ),
         }}
       />
@@ -53,6 +49,21 @@ export default function OwnerLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="account-circle-outline"
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen name="login" options={{ href: null }} />
+      <Tabs.Screen name="register" options={{ href: null }} />
     </Tabs>
   );
 }

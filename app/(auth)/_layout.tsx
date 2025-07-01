@@ -5,9 +5,10 @@ export default function AuthLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="email" />
-      <Stack.Screen name="verify-code" />
+      {/* <Stack.Screen name="verify-code" /> */}
       <Stack.Screen name="register" />
       <Stack.Screen name="location" />
+      <Stack.Screen name="forgotPassword" />
     </Stack>
   );
-} 
+}

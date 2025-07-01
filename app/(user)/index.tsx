@@ -679,8 +679,32 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push('/(user)/notifications')}
+            style={{ position: 'relative' }}
           >
             <Ionicons name="notifications-outline" size={24} color="#181028" />
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  backgroundColor: 'red',
+                  borderRadius: 10,
+                  minWidth: 18,
+                  height: 18,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 4,
+                  zIndex: 1,
+                }}
+              >
+                <Text
+                  style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}
+                >
+                  {unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
         <View style={{ paddingHorizontal: SPACING.md }}>

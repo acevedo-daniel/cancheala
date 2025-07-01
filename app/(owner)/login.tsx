@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,33 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 
-export default function EmailScreen() {
+export default function OwnerLoginScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({ tabBarStyle: { display: 'none' } });
+    return () => {
+      navigation.setOptions({ tabBarStyle: undefined });
+    };
+  }, [navigation]);
+
+  const handleGoBack = () => {
+    if (router.canGoBack?.()) {
+      router.back();
+    } else {
+      router.replace('/(auth)');
+    }
+  };
 
   const handleSubmit = async () => {
     setError('');
@@ -26,27 +43,14 @@ export default function EmailScreen() {
       setError('Completa ambos campos');
       return;
     }
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      router.replace('/(user)');
+      router.replace('/(owner)');
     } catch (e: any) {
-      if (
-        e.code === 'auth/user-not-found' ||
-        e.code === 'auth/wrong-password'
-      ) {
-        setError('Correo o contraseña incorrectos');
-      } else {
-        setError('Error al iniciar sesión: ' + e.message);
-      }
+      setError('Correo o contraseña incorrectos');
     }
-  };
-
-  const handleGoBack = () => {
-    if (router.canGoBack?.()) {
-      router.back();
-    } else {
-      router.replace('/(user)/profile');
-    }
+    setLoading(false);
   };
 
   return (
@@ -59,10 +63,8 @@ export default function EmailScreen() {
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
       </View>
-
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.subtitle}>Iniciar sesión</Text>
-
+        <Text style={styles.subtitle}>Acceso para proveedores</Text>
         <View style={styles.form}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Correo electrónico</Text>
@@ -94,7 +96,7 @@ export default function EmailScreen() {
               (!email || !password) && styles.buttonDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={!email || !password}
+            disabled={!email || !password || loading}
           >
             <Text
               style={[
@@ -102,10 +104,18 @@ export default function EmailScreen() {
                 (!email || !password) && styles.buttonTextDisabled,
               ]}
             >
-              Iniciar sesión
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.registerButton}
+          onPress={() => router.push('/(owner)/register')}
+        >
+          <Text style={styles.registerButtonText}>
+            ¿No tienes cuenta? Registrarse como proveedor
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -136,18 +146,13 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     marginRight: 8,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginLeft: 16,
-  },
   content: {
     flex: 1,
     padding: 24,
   },
   subtitle: {
     fontSize: 28,
-    fontFamily: 'Inter-Bold',
+    fontWeight: 'bold',
     marginBottom: 32,
     color: '#000000',
     textAlign: 'center',
@@ -160,7 +165,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
     color: '#666666',
     marginBottom: 4,
   },
@@ -170,18 +174,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
     backgroundColor: '#fff',
     color: '#000000',
   },
-  inputError: {
-    borderColor: '#00C853',
-    backgroundColor: '#fff5f5',
-  },
   errorText: {
-    color: '#00C853',
+    color: '#ff4d4d',
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   button: {
     width: '100%',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: 'bold',
   },
   buttonDisabled: {
     backgroundColor: '#f5f5f5',
@@ -209,5 +209,16 @@ const styles = StyleSheet.create({
   },
   buttonTextDisabled: {
     color: '#999999',
+  },
+  registerButton: {
+    marginTop: 24,
+    alignItems: 'center',
+    padding: 12,
+  },
+  registerButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
