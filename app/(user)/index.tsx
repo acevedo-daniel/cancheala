@@ -13,19 +13,15 @@ import {
   Button,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  TextInput,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Category, Space } from '../../types';
-import { BANNERS, CATEGORIES, SPACES, EVENTS } from '../../mocks/data';
+import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { SPACING, COLORS } from '../../constants';
-import { useAppStore } from '../../store';
-import { NotificationsContext } from './notifications';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -42,16 +38,12 @@ export default function HomeScreen() {
   const [selectedHours, setSelectedHours] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
-  const location = useAppStore(state => state.location);
-  const [readEvents, setReadEvents] = useState([]);
-  const notificationsCtx = React.useContext(NotificationsContext);
-  const unreadCount = notificationsCtx ? notificationsCtx.events.length : 0;
 
   // Resetear categoría seleccionada cuando vuelvas al home
   useFocusEffect(
     React.useCallback(() => {
       setSelectedCategory(null);
-    }, [])
+    }, []),
   );
 
   const handleReservePress = (space: Space) => {
@@ -68,17 +60,6 @@ export default function HomeScreen() {
     setCurrentBanner(currentIndex);
   };
 
-  const handleToggleFavorito = (id: string) => {
-    setFavoritos((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
-    );
-  };
-
-  const handleCardPress = (space: Space) => {
-    setSelectedDetailSpace(space);
-    setDetailModalVisible(true);
-  };
-
   const renderBanner = ({ item }: { item: Banner }) => (
     <View style={styles.banner}>
       {item.image && (
@@ -89,7 +70,7 @@ export default function HomeScreen() {
         />
       )}
       <View style={styles.bannerOverlay}>
-      <Text style={styles.bannerText}>{item.title}</Text>
+        <Text style={styles.bannerText}>{item.title}</Text>
       </View>
     </View>
   );
@@ -101,7 +82,7 @@ export default function HomeScreen() {
         setSelectedCategory(item.id);
         router.push({
           pathname: '/search',
-          params: { filter: item.name }
+          params: { filter: item.name },
         });
       }}
       activeOpacity={0.85}
@@ -109,14 +90,20 @@ export default function HomeScreen() {
       <Image source={item.image} style={styles.categoryImageV2} />
       <View style={styles.categoryOverlayV2} />
       <View style={styles.categoryContentV2}>
-        <Ionicons name={item.icon as any} size={28} color="#fff" style={{ marginBottom: 6 }} />
+        <Ionicons
+          name={item.icon as any}
+          size={28}
+          color="#fff"
+          style={{ marginBottom: 6 }}
+        />
         <Text style={styles.categoryTextV2}>{item.name}</Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderSpace = ({ item }: { item: typeof SPACES[0] }) => {
-    const formatDistance = (m: number) => m < 1000 ? `${m} m` : `${(m/1000).toFixed(1)} km`;
+  const renderSpace = ({ item }: { item: (typeof SPACES)[0] }) => {
+    const formatDistance = (m: number) =>
+      m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
     const price = '$1.500';
     const promoColors = [
       '#FFE066', // Amarillo
@@ -131,89 +118,152 @@ export default function HomeScreen() {
         {/* Badge flotante como parte del flujo normal */}
         {item.statusTag && (
           <View style={styles.statusTagInline}>
-            <Text style={styles.statusTagTextV2} numberOfLines={1} ellipsizeMode="tail">{item.statusTag}</Text>
+            <Text
+              style={styles.statusTagTextV2}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.statusTag}
+            </Text>
           </View>
         )}
         <View style={styles.nearbyCardV3}>
           <View style={{ position: 'relative', overflow: 'visible' }}>
-            <Image
-              source={item.image}
-              style={styles.nearbyImageV3}
-            />
+            <Image source={item.image} style={styles.nearbyImageV3} />
           </View>
           <View style={styles.nearbyInfoV3}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.nearbyNameV2} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.nearbyNameV2} numberOfLines={1}>
+                {item.name}
+              </Text>
               <View style={{ flex: 1 }} />
-              <Ionicons name="star" size={16} color="#181829" style={{ marginRight: 2 }} />
-              <Text style={styles.nearbyRatingV2}>{item.rating.toFixed(1)}</Text>
+              <Ionicons
+                name="star"
+                size={16}
+                color="#181829"
+                style={{ marginRight: 2 }}
+              />
+              <Text style={styles.nearbyRatingV2}>
+                {item.rating.toFixed(1)}
+              </Text>
             </View>
             <Text style={styles.nearbyTypeV2}>{item.type}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-              <Ionicons name="navigate-outline" size={14} color="#A1A1B3" style={{ marginRight: 2 }} />
-              <Text style={styles.nearbyDataV2}>{formatDistance(item.distance)}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 2,
+              }}
+            >
+              <Ionicons
+                name="navigate-outline"
+                size={14}
+                color="#A1A1B3"
+                style={{ marginRight: 2 }}
+              />
+              <Text style={styles.nearbyDataV2}>
+                {formatDistance(item.distance)}
+              </Text>
               <Text style={styles.nearbyDotV2}>·</Text>
-              <Ionicons name="pricetag-outline" size={14} color="#A1A1B3" style={{ marginRight: 2 }} />
+              <Ionicons
+                name="pricetag-outline"
+                size={14}
+                color="#A1A1B3"
+                style={{ marginRight: 2 }}
+              />
               <Text style={styles.nearbyDataV2}>{price}</Text>
             </View>
             {/* Promos chips */}
-            <View style={{ flexDirection: 'row', marginTop: 6, flexWrap: 'wrap' }}>
-              {item.promos && item.promos.map((promo, idx) => (
-                <View
-                  key={promo}
-                  style={[styles.promoChipV2, { backgroundColor: promoColors[idx % promoColors.length] }]}
-                >
-                  <Text style={styles.promoChipTextV2} numberOfLines={1}>{promo}</Text>
-                </View>
-              ))}
+            <View
+              style={{ flexDirection: 'row', marginTop: 6, flexWrap: 'wrap' }}
+            >
+              {item.promos &&
+                item.promos.map((promo, idx) => (
+                  <View
+                    key={promo}
+                    style={[
+                      styles.promoChipV2,
+                      {
+                        backgroundColor: promoColors[idx % promoColors.length],
+                      },
+                    ]}
+                  >
+                    <Text style={styles.promoChipTextV2} numberOfLines={1}>
+                      {promo}
+                    </Text>
+                  </View>
+                ))}
             </View>
           </View>
         </View>
       </View>
-  );
+    );
   };
 
   return (
     <ScreenContainer>
       <View style={{ backgroundColor: '#fff', paddingBottom: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingTop: 18, marginBottom: 10 }}>
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => router.push('/(user)/location-selection')}>
-            <Text style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}>
-              {location?.address || 'Selecciona tu ubicación'}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: SPACING.md,
+            paddingTop: 18,
+            marginBottom: 10,
+          }}
+        >
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center' }}
+            onPress={() => router.push('/(user)/location-selection')}
+          >
+            <Text
+              style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}
+            >
+              C. Falucho 265
             </Text>
-            <Ionicons name="chevron-down" size={20} color="#181028" style={{ marginLeft: 4 }} />
+            <Ionicons
+              name="chevron-down"
+              size={20}
+              color="#181028"
+              style={{ marginLeft: 4 }}
+            />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/(user)/notifications')} style={{ position: 'relative' }}>
+          <TouchableOpacity
+            onPress={() => router.push('/(user)/notifications')}
+          >
             <Ionicons name="notifications-outline" size={24} color="#181028" />
-            {unreadCount > 0 && (
-              <View style={{
-                position: 'absolute',
-                top: -6,
-                right: -6,
-                backgroundColor: 'red',
-                borderRadius: 10,
-                minWidth: 18,
-                height: 18,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingHorizontal: 4,
-                zIndex: 1,
-              }}>
-                <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>{unreadCount}</Text>
-              </View>
-            )}
           </TouchableOpacity>
         </View>
         <View style={{ paddingHorizontal: SPACING.md }}>
           <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 32, paddingHorizontal: 20, paddingVertical: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: '#e5e5e5' }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: '#fff',
+              borderRadius: 32,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              shadowColor: '#000',
+              shadowOpacity: 0.04,
+              shadowRadius: 6,
+              elevation: 1,
+              borderWidth: 1,
+              borderColor: '#e5e5e5',
+            }}
             onPress={() => router.push('/search')}
             activeOpacity={0.8}
           >
             <Text
-              style={{ flex: 1, color: '#888999', fontSize: 17, fontWeight: '500', marginRight: 8 }}
+              style={{
+                flex: 1,
+                color: '#888999',
+                fontSize: 17,
+                fontWeight: '500',
+                marginRight: 8,
+              }}
               numberOfLines={1}
-          >
+            >
               Buscar canchas, deportes...
             </Text>
             <Ionicons name="search" size={20} color="#888999" />
@@ -250,7 +300,7 @@ export default function HomeScreen() {
           {/* Quick Access */}
           <View style={styles.quickAccess}>
             <View style={styles.quickAccessItem}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.quickAccessCard}
                 onPress={() => router.push('/(user)/canchas')}
               >
@@ -262,20 +312,20 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <Text style={styles.quickAccessText}>Canchas</Text>
             </View>
-            
+
             <View style={styles.quickAccessItem}>
-            <TouchableOpacity style={styles.quickAccessCard}>
+              <TouchableOpacity style={styles.quickAccessCard}>
                 <Image
                   source={require('../../assets/images/chica-espaldas-tennis.jpg')}
                   style={styles.quickAccessImage}
                   resizeMode="cover"
                 />
-            </TouchableOpacity>
+              </TouchableOpacity>
               <Text style={styles.quickAccessText}>Matchmaking</Text>
             </View>
           </View>
 
-          {/* Categorías */}
+          {/* Filtros rápidos */}
           <View style={styles.categoriesSection}>
             <Text style={styles.sectionTitle}>Explora por</Text>
             <FlatList
@@ -309,20 +359,11 @@ export default function HomeScreen() {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalReservaBox}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                <Image source={selectedSpace?.image} style={styles.modalImg} />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.modalTitle}>{selectedSpace?.name || ''}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 2 }}>
-                    <Ionicons name="star" size={16} color="#FFD700" />
-                    <Text style={{ marginLeft: 4, fontWeight: 'bold' }}>{selectedSpace?.rating}</Text>
-                  </View>
-                  <Text style={{ color: '#666', fontSize: 13 }}>{selectedSpace?.location}</Text>
-                  <Text style={{ color: '#888', fontSize: 13, marginTop: 2 }}>Precio por hora: ${SPACE_PRICE.toLocaleString()}</Text>
-                </View>
-              </View>
-              <Text style={{ marginBottom: 10, fontWeight: '600', fontSize: 15 }}>Selecciona los horarios disponibles</Text>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                Reservar en {selectedSpace?.name || ''}
+              </Text>
+              <Text style={{ marginBottom: 10 }}>Selecciona horarios:</Text>
               <View style={styles.hoursContainer}>
                 {availableHours.map((hour) => {
                   const selected = selectedHours.includes(hour);
@@ -342,10 +383,9 @@ export default function HomeScreen() {
                       ]}
                     >
                       <Text
-                        style={[
-                          styles.hourButtonText,
-                          selected && styles.hourButtonTextSelected,
-                        ]}
+                        style={{
+                          color: selected ? '#fff' : '#000',
+                        }}
                       >
                         {hour}
                       </Text>
@@ -353,9 +393,7 @@ export default function HomeScreen() {
                   );
                 })}
               </View>
-              <Text style={{ color: '#888', fontSize: 12, marginTop: 6, marginBottom: 2 }}>
-                De 19hs en adelante +$2.000 por luz
-              </Text>
+
               {selectedHours.length > 0 && selectedSpace && (
                 <Button
                   title="Reservar"
@@ -373,43 +411,6 @@ export default function HomeScreen() {
                   onPress={() => setModalVisible(false)}
                 />
               </View>
-              {selectedDetailSpace && (
-                <>
-                  <Image source={selectedDetailSpace.image} style={styles.modalImg} resizeMode="cover" />
-                  {selectedDetailSpace.specs?.available && (
-                    <View style={styles.badgeDisponible}><Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>Disponible</Text></View>
-                  )}
-                  <Text style={styles.modalTitle}>{selectedDetailSpace.name}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                    <Ionicons name="star" size={16} color="#FFD700" />
-                    <Text style={{ marginLeft: 4, fontWeight: 'bold' }}>{selectedDetailSpace.rating}</Text>
-                    <Text style={{ color: '#888', marginLeft: 6, fontSize: 13 }}>({selectedDetailSpace.specs?.reviews} reseñas)</Text>
-                    <View style={styles.priceBadge}><Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>{`$${selectedDetailSpace.specs?.price.toLocaleString()}/hora`}</Text></View>
-                  </View>
-                  <Text style={{ color: '#666', fontSize: 14, marginBottom: 2 }}><Ionicons name="location-outline" size={14} color="#888" /> {selectedDetailSpace.location}</Text>
-                  <Text style={{ color: '#888', fontSize: 13, marginBottom: 2 }}>Dirección: {selectedDetailSpace.address}</Text>
-                  <Text style={{ fontWeight: 'bold', marginTop: 8, marginBottom: 2 }}>Servicios incluidos:</Text>
-                  {selectedDetailSpace.specs?.services?.map((serv, idx) => (
-                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                      <Ionicons name={serv.icon} size={18} color="#00C853" style={{ marginRight: 6 }} />
-                      <Text style={{ color: '#444', fontSize: 14 }}>{serv.label}</Text>
-                    </View>
-                  ))}
-                  <TouchableOpacity
-                    style={styles.reservarBtnModal}
-                    onPress={() => {
-                      setDetailModalVisible(false);
-                      setTimeout(() => {
-                        setSelectedSpace(selectedDetailSpace);
-                        setModalVisible(true);
-                        setSelectedHours([]);
-                      }, 300); // Espera a que cierre el modal de detalles
-                    }}
-                  >
-                    <Text style={styles.reservarBtnTextModal}>Reservar Ahora</Text>
-                  </TouchableOpacity>
-                </>
-              )}
             </View>
           </View>
         </Modal>
@@ -505,7 +506,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-
     backgroundColor: '#e0e0e0',
     marginHorizontal: 4,
   },
@@ -619,13 +619,11 @@ const styles = StyleSheet.create({
 
   spaceCard: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#f9f9f9',
     borderRadius: 12,
     marginBottom: 14,
     overflow: 'hidden',
     elevation: 1,
-    padding: 10,
   },
   spaceImage: {
     width: 90,
@@ -642,42 +640,22 @@ const styles = StyleSheet.create({
   spaceName: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 2,
-    color: '#222',
-    maxWidth: 160,
+    marginBottom: 4,
+  },
+  spaceRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  ratingText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: '#000',
+    fontWeight: '500',
   },
   spaceLocation: {
     fontSize: 13,
     color: '#666',
-    marginBottom: 4,
-  },
-  spaceActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 8,
-    gap: 6,
-  },
-  reservarBtn: {
-    backgroundColor: '#00C853',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginRight: 6,
-  },
-  reservarBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 6,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#000',
-    fontWeight: '500',
   },
 
   modalOverlay: {
@@ -687,25 +665,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
 
-  modalReservaBox: {
+  modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 24,
-    marginHorizontal: 16,
-    marginTop: 60,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  modalImg: {
-    width: 54,
-    height: 54,
+    padding: 20,
     borderRadius: 10,
-    backgroundColor: '#eee',
+    width: '85%',
   },
+
   modalTitle: {
     fontWeight: 'bold',
     fontSize: 18,
@@ -715,20 +681,18 @@ const styles = StyleSheet.create({
   hoursContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
     marginBottom: 10,
-    gap: 8,
   },
 
   hourButton: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    margin: 4,
-    minWidth: 64,
+    backgroundColor: '#eee',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginRight: 10,
+    marginBottom: 10,
+    minWidth: 70,
     alignItems: 'center',
-    justifyContent: 'center',
   },
 
   hourButtonSelected: {
