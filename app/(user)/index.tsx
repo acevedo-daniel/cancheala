@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useContext,
+} from 'react';
 import {
   View,
   Text,
@@ -28,6 +34,7 @@ import { SPACING, COLORS } from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppStore } from '../../store';
+import { NotificationsContext } from './notifications';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -75,7 +82,7 @@ const MOCK_CANCHAS: Cancha[] = [
     precio: '16000',
     descripcion: 'Cancha techada, césped sintético, iluminación incluida.',
     direccionTexto: 'Calle Falsa 456',
-    ubicacionMapa: { latitude: -34.6038, longitude: -58.3820 },
+    ubicacionMapa: { latitude: -34.6038, longitude: -58.382 },
     puntuacion: 8.7,
     suelo: 'césped',
     disponible: false,
@@ -89,7 +96,7 @@ const MOCK_CANCHAS: Cancha[] = [
     precio: '11000',
     descripcion: 'Cancha techada, césped sintético, iluminación incluida.',
     direccionTexto: 'Ruta 8 km 45',
-    ubicacionMapa: { latitude: -34.6040, longitude: -58.3830 },
+    ubicacionMapa: { latitude: -34.604, longitude: -58.383 },
     puntuacion: 9.5,
     suelo: 'césped',
     disponible: true,
@@ -104,7 +111,7 @@ const MOCK_CANCHAS: Cancha[] = [
     precio: '8000',
     descripcion: 'Cancha de cemento techada, iluminación incluida.',
     direccionTexto: 'Calle Cemento 123',
-    ubicacionMapa: { latitude: -34.6050, longitude: -58.3840 },
+    ubicacionMapa: { latitude: -34.605, longitude: -58.384 },
     puntuacion: 8.9,
     suelo: 'hormigón',
     disponible: true,
@@ -118,7 +125,7 @@ const MOCK_CANCHAS: Cancha[] = [
     precio: '9000',
     descripcion: 'Cancha de cemento techada, iluminación incluida.',
     direccionTexto: 'Calle Cemento 456',
-    ubicacionMapa: { latitude: -34.6060, longitude: -58.3850 },
+    ubicacionMapa: { latitude: -34.606, longitude: -58.385 },
     puntuacion: 8.3,
     suelo: 'hormigón',
     disponible: false,
@@ -132,7 +139,7 @@ const MOCK_CANCHAS: Cancha[] = [
     precio: '7000',
     descripcion: 'Cancha de cemento techada, iluminación incluida.',
     direccionTexto: 'Calle Cemento 789',
-    ubicacionMapa: { latitude: -34.6070, longitude: -58.3860 },
+    ubicacionMapa: { latitude: -34.607, longitude: -58.386 },
     puntuacion: 8.1,
     suelo: 'hormigón',
     disponible: true,
@@ -151,78 +158,118 @@ const CATEGORIES = [
     name: 'Blindex',
     icon: 'layers-outline',
     color: '#4ADE80',
-    description: 'Canchas con paredes de blindex (vidrio) y césped sintético.'
+    description: 'Canchas con paredes de blindex (vidrio) y césped sintético.',
   },
   {
     id: 'cemento',
     name: 'Cemento',
     icon: 'grid-outline',
     color: '#A1A1B3',
-    description: 'Canchas de cemento, ideales para juego rápido.'
+    description: 'Canchas de cemento, ideales para juego rápido.',
   },
   {
     id: 'techada',
     name: 'Techadas',
     icon: 'home-outline',
     color: '#60A5FA',
-    description: 'Canchas techadas para jugar sin preocuparte por el clima.'
+    description: 'Canchas techadas para jugar sin preocuparte por el clima.',
   },
   {
     id: 'cafeteria',
     name: 'Con cafetería',
     icon: 'cafe-outline',
     color: '#FFD600',
-    description: 'Canchas con cafetería o bar para disfrutar antes o después.'
+    description: 'Canchas con cafetería o bar para disfrutar antes o después.',
   },
   {
     id: 'pet',
     name: 'Pet friendly',
     icon: 'paw-outline',
     color: '#F472B6',
-    description: 'Espacios donde podés venir con tu mascota.'
+    description: 'Espacios donde podés venir con tu mascota.',
   },
   {
     id: 'parking',
     name: 'Estacionamiento',
     icon: 'car-outline',
     color: '#00C853',
-    description: 'Canchas con estacionamiento propio.'
+    description: 'Canchas con estacionamiento propio.',
   },
 ];
 
 // Componente para cada categoría (con animación, tooltip y color personalizado)
-function CategoryCard({ item, onPress }: { item: typeof CATEGORIES[0], onPress: () => void }) {
+function CategoryCard({
+  item,
+  onPress,
+}: {
+  item: (typeof CATEGORIES)[0];
+  onPress: () => void;
+}) {
   const scale = React.useRef(new Animated.Value(1)).current;
   const [showTooltip, setShowTooltip] = React.useState(false);
   return (
     <View style={{ alignItems: 'center', marginRight: 16 }}>
       <Pressable
-        onPressIn={() => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start()}
-        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()}
+        onPressIn={() =>
+          Animated.spring(scale, {
+            toValue: 0.93,
+            useNativeDriver: true,
+          }).start()
+        }
+        onPressOut={() =>
+          Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()
+        }
         onLongPress={() => setShowTooltip(true)}
         onPress={onPress}
-        style={({ pressed }) => [{
-          backgroundColor: item.color,
-          borderRadius: 18,
-          width: 64,
-          height: 64,
-          justifyContent: 'center',
-          alignItems: 'center',
-          elevation: pressed ? 4 : 2,
-          shadowColor: '#000',
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-        }]}
+        style={({ pressed }) => [
+          {
+            backgroundColor: item.color,
+            borderRadius: 18,
+            width: 64,
+            height: 64,
+            justifyContent: 'center',
+            alignItems: 'center',
+            elevation: pressed ? 4 : 2,
+            shadowColor: '#000',
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+          },
+        ]}
       >
         <Animated.View style={{ transform: [{ scale }] }}>
           <Ionicons name={item.icon as any} size={32} color="#fff" />
         </Animated.View>
       </Pressable>
-      <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#222', marginTop: 6 }}>{item.name}</Text>
+      <Text
+        style={{
+          fontSize: 13,
+          fontWeight: 'bold',
+          color: '#222',
+          marginTop: 6,
+        }}
+      >
+        {item.name}
+      </Text>
       {showTooltip && (
-        <View style={{ position: 'absolute', top: 70, left: -30, backgroundColor: '#222', padding: 8, borderRadius: 8, zIndex: 10, maxWidth: 120 }}>
-          <Text style={{ color: '#fff', fontSize: 12 }}>{item.description}</Text>
-          <Pressable onPress={() => setShowTooltip(false)} style={{ position: 'absolute', top: 2, right: 4 }}>
+        <View
+          style={{
+            position: 'absolute',
+            top: 70,
+            left: -30,
+            backgroundColor: '#222',
+            padding: 8,
+            borderRadius: 8,
+            zIndex: 10,
+            maxWidth: 120,
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 12 }}>
+            {item.description}
+          </Text>
+          <Pressable
+            onPress={() => setShowTooltip(false)}
+            style={{ position: 'absolute', top: 2, right: 4 }}
+          >
             <Ionicons name="close" size={14} color="#fff" />
           </Pressable>
         </View>
@@ -250,7 +297,7 @@ const PERSON_TEXTS = [
 
 // Mapeo de íconos y colores para especificaciones
 const ESPEC_ICONS: { [key: string]: { icon: string; color: string } } = {
-  'Techada': { icon: 'home', color: '#F44336' },
+  Techada: { icon: 'home', color: '#F44336' },
   'Iluminación incluida': { icon: 'bulb', color: '#FFD600' },
   'Césped sintético': { icon: 'square', color: '#8BC34A' },
   'Venta de pelotitas': { icon: 'tennisball', color: '#2196F3' },
@@ -283,12 +330,19 @@ export default function HomeScreen() {
   const [fechaReserva, setFechaReserva] = useState('');
   const [horaReserva, setHoraReserva] = useState('');
   // ESTADO PARA FILTRO DE TIPO DE CANCHA
-  const [tipoFiltro, setTipoFiltro] = useState<'todas' | 'blindex' | 'cemento'>('todas');
+  const [tipoFiltro, setTipoFiltro] = useState<'todas' | 'blindex' | 'cemento'>(
+    'todas',
+  );
   // ESTADO PARA FILTRO DE DISPONIBILIDAD
-  const [disponibilidadFiltro, setDisponibilidadFiltro] = useState<DisponibilidadFiltro>('todas');
+  const [disponibilidadFiltro, setDisponibilidadFiltro] =
+    useState<DisponibilidadFiltro>('todas');
   // Estado para validación visual
   const [reservaError, setReservaError] = useState<string>('');
-  const location = useAppStore(state => state.location);
+  const location = useAppStore((state) => state.location);
+
+  // Obtener notificaciones del contexto
+  const { events } = useContext(NotificationsContext) || { events: [] };
+  const unreadCount = events.length;
 
   // Resetear categoría seleccionada cuando vuelvas al home
   useFocusEffect(
@@ -344,38 +398,75 @@ export default function HomeScreen() {
     </View>
   );
 
-  const renderCategory = ({ item }: { item: typeof CATEGORIES[0] }) => {
+  const renderCategory = ({ item }: { item: (typeof CATEGORIES)[0] }) => {
     const scale = useRef(new Animated.Value(1)).current;
     const [showTooltip, setShowTooltip] = useState(false);
     return (
       <View style={{ alignItems: 'center', marginRight: 16 }}>
         <Pressable
-          onPressIn={() => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start()}
-          onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()}
+          onPressIn={() =>
+            Animated.spring(scale, {
+              toValue: 0.93,
+              useNativeDriver: true,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scale, {
+              toValue: 1,
+              useNativeDriver: true,
+            }).start()
+          }
           onLongPress={() => setShowTooltip(true)}
           onPress={() => setTipoFiltro(item.id as any)}
-          style={({ pressed }) => [{
-            backgroundColor: item.color,
-            borderRadius: 18,
-            width: 64,
-            height: 64,
-            justifyContent: 'center',
-            alignItems: 'center',
-            elevation: pressed ? 4 : 2,
-            shadowColor: '#000',
-            shadowOpacity: 0.08,
-            shadowRadius: 8,
-          }]}
+          style={({ pressed }) => [
+            {
+              backgroundColor: item.color,
+              borderRadius: 18,
+              width: 64,
+              height: 64,
+              justifyContent: 'center',
+              alignItems: 'center',
+              elevation: pressed ? 4 : 2,
+              shadowColor: '#000',
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+            },
+          ]}
         >
           <Animated.View style={{ transform: [{ scale }] }}>
             <Ionicons name={item.icon as any} size={32} color="#fff" />
           </Animated.View>
         </Pressable>
-        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#222', marginTop: 6 }}>{item.name}</Text>
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: 'bold',
+            color: '#222',
+            marginTop: 6,
+          }}
+        >
+          {item.name}
+        </Text>
         {showTooltip && (
-          <View style={{ position: 'absolute', top: 70, left: -30, backgroundColor: '#222', padding: 8, borderRadius: 8, zIndex: 10, maxWidth: 120 }}>
-            <Text style={{ color: '#fff', fontSize: 12 }}>{item.description}</Text>
-            <Pressable onPress={() => setShowTooltip(false)} style={{ position: 'absolute', top: 2, right: 4 }}>
+          <View
+            style={{
+              position: 'absolute',
+              top: 70,
+              left: -30,
+              backgroundColor: '#222',
+              padding: 8,
+              borderRadius: 8,
+              zIndex: 10,
+              maxWidth: 120,
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 12 }}>
+              {item.description}
+            </Text>
+            <Pressable
+              onPress={() => setShowTooltip(false)}
+              style={{ position: 'absolute', top: 2, right: 4 }}
+            >
               <Ionicons name="close" size={14} color="#fff" />
             </Pressable>
           </View>
@@ -412,7 +503,10 @@ export default function HomeScreen() {
         )}
         <View style={styles.nearbyCardV3}>
           <View style={{ position: 'relative', overflow: 'visible' }}>
-            <Image source={getImageSource(item.image)} style={styles.nearbyImageV3} />
+            <Image
+              source={getImageSource(item.image)}
+              style={styles.nearbyImageV3}
+            />
           </View>
           <View style={styles.nearbyInfoV3}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -501,26 +595,40 @@ export default function HomeScreen() {
     setModalReservaVisible(false);
     setSelectedHours([]);
     if (!selectedDate) return;
-    alert('Reserva confirmada para ' + canchaReservando?.nombre + ' el ' + selectedDate.toLocaleDateString() + ' a las ' + selectedHours.join(', '));
+    alert(
+      'Reserva confirmada para ' +
+        canchaReservando?.nombre +
+        ' el ' +
+        selectedDate.toLocaleDateString() +
+        ' a las ' +
+        selectedHours.join(', '),
+    );
   };
 
   // Animación para las tarjetas de canchas
-  const animatedValues = useRef(MOCK_CANCHAS.map(() => new Animated.Value(0))).current;
+  const animatedValues = useRef(
+    MOCK_CANCHAS.map(() => new Animated.Value(0)),
+  ).current;
   useEffect(() => {
-    Animated.stagger(120, animatedValues.map(anim =>
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      })
-    )).start();
+    Animated.stagger(
+      120,
+      animatedValues.map((anim) =>
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ),
+    ).start();
   }, []);
 
   // Animación de scale para botones
   const useButtonScale = () => {
     const scale = useRef(new Animated.Value(1)).current;
-    const onPressIn = () => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start();
-    const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
+    const onPressIn = () =>
+      Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start();
+    const onPressOut = () =>
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
     return { scale, onPressIn, onPressOut };
   };
 
@@ -543,7 +651,13 @@ export default function HomeScreen() {
   };
 
   // Componente separado para la tarjeta de cancha (dentro de HomeScreen para acceso a hooks y funciones)
-  function CanchaCard({ item, index, onVerDetalle, onReservar, animatedValue }: {
+  function CanchaCard({
+    item,
+    index,
+    onVerDetalle,
+    onReservar,
+    animatedValue,
+  }: {
     item: Cancha;
     index: number;
     onVerDetalle: (item: Cancha) => void;
@@ -556,12 +670,22 @@ export default function HomeScreen() {
       <Animated.View
         style={{
           opacity: animatedValue,
-          transform: [{ scale: animatedValue.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }],
+          transform: [
+            {
+              scale: animatedValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.95, 1],
+              }),
+            },
+          ],
         }}
       >
         <View style={styles.canchaCard}>
           <View>
-            <Image source={getImageSource(item.imageUri)} style={styles.canchaImage} />
+            <Image
+              source={getImageSource(item.imageUri)}
+              style={styles.canchaImage}
+            />
             {/* Overlay nombre y precio */}
             <View style={styles.canchaOverlay}>
               <Text style={styles.canchaNombre}>{item.nombre}</Text>
@@ -584,23 +708,42 @@ export default function HomeScreen() {
             <Animated.View style={{ transform: [{ scale: detalleBtn.scale }] }}>
               <TouchableOpacity
                 style={styles.canchaButtonDetalle}
-                onPress={() => { detalleBtn.onPressOut(); onVerDetalle(item); animateModalIn(); }}
+                onPress={() => {
+                  detalleBtn.onPressOut();
+                  onVerDetalle(item);
+                  animateModalIn();
+                }}
                 onPressIn={detalleBtn.onPressIn}
                 onPressOut={detalleBtn.onPressOut}
               >
-                <Ionicons name="information-circle-outline" size={16} color="#007bff" />
+                <Ionicons
+                  name="information-circle-outline"
+                  size={16}
+                  color="#007bff"
+                />
                 <Text style={styles.canchaButtonDetalleText}>Ver detalles</Text>
               </TouchableOpacity>
             </Animated.View>
-            <Animated.View style={{ transform: [{ scale: reservarBtn.scale }] }}>
+            <Animated.View
+              style={{ transform: [{ scale: reservarBtn.scale }] }}
+            >
               <TouchableOpacity
-                style={[styles.canchaButtonReservar, { backgroundColor: item.disponible ? '#4CAF50' : '#ccc' }]}
-                onPress={() => { reservarBtn.onPressOut(); onReservar(item); animateModalIn(); }}
+                style={[
+                  styles.canchaButtonReservar,
+                  { backgroundColor: item.disponible ? '#4CAF50' : '#ccc' },
+                ]}
+                onPress={() => {
+                  reservarBtn.onPressOut();
+                  onReservar(item);
+                  animateModalIn();
+                }}
                 onPressIn={reservarBtn.onPressIn}
                 onPressOut={reservarBtn.onPressOut}
                 disabled={!item.disponible}
               >
-                <Text style={styles.canchaButtonReservarText}>{item.disponible ? 'Reservar' : 'Ocupada'}</Text>
+                <Text style={styles.canchaButtonReservarText}>
+                  {item.disponible ? 'Reservar' : 'Ocupada'}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -610,11 +753,11 @@ export default function HomeScreen() {
   }
 
   // Filtrar canchas por tipo
-  const canchasBlindex = MOCK_CANCHAS.filter(c => c.suelo === 'césped');
-  const canchasCemento = MOCK_CANCHAS.filter(c => c.suelo === 'hormigón');
+  const canchasBlindex = MOCK_CANCHAS.filter((c) => c.suelo === 'césped');
+  const canchasCemento = MOCK_CANCHAS.filter((c) => c.suelo === 'hormigón');
 
   // Filtrar canchas según tipo y disponibilidad
-  const canchasFiltradas = MOCK_CANCHAS.filter(c => {
+  const canchasFiltradas = MOCK_CANCHAS.filter((c) => {
     let tipoOk = true;
     if (tipoFiltro === 'blindex') tipoOk = c.suelo === 'césped';
     if (tipoFiltro === 'cemento') tipoOk = c.suelo === 'hormigón';
@@ -639,14 +782,17 @@ export default function HomeScreen() {
   }
 
   const carouselVisible = useRef(new Animated.Value(0)).current;
-  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const y = event.nativeEvent.contentOffset.y;
-    Animated.timing(carouselVisible, {
-      toValue: Math.max(0, Math.min(120, y)),
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
-  }, [carouselVisible]);
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = event.nativeEvent.contentOffset.y;
+      Animated.timing(carouselVisible, {
+        toValue: Math.max(0, Math.min(120, y)),
+        duration: 220,
+        useNativeDriver: false,
+      }).start();
+    },
+    [carouselVisible],
+  );
 
   return (
     <ScreenContainer>
@@ -741,13 +887,24 @@ export default function HomeScreen() {
             <Ionicons name="search" size={20} color="#888999" />
           </TouchableOpacity>
         </View>
-        <Animated.View style={{
-          opacity: carouselVisible.interpolate({ inputRange: [0, 10, 20], outputRange: [1, 0.5, 0] }),
-          height: carouselVisible.interpolate({ inputRange: [0, 10, 20], outputRange: [110, 60, 0] }),
-          marginBottom: carouselVisible.interpolate({ inputRange: [0, 10, 20], outputRange: [10, 5, 0] }),
-          overflow: 'hidden',
-          marginTop: 18
-        }}>
+        <Animated.View
+          style={{
+            opacity: carouselVisible.interpolate({
+              inputRange: [0, 10, 20],
+              outputRange: [1, 0.5, 0],
+            }),
+            height: carouselVisible.interpolate({
+              inputRange: [0, 10, 20],
+              outputRange: [110, 60, 0],
+            }),
+            marginBottom: carouselVisible.interpolate({
+              inputRange: [0, 10, 20],
+              outputRange: [10, 5, 0],
+            }),
+            overflow: 'hidden',
+            marginTop: 18,
+          }}
+        >
           <FlatList
             data={PERSON_IMAGES}
             horizontal
@@ -757,14 +914,24 @@ export default function HomeScreen() {
               <View style={{ marginRight: 16 }}>
                 <Image
                   source={getImageSource(item)}
-                  style={{ width: 170, height: 110, borderRadius: 18, resizeMode: 'cover' }}
+                  style={{
+                    width: 170,
+                    height: 110,
+                    borderRadius: 18,
+                    resizeMode: 'cover',
+                  }}
                 />
               </View>
             )}
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
         </Animated.View>
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16}>
+        <ScrollView
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
           {/* Banners */}
           <View style={styles.bannerContainer}>
             <FlatList
@@ -809,16 +976,24 @@ export default function HomeScreen() {
           </View>
 
           {/* Filtro visual arriba de la grilla */}
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10, gap: 8 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginBottom: 10,
+              gap: 8,
+            }}
+          >
             {[
               { label: 'Todas', value: 'todas' },
               { label: 'Blindex', value: 'blindex' },
               { label: 'Cemento', value: 'cemento' },
-            ].map(opt => (
+            ].map((opt) => (
               <TouchableOpacity
                 key={opt.value}
                 style={{
-                  backgroundColor: tipoFiltro === opt.value ? '#007bff' : '#eaf1fb',
+                  backgroundColor:
+                    tipoFiltro === opt.value ? '#007bff' : '#eaf1fb',
                   borderRadius: 16,
                   paddingHorizontal: 16,
                   paddingVertical: 7,
@@ -826,20 +1001,35 @@ export default function HomeScreen() {
                 onPress={() => setTipoFiltro(opt.value as any)}
                 activeOpacity={0.8}
               >
-                <Text style={{ color: tipoFiltro === opt.value ? '#fff' : '#007bff', fontWeight: 'bold' }}>{opt.label}</Text>
+                <Text
+                  style={{
+                    color: tipoFiltro === opt.value ? '#fff' : '#007bff',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {opt.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16, gap: 8 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginBottom: 16,
+              gap: 8,
+            }}
+          >
             {[
               { label: 'Todas', value: 'todas' },
               { label: 'Disponibles', value: 'disponibles' },
               { label: 'Ocupadas', value: 'ocupadas' },
-            ].map(opt => (
+            ].map((opt) => (
               <TouchableOpacity
                 key={opt.value}
                 style={{
-                  backgroundColor: disponibilidadFiltro === opt.value ? '#4CAF50' : '#eaf1fb',
+                  backgroundColor:
+                    disponibilidadFiltro === opt.value ? '#4CAF50' : '#eaf1fb',
                   borderRadius: 16,
                   paddingHorizontal: 16,
                   paddingVertical: 7,
@@ -847,7 +1037,15 @@ export default function HomeScreen() {
                 onPress={() => setDisponibilidadFiltro(opt.value as any)}
                 activeOpacity={0.8}
               >
-                <Text style={{ color: disponibilidadFiltro === opt.value ? '#fff' : '#4CAF50', fontWeight: 'bold' }}>{opt.label}</Text>
+                <Text
+                  style={{
+                    color:
+                      disponibilidadFiltro === opt.value ? '#fff' : '#4CAF50',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {opt.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -855,7 +1053,15 @@ export default function HomeScreen() {
           {/* SECCIÓN DE CANCHAS DISPONIBLES */}
           {tipoFiltro === 'todas' ? (
             <>
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#181028', marginBottom: 8, marginLeft: 2 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#181028',
+                  marginBottom: 8,
+                  marginLeft: 2,
+                }}
+              >
                 Canchas Blindex
               </Text>
               <FlatList
@@ -872,10 +1078,24 @@ export default function HomeScreen() {
                 keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+                contentContainerStyle={{
+                  paddingBottom: 10,
+                  gap: 12,
+                  paddingLeft: 8,
+                  paddingRight: 8,
+                }}
                 scrollEnabled={true}
               />
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#181028', marginBottom: 8, marginLeft: 2, marginTop: 18 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#181028',
+                  marginBottom: 8,
+                  marginLeft: 2,
+                  marginTop: 18,
+                }}
+              >
                 Canchas Cemento
               </Text>
               <FlatList
@@ -892,7 +1112,12 @@ export default function HomeScreen() {
                 keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+                contentContainerStyle={{
+                  paddingBottom: 10,
+                  gap: 12,
+                  paddingLeft: 8,
+                  paddingRight: 8,
+                }}
                 scrollEnabled={true}
               />
             </>
@@ -911,7 +1136,12 @@ export default function HomeScreen() {
               keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+              contentContainerStyle={{
+                paddingBottom: 10,
+                gap: 12,
+                paddingLeft: 8,
+                paddingRight: 8,
+              }}
               scrollEnabled={true}
             />
           ) : (
@@ -929,7 +1159,12 @@ export default function HomeScreen() {
               keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+              contentContainerStyle={{
+                paddingBottom: 10,
+                gap: 12,
+                paddingLeft: 8,
+                paddingRight: 8,
+              }}
               scrollEnabled={true}
             />
           )}
@@ -942,48 +1177,202 @@ export default function HomeScreen() {
           animationType="slide"
           onRequestClose={() => setModalDetalleVisible(false)}
         >
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
-            <View style={{ backgroundColor: '#fff', borderRadius: 22, padding: 24, width: '85%', maxHeight: '80%', alignItems: 'center', position: 'relative' }}>
-              <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }} onPress={() => setModalDetalleVisible(false)}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.25)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 22,
+                padding: 24,
+                width: '85%',
+                maxHeight: '80%',
+                alignItems: 'center',
+                position: 'relative',
+              }}
+            >
+              <TouchableOpacity
+                style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}
+                onPress={() => setModalDetalleVisible(false)}
+              >
                 <Ionicons name="close-circle" size={28} color="#888" />
               </TouchableOpacity>
               {canchaDetalle && (
-                <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }} contentContainerStyle={{ alignItems: 'center' }}>
-                  <Image source={getImageSource(canchaDetalle.imageUri)} style={{ width: '100%', height: 140, borderRadius: 16, marginBottom: 16 }} resizeMode="cover" />
-                  <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' }}>{canchaDetalle.nombre}</Text>
-                  <View style={{ marginBottom: 10, width: '100%', alignItems: 'center' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
-                      <Text style={{ fontSize: 16, color: '#2196f3', fontWeight: '600', marginRight: 4 }}>{Number(canchaDetalle.precio).toLocaleString()}$ s/luz</Text>
-                      <Ionicons name="sunny" size={18} color="#FFD600" style={{ marginLeft: 2 }} />
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  style={{ width: '100%' }}
+                  contentContainerStyle={{ alignItems: 'center' }}
+                >
+                  <Image
+                    source={getImageSource(canchaDetalle.imageUri)}
+                    style={{
+                      width: '100%',
+                      height: 140,
+                      borderRadius: 16,
+                      marginBottom: 16,
+                    }}
+                    resizeMode="cover"
+                  />
+                  <Text
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 'bold',
+                      marginBottom: 8,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {canchaDetalle.nombre}
+                  </Text>
+                  <View
+                    style={{
+                      marginBottom: 10,
+                      width: '100%',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 2,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: '#2196f3',
+                          fontWeight: '600',
+                          marginRight: 4,
+                        }}
+                      >
+                        {Number(canchaDetalle.precio).toLocaleString()}$ s/luz
+                      </Text>
+                      <Ionicons
+                        name="sunny"
+                        size={18}
+                        color="#FFD600"
+                        style={{ marginLeft: 2 }}
+                      />
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 16, color: '#222', fontWeight: '600', marginRight: 4 }}>{(Number(canchaDetalle.precio) + 2000).toLocaleString()}$ c/luz</Text>
-                      <Ionicons name="moon" size={18} color="#222" style={{ marginLeft: 2 }} />
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: '#222',
+                          fontWeight: '600',
+                          marginRight: 4,
+                        }}
+                      >
+                        {(Number(canchaDetalle.precio) + 2000).toLocaleString()}
+                        $ c/luz
+                      </Text>
+                      <Ionicons
+                        name="moon"
+                        size={18}
+                        color="#222"
+                        style={{ marginLeft: 2 }}
+                      />
                     </View>
                   </View>
-                  <View style={{ backgroundColor: '#f7fafd', borderRadius: 16, padding: 12, width: '100%', marginBottom: 18 }}>
+                  <View
+                    style={{
+                      backgroundColor: '#f7fafd',
+                      borderRadius: 16,
+                      padding: 12,
+                      width: '100%',
+                      marginBottom: 18,
+                    }}
+                  >
                     {canchaDetalle.especificaciones.map((esp, idx) => {
                       // Separar tipo y valor si viene como 'Superficie: Césped sintético'
                       let tipo = esp;
                       let valor = '';
                       if (esp.includes(':')) {
-                        [tipo, valor] = esp.split(':').map(s => s.trim());
+                        [tipo, valor] = esp.split(':').map((s) => s.trim());
                       }
-                      const iconData = ESPEC_ICONS[tipo] || { icon: 'information-circle', color: '#B0BEC5' };
+                      const iconData = ESPEC_ICONS[tipo] || {
+                        icon: 'information-circle',
+                        color: '#B0BEC5',
+                      };
                       return (
-                        <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 8, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 2, elevation: 1 }}>
-                          <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                            <Ionicons name={iconData.icon} size={20} color={iconData.color} />
+                        <View
+                          key={idx}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#fff',
+                            borderRadius: 12,
+                            paddingVertical: 10,
+                            paddingHorizontal: 14,
+                            marginBottom: 8,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.03,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 8,
+                              backgroundColor: '#f5f5f5',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              marginRight: 12,
+                            }}
+                          >
+                            <Ionicons
+                              name={iconData.icon}
+                              size={20}
+                              color={iconData.color}
+                            />
                           </View>
-                          <Text style={{ fontSize: 15, color: '#222', flex: 1 }}>
-                            <Text style={{ fontWeight: 'bold' }}>{tipo}</Text>{valor ? `: ${valor}` : ''}
+                          <Text
+                            style={{ fontSize: 15, color: '#222', flex: 1 }}
+                          >
+                            <Text style={{ fontWeight: 'bold' }}>{tipo}</Text>
+                            {valor ? `: ${valor}` : ''}
                           </Text>
                         </View>
                       );
                     })}
                   </View>
-                  <TouchableOpacity style={{ backgroundColor: '#4CAF50', borderRadius: 10, paddingVertical: 14, width: '100%', alignItems: 'center', marginTop: 4 }} onPress={() => { setModalDetalleVisible(false); setModalReservaVisible(true); }}>
-                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>Reservar Ahora</Text>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#4CAF50',
+                      borderRadius: 10,
+                      paddingVertical: 14,
+                      width: '100%',
+                      alignItems: 'center',
+                      marginTop: 4,
+                    }}
+                    onPress={() => {
+                      setModalDetalleVisible(false);
+                      setModalReservaVisible(true);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: 18,
+                      }}
+                    >
+                      Reservar Ahora
+                    </Text>
                   </TouchableOpacity>
                 </ScrollView>
               )}
@@ -995,28 +1384,51 @@ export default function HomeScreen() {
           visible={modalReservaVisible}
           transparent
           animationType="none"
-          onRequestClose={() => animateModalOut(() => setModalReservaVisible(false))}
+          onRequestClose={() =>
+            animateModalOut(() => setModalReservaVisible(false))
+          }
           onShow={animateModalIn}
         >
           <View style={styles.modalOverlay}>
-            <Animated.View style={[styles.modalContentDetalle, {
-              opacity: modalAnim,
-              transform: [{ scale: modalAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }],
-            }]}
+            <Animated.View
+              style={[
+                styles.modalContentDetalle,
+                {
+                  opacity: modalAnim,
+                  transform: [
+                    {
+                      scale: modalAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.95, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
             >
-              <Text style={styles.modalTitle}>Reservar {canchaReservando?.nombre}</Text>
+              <Text style={styles.modalTitle}>
+                Reservar {canchaReservando?.nombre}
+              </Text>
               <TouchableOpacity
                 style={{
                   marginBottom: 10,
                   borderWidth: 1,
-                  borderColor: reservaError && !selectedDate ? 'red' : '#e5e5e5',
+                  borderColor:
+                    reservaError && !selectedDate ? 'red' : '#e5e5e5',
                   borderRadius: 8,
                   padding: 10,
                 }}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text style={{ color: selectedDate ? '#181028' : '#888', fontSize: 15 }}>
-                  {selectedDate ? selectedDate.toLocaleDateString() : 'Seleccionar fecha'}
+                <Text
+                  style={{
+                    color: selectedDate ? '#181028' : '#888',
+                    fontSize: 15,
+                  }}
+                >
+                  {selectedDate
+                    ? selectedDate.toLocaleDateString()
+                    : 'Seleccionar fecha'}
                 </Text>
               </TouchableOpacity>
               {showDatePicker && (
@@ -1027,41 +1439,69 @@ export default function HomeScreen() {
                   minimumDate={new Date()}
                   onChange={(_, date) => {
                     setShowDatePicker(false);
-                    if (date && isDayAvailable(date, canchaReservando)) setSelectedDate(date);
+                    if (date && isDayAvailable(date, canchaReservando))
+                      setSelectedDate(date);
                   }}
                 />
               )}
               {reservaError && !selectedDate && (
-                <Text style={{ color: 'red', marginBottom: 6 }}>{reservaError}</Text>
+                <Text style={{ color: 'red', marginBottom: 6 }}>
+                  {reservaError}
+                </Text>
               )}
               <Text style={styles.modalLabel}>Selecciona horario:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10, marginTop: 4 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginBottom: 10, marginTop: 4 }}
+              >
                 {availableHours.map((hour) => {
                   const selected = selectedHours.includes(hour);
                   return (
                     <TouchableOpacity
                       key={hour}
                       onPress={() => {
-                        if (selected) setSelectedHours(selectedHours.filter(h => h !== hour));
+                        if (selected)
+                          setSelectedHours(
+                            selectedHours.filter((h) => h !== hour),
+                          );
                         else setSelectedHours([...selectedHours, hour]);
                       }}
                       style={[
                         styles.hourButton,
                         selected && styles.hourButtonSelected,
-                        { minWidth: 70, marginRight: 8, borderColor: reservaError && !selected ? 'red' : '#e5e5e5', borderWidth: 1 },
+                        {
+                          minWidth: 70,
+                          marginRight: 8,
+                          borderColor:
+                            reservaError && !selected ? 'red' : '#e5e5e5',
+                          borderWidth: 1,
+                        },
                       ]}
                     >
-                      <Text style={{ color: selected ? '#fff' : '#000' }}>{hour}</Text>
+                      <Text style={{ color: selected ? '#fff' : '#000' }}>
+                        {hour}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
               {reservaError && selectedHours.length === 0 && (
-                <Text style={{ color: 'red', marginBottom: 6 }}>{reservaError}</Text>
+                <Text style={{ color: 'red', marginBottom: 6 }}>
+                  {reservaError}
+                </Text>
               )}
-              <Button title="Confirmar reserva" color="#4CAF50" onPress={confirmarReserva} />
+              <Button
+                title="Confirmar reserva"
+                color="#4CAF50"
+                onPress={confirmarReserva}
+              />
               <View style={{ marginTop: 10 }}>
-                <Button title="Cancelar" color="#999" onPress={() => setModalReservaVisible(false)} />
+                <Button
+                  title="Cancelar"
+                  color="#999"
+                  onPress={() => setModalReservaVisible(false)}
+                />
               </View>
             </Animated.View>
           </View>
