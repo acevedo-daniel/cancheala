@@ -13,6 +13,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const styles = StyleSheet.create({
   container: {
@@ -166,6 +167,8 @@ export default function RegisterScreen() {
     lastName: '',
     birthDate: '',
     gender: '',
+    dni: '',
+    age: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -200,6 +203,16 @@ export default function RegisterScreen() {
     if (!formData.gender) {
       newErrors.gender = 'Selecciona tu género';
     }
+    if (!formData.dni.trim()) {
+      newErrors.dni = 'El DNI es requerido';
+    } else if (!/^\d{7,10}$/.test(formData.dni)) {
+      newErrors.dni = 'DNI inválido';
+    }
+    if (!formData.age.trim()) {
+      newErrors.age = 'La edad es requerida';
+    } else if (isNaN(Number(formData.age)) || Number(formData.age) < 1 || Number(formData.age) > 120) {
+      newErrors.age = 'Edad inválida';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -219,9 +232,19 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      // TODO: Guardar datos del usuario
+      try {
+        await AsyncStorage.setItem('name', formData.name);
+        await AsyncStorage.setItem('lastName', formData.lastName);
+        await AsyncStorage.setItem('birthDate', formData.birthDate);
+        await AsyncStorage.setItem('gender', formData.gender);
+        await AsyncStorage.setItem('dni', formData.dni);
+        await AsyncStorage.setItem('age', formData.age);
+        if (email) await AsyncStorage.setItem('email', email.toString());
+      } catch (e) {
+        console.log('Error guardando datos del usuario:', e);
+      }
       console.log('Datos del usuario:', { email, ...formData });
       router.replace('/(auth)/location');
     }
@@ -315,16 +338,42 @@ export default function RegisterScreen() {
             {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
           </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>DNI</Text>
+            <TextInput
+              style={[styles.input, errors.dni && styles.inputError]}
+              placeholder="Tu DNI"
+              value={formData.dni}
+              onChangeText={(text) => setFormData({ ...formData, dni: text })}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+            {errors.dni && <Text style={styles.errorText}>{errors.dni}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Edad</Text>
+            <TextInput
+              style={[styles.input, errors.age && styles.inputError]}
+              placeholder="Tu edad"
+              value={formData.age}
+              onChangeText={(text) => setFormData({ ...formData, age: text })}
+              keyboardType="number-pad"
+              maxLength={3}
+            />
+            {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
+          </View>
+
           <TouchableOpacity
             style={[
               styles.button,
               styles.primaryButton,
-              (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender) && styles.buttonDisabled
+              (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender || !formData.dni || !formData.age) && styles.buttonDisabled
             ]}
             onPress={handleSubmit}
-            disabled={!formData.name || !formData.lastName || !formData.birthDate || !formData.gender}
+            disabled={!formData.name || !formData.lastName || !formData.birthDate || !formData.gender || !formData.dni || !formData.age}
           >
-            <Text style={[styles.buttonText, (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender) && styles.buttonTextDisabled]}>
+            <Text style={[styles.buttonText, (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender || !formData.dni || !formData.age) && styles.buttonTextDisabled]}>
               Continuar
             </Text>
           </TouchableOpacity>

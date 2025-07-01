@@ -145,8 +145,8 @@ export default function ProfileScreen() {
         <View style={styles.infoContainer}>
           {renderItem('Nombre y Apellido', name)}
           {renderItem('Correo electrónico', email)}
-          {renderItem('Edad', age)}
           {renderItem('DNI', dni)}
+          {renderItem('Edad', age)}
         </View>
 
         {/* Configuraciones */}
