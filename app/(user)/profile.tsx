@@ -20,7 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const FotoPerfil = require('../../assets/FotoPerfil.png');
+  const FotoPerfil = require('../../assets/images/placeholder.png');
   const router = useRouter();
 
   const [profileImage, setProfileImage] = useState(FotoPerfil);
