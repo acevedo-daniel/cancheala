@@ -11,17 +11,41 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase/firebaseConfig';
 
 export default function EmailScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = () => {
-    if (email.trim()) {
-      router.push({
-        pathname: '/(auth)/verify-code',
-        params: { email: email.trim() }
-      });
+  const handleSubmit = async () => {
+    setError('');
+    if (!email.trim() || !password.trim()) {
+      setError('Completa ambos campos');
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      router.replace('/(user)');
+    } catch (e: any) {
+      if (
+        e.code === 'auth/user-not-found' ||
+        e.code === 'auth/wrong-password'
+      ) {
+        setError('Correo o contraseña incorrectos');
+      } else {
+        setError('Error al iniciar sesión: ' + e.message);
+      }
+    }
+  };
+
+  const handleGoBack = () => {
+    if (router.canGoBack?.()) {
+      router.back();
+    } else {
+      router.replace('/(user)/profile');
     }
   };
 
@@ -31,16 +55,13 @@ export default function EmailScreen() {
       style={styles.container}
     >
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.subtitle}>Ingresa tu correo</Text>
+        <Text style={styles.subtitle}>Iniciar sesión</Text>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
@@ -55,18 +76,33 @@ export default function EmailScreen() {
               autoComplete="email"
             />
           </View>
-
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <TouchableOpacity
             style={[
               styles.button,
               styles.primaryButton,
-              !email && styles.buttonDisabled
+              (!email || !password) && styles.buttonDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={!email}
+            disabled={!email || !password}
           >
-            <Text style={[styles.buttonText, !email && styles.buttonTextDisabled]}>
-              Continuar
+            <Text
+              style={[
+                styles.buttonText,
+                (!email || !password) && styles.buttonTextDisabled,
+              ]}
+            >
+              Iniciar sesión
             </Text>
           </TouchableOpacity>
         </View>
@@ -174,4 +210,4 @@ const styles = StyleSheet.create({
   buttonTextDisabled: {
     color: '#999999',
   },
-}); 
+});

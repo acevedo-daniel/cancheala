@@ -13,6 +13,9 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/firebaseConfig';
 
 const styles = StyleSheet.create({
   container: {
@@ -164,66 +167,95 @@ export default function RegisterScreen() {
   const [formData, setFormData] = useState({
     name: '',
     lastName: '',
-    birthDate: '',
-    gender: '',
+    age: '',
+    dni: '',
+    email: '',
+    password: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
     }
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'El apellido es requerido';
     }
-    if (!formData.birthDate.trim()) {
-      newErrors.birthDate = 'La fecha de nacimiento es requerida';
-    } else {
-      // Validar formato DD/MM/YYYY
-      const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-      if (!dateRegex.test(formData.birthDate)) {
-        newErrors.birthDate = 'Formato inválido. Usa DD/MM/YYYY';
-      } else {
-        const [day, month, year] = formData.birthDate.split('/').map(Number);
-        const date = new Date(year, month - 1, day);
-        const currentDate = new Date();
-        
-        if (date > currentDate) {
-          newErrors.birthDate = 'La fecha no puede ser futura';
-        } else if (year < 1900) {
-          newErrors.birthDate = 'Año inválido';
-        }
-      }
+    if (!formData.age.trim()) {
+      newErrors.age = 'La edad es requerida';
+    } else if (isNaN(Number(formData.age)) || Number(formData.age) < 0) {
+      newErrors.age = 'Edad inválida';
     }
-    if (!formData.gender) {
-      newErrors.gender = 'Selecciona tu género';
+    if (!formData.dni.trim()) {
+      newErrors.dni = 'El DNI es requerido';
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!formData.email.trim()) {
+      newErrors.email = 'El correo es requerido';
+    } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
+      newErrors.email = 'Correo inválido';
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = 'La contraseña es requerida';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Mínimo 6 caracteres';
+    }
+    return newErrors;
   };
 
   const formatDate = (text: string) => {
     // Eliminar todo excepto números
     const numbers = text.replace(/[^\d]/g, '');
-    
+
     // Formatear como DD/MM/YYYY
     if (numbers.length <= 2) {
       return numbers;
     } else if (numbers.length <= 4) {
       return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
     } else {
-      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(
+        4,
+        8,
+      )}`;
     }
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      // TODO: Guardar datos del usuario
-      console.log('Datos del usuario:', { email, ...formData });
-      router.replace('/(auth)/location');
+  const handleSubmit = async () => {
+    const newErrors = validateForm();
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+    try {
+      // Crear usuario en Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password,
+      );
+      const user = userCredential.user;
+      // Guardar datos extra en Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name: formData.name,
+        lastName: formData.lastName,
+        age: formData.age,
+        dni: formData.dni,
+        email: formData.email,
+        role: 'user',
+      });
+      router.replace('/(user)');
+    } catch (e: any) {
+      if (e.code === 'auth/email-already-in-use') {
+        setErrors({ email: 'El correo ya está registrado' });
+      } else {
+        alert('Error al registrar usuario: ' + e.message);
+      }
+    }
+  };
+
+  const handleGoBack = () => {
+    if (router.canGoBack?.()) {
+      router.back();
+    } else {
+      router.replace('/(user)/profile');
     }
   };
 
@@ -233,10 +265,7 @@ export default function RegisterScreen() {
       style={styles.container}
     >
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
       </View>
@@ -248,85 +277,83 @@ export default function RegisterScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Nombre</Text>
             <TextInput
-              style={[styles.input, errors.name && styles.inputError]}
-              placeholder="Tu nombre"
+              style={styles.input}
+              placeholder="Nombre"
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
-              autoCapitalize="words"
             />
             {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
           </View>
-
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Apellido</Text>
             <TextInput
-              style={[styles.input, errors.lastName && styles.inputError]}
-              placeholder="Tu apellido"
+              style={styles.input}
+              placeholder="Apellido"
               value={formData.lastName}
-              onChangeText={(text) => setFormData({ ...formData, lastName: text })}
-              autoCapitalize="words"
+              onChangeText={(text) =>
+                setFormData({ ...formData, lastName: text })
+              }
             />
-            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+            {errors.lastName && (
+              <Text style={styles.errorText}>{errors.lastName}</Text>
+            )}
           </View>
-
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Fecha de nacimiento</Text>
+            <Text style={styles.label}>Edad</Text>
             <TextInput
-              style={[styles.input, errors.birthDate && styles.inputError]}
-              placeholder="DD/MM/YYYY"
-              value={formData.birthDate}
-              onChangeText={(text) => setFormData({ ...formData, birthDate: formatDate(text) })}
-              keyboardType="number-pad"
-              maxLength={10}
+              style={styles.input}
+              placeholder="Edad"
+              value={formData.age}
+              onChangeText={(text) => setFormData({ ...formData, age: text })}
+              keyboardType="numeric"
             />
-            {errors.birthDate && <Text style={styles.errorText}>{errors.birthDate}</Text>}
+            {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
           </View>
-
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Género</Text>
-            <View style={styles.genderContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.genderButton,
-                  formData.gender === 'M' && styles.genderButtonSelected,
-                  errors.gender && styles.inputError
-                ]}
-                onPress={() => setFormData({ ...formData, gender: 'M' })}
-              >
-                <Text style={[
-                  styles.genderButtonText,
-                  formData.gender === 'M' && styles.genderButtonTextSelected
-                ]}>Masculino</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.genderButton,
-                  formData.gender === 'F' && styles.genderButtonSelected,
-                  errors.gender && styles.inputError
-                ]}
-                onPress={() => setFormData({ ...formData, gender: 'F' })}
-              >
-                <Text style={[
-                  styles.genderButtonText,
-                  formData.gender === 'F' && styles.genderButtonTextSelected
-                ]}>Femenino</Text>
-              </TouchableOpacity>
-            </View>
-            {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+            <Text style={styles.label}>DNI</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="DNI"
+              value={formData.dni}
+              onChangeText={(text) => setFormData({ ...formData, dni: text })}
+              keyboardType="numeric"
+            />
+            {errors.dni && <Text style={styles.errorText}>{errors.dni}</Text>}
           </View>
-
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Correo electrónico</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Correo electrónico"
+              value={formData.email}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              value={formData.password}
+              onChangeText={(text) =>
+                setFormData({ ...formData, password: text })
+              }
+              secureTextEntry
+            />
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
+          </View>
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.primaryButton,
-              (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender) && styles.buttonDisabled
-            ]}
+            style={[styles.button, styles.primaryButton]}
             onPress={handleSubmit}
-            disabled={!formData.name || !formData.lastName || !formData.birthDate || !formData.gender}
           >
-            <Text style={[styles.buttonText, (!formData.name || !formData.lastName || !formData.birthDate || !formData.gender) && styles.buttonTextDisabled]}>
-              Continuar
-            </Text>
+            <Text style={styles.buttonText}>Registrarse</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

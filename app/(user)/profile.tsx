@@ -9,6 +9,8 @@ import {
   Pressable,
   Alert,
   SafeAreaView,
+  ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
@@ -16,6 +18,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import FotoPerfil from '../../assets/profile/FotoPerfil.png';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
 
 const AVATAR_SIZE = 90;
 const AVATAR_RADIUS = AVATAR_SIZE / 2;
@@ -24,37 +30,56 @@ const EDIT_ICON_RIGHT_OFFSET = AVATAR_RADIUS - 10;
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const FotoPerfil = require('../../assets/profile/FotoPerfil.png');
 
   const [profileImage, setProfileImage] = useState(FotoPerfil);
   const [isModalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [age, setAge] = useState('');
   const [email, setEmail] = useState('');
   const [dni, setDni] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const toggleModal = () => setModalVisible(!isModalVisible);
 
   useEffect(() => {
-    const loadProfileData = async () => {
+    const checkAuth = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      setIsAuthenticated(!!user);
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
       try {
-        const storedName = await AsyncStorage.getItem('name');
-        const storedAge = await AsyncStorage.getItem('age');
-        const storedEmail = await AsyncStorage.getItem('email');
-        const storedDni = await AsyncStorage.getItem('dni');
-        const storedImage = await AsyncStorage.getItem('profileImage');
-
-        if (storedName) setName(storedName);
-        if (storedAge) setAge(storedAge);
-        if (storedEmail) setEmail(storedEmail);
-        if (storedDni) setDni(storedDni);
-        if (storedImage) setProfileImage({ uri: storedImage });
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setName(data.name || '');
+          setLastName(data.lastName || '');
+          setAge(data.age || '');
+          setEmail(data.email || user.email || '');
+          setDni(data.dni || '');
+          if (data.photoURL) {
+            setProfileImage({ uri: data.photoURL });
+          } else {
+            setProfileImage(FotoPerfil);
+          }
+        } else {
+          setName(user.displayName || '');
+          setEmail(user.email || '');
+          setProfileImage(FotoPerfil);
+        }
       } catch (error) {
         console.log('Error cargando datos:', error);
       }
+      setLoading(false);
     };
-
-    loadProfileData();
+    checkAuth();
   }, []);
 
   const pickImageFromGallery = async () => {
@@ -113,17 +138,92 @@ export default function ProfileScreen() {
     toggleModal();
   };
 
-  const handleLogout = () => {
-    console.log('Cerrar sesión pulsado');
-    router.replace('/(auth)');
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await auth.signOut();
+      router.replace('/(auth)');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo cerrar la sesión.');
+      console.log(error);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return;
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          name,
+          lastName,
+          age,
+          dni,
+          email: email || user.email || '',
+        },
+        { merge: true },
+      );
+      Alert.alert('Éxito', 'Datos actualizados correctamente.');
+      setEditMode(false);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudieron actualizar los datos.');
+      console.log(error);
+    }
+    setSaving(false);
   };
 
   const renderItem = (label: string, value: string) => (
     <View style={styles.item}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value || '—'}</Text>
+      <Text style={styles.value}>{value || '\u2014'}</Text>
     </View>
   );
+
+  if (loading || isAuthenticated === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView
+        style={[
+          styles.container,
+          { paddingTop: insets.top, justifyContent: 'center', flex: 1 },
+        ]}
+      >
+        <View style={styles.unauthContent}>
+          <View style={styles.avatarContainer}>
+            <Image source={FotoPerfil} style={styles.avatar} />
+          </View>
+          <Text style={styles.unauthTitle}>¡Bienvenido a Cancheala!</Text>
+          <Text style={styles.unauthSubtitle}>
+            Inicia sesión o regístrate para acceder a tu perfil y reservas.
+          </Text>
+          <TouchableOpacity
+            style={[styles.authButton, styles.loginButton]}
+            onPress={() => router.replace('/(auth)/email')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.authButtonText}>Iniciar sesión</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.authButton, styles.registerButton]}
+            onPress={() => router.replace('/(auth)/register')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.authButtonText}>Registrarse</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
@@ -131,22 +231,98 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerText}>Mi Perfil</Text>
+          <TouchableOpacity onPress={() => setEditMode(!editMode)}>
+            <Feather name={editMode ? 'x' : 'edit-2'} size={20} color="#333" />
+          </TouchableOpacity>
         </View>
 
         {/* Avatar */}
         <View style={styles.avatarContainer}>
           <Image source={profileImage} style={styles.avatar} />
-          <TouchableOpacity style={styles.editIcon} onPress={toggleModal}>
-            <Feather name="edit-2" size={16} color="white" />
-          </TouchableOpacity>
+          {editMode && (
+            <TouchableOpacity style={styles.editIcon} onPress={toggleModal}>
+              <Feather name="edit-2" size={16} color="white" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Info */}
+        {/* Info/Formulario */}
         <View style={styles.infoContainer}>
-          {renderItem('Nombre y Apellido', name)}
-          {renderItem('Correo electrónico', email)}
-          {renderItem('Edad', age)}
-          {renderItem('DNI', dni)}
+          {editMode ? (
+            <>
+              <Text style={styles.label}>Nombre</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="Nombre"
+              />
+              <Text style={styles.label}>Apellido</Text>
+              <TextInput
+                style={styles.input}
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Apellido"
+              />
+              <Text style={styles.label}>Correo electrónico</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: '#f0f0f0' }]}
+                value={email}
+                editable={false}
+                selectTextOnFocus={false}
+              />
+              <Text style={styles.label}>Edad</Text>
+              <TextInput
+                style={styles.input}
+                value={age}
+                onChangeText={setAge}
+                placeholder="Edad"
+                keyboardType="numeric"
+              />
+              <Text style={styles.label}>DNI</Text>
+              <TextInput
+                style={styles.input}
+                value={dni}
+                onChangeText={setDni}
+                placeholder="DNI"
+                keyboardType="numeric"
+              />
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Guardar</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.item}>
+                <Text style={styles.label}>Nombre</Text>
+                <Text style={styles.value}>{name || '\u2014'}</Text>
+              </View>
+              <View style={styles.item}>
+                <Text style={styles.label}>Apellido</Text>
+                <Text style={styles.value}>{lastName || '\u2014'}</Text>
+              </View>
+              <View style={styles.item}>
+                <Text style={styles.label}>Correo electrónico</Text>
+                <Text style={styles.value}>{email || '\u2014'}</Text>
+              </View>
+              <View style={styles.item}>
+                <Text style={styles.label}>Edad</Text>
+                <Text style={styles.value}>{age || '\u2014'}</Text>
+              </View>
+              <View style={styles.item}>
+                <Text style={styles.label}>DNI</Text>
+                <Text style={styles.value}>{dni || '\u2014'}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Configuraciones */}
@@ -179,29 +355,39 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Modal */}
-        <Modal
-          isVisible={isModalVisible}
-          onBackdropPress={toggleModal}
-          backdropOpacity={0.6}
-          style={styles.modalBottom}
-        >
-          <View style={styles.modalContainer}>
-            <Pressable
-              style={styles.modalButton}
+        {/* Modal para seleccionar foto */}
+        <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
+          <View
+            style={{ backgroundColor: 'white', borderRadius: 16, padding: 24 }}
+          >
+            <Text
+              style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}
+            >
+              Cambiar foto de perfil
+            </Text>
+            <TouchableOpacity
+              style={{ marginBottom: 16 }}
               onPress={pickImageFromGallery}
             >
-              <Text style={styles.modalButtonText}>Elegir desde galería</Text>
-            </Pressable>
-            <Pressable style={styles.modalButton} onPress={takePhotoWithCamera}>
-              <Text style={styles.modalButtonText}>Tomar una foto</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.modalButton, { backgroundColor: '#ff4d4d' }]}
+              <Text style={{ fontSize: 16 }}>Seleccionar de la galería</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ marginBottom: 16 }}
+              onPress={takePhotoWithCamera}
+            >
+              <Text style={{ fontSize: 16 }}>Tomar una foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ marginBottom: 16 }}
               onPress={handleBorrarImagen}
             >
-              <Text style={styles.modalButtonText}>Borrar imagen</Text>
-            </Pressable>
+              <Text style={{ fontSize: 16, color: 'red' }}>
+                Eliminar foto actual
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleModal}>
+              <Text style={{ fontSize: 16, color: 'gray' }}>Cancelar</Text>
+            </TouchableOpacity>
           </View>
         </Modal>
       </ScrollView>
@@ -322,5 +508,72 @@ const styles = StyleSheet.create({
   modalBottom: {
     justifyContent: 'flex-end',
     margin: 0,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  unauthContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  unauthTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#222',
+    marginTop: 12,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  unauthSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  authButton: {
+    width: 220,
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  loginButton: {
+    backgroundColor: '#007AFF',
+  },
+  registerButton: {
+    backgroundColor: '#4CAF50',
+    marginBottom: 0,
+  },
+  authButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
 });

@@ -1,16 +1,32 @@
 // HomeAdministracion.tsx
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart, LineChart } from 'react-native-chart-kit';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
 
 const HomeAdministracion = () => {
+  const router = useRouter();
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.replace('/(auth)')}
+          >
+            <Ionicons name="arrow-back" size={28} color="#333" />
+          </TouchableOpacity>
           <Text style={styles.title}>Bienvenido Administrador</Text>
           <Text style={styles.subtitle}>Resumen general del sistema</Text>
         </View>
@@ -34,6 +50,7 @@ const HomeAdministracion = () => {
             width={screenWidth - 32}
             height={220}
             yAxisLabel="$"
+            yAxisSuffix=""
             chartConfig={chartConfig}
             style={styles.chart}
           />
@@ -55,6 +72,7 @@ const HomeAdministracion = () => {
             width={screenWidth - 32}
             height={220}
             yAxisLabel="$"
+            yAxisSuffix=""
             chartConfig={chartConfig}
             style={styles.chart}
           />
@@ -139,6 +157,13 @@ const styles = StyleSheet.create({
   },
   chart: {
     borderRadius: 12,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    padding: 8,
+    zIndex: 10,
   },
 });
 
