@@ -14,9 +14,6 @@ const imageMap: Record<string, any> = {
   'padel1.png': require('../../assets/images/padel1.png'),
   'padel2.png': require('../../assets/images/padel2.png'),
   'padel3.png': require('../../assets/images/padel3.png'),
-  'padel4.jpg': require('../../assets/images/padel4.jpg'),
-  'padel5.jpeg': require('../../assets/images/padel5.jpeg'),
-  'ManosUnidas.jpg': require('../../assets/images/ManosUnidas.jpg'),
   'placeholder.png': require('../../assets/images/placeholder.png'),
 };
 

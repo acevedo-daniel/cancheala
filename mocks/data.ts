@@ -1,4 +1,13 @@
-import { User, Location, Category, Banner, Space, UserRole, Event, EventType } from '../types';
+import {
+  User,
+  Location,
+  Category,
+  Banner,
+  Space,
+  UserRole,
+  Event,
+  EventType,
+} from '../types';
 
 export const MOCK_USERS: User[] = [
   {
@@ -8,7 +17,7 @@ export const MOCK_USERS: User[] = [
     role: UserRole.USER,
     firstName: 'Juan',
     lastName: 'Pérez',
-    isGoogleUser: false
+    isGoogleUser: false,
   },
   {
     id: '2',
@@ -17,7 +26,7 @@ export const MOCK_USERS: User[] = [
     role: UserRole.OWNER,
     firstName: 'María',
     lastName: 'García',
-    isGoogleUser: true
+    isGoogleUser: true,
   },
 ];
 
@@ -29,7 +38,7 @@ export const MOCK_LOCATIONS: Location[] = [
     coordinates: {
       latitude: -34.603722,
       longitude: -58.381592,
-    }
+    },
   },
   {
     id: '2',
@@ -38,39 +47,37 @@ export const MOCK_LOCATIONS: Location[] = [
     coordinates: {
       latitude: -34.603722,
       longitude: -58.381592,
-    }
+    },
   },
 ];
 
 export const BANNERS: Banner[] = [
-  { 
-    id: '1', 
-    title: 'Promociones destacadas', 
-    image: require('../assets/images/chica-posando-lentes-tennis.jpg') 
-  },
-  { 
-    id: '2', 
-    title: 'Nuevos espacios', 
-    image: require('../assets/images/chica-espaldas-tennis.jpg') 
-  },
-  { 
-    id: '3', 
-    title: 'Eventos especiales', 
-    image: require('../assets/images/chica-vestido-tennis.jpg') 
-  },
-  { 
-    id: '4', 
-    title: 'Espacios populares', 
-    image: require('../assets/images/alejandro-galan-federico-chingotto-qatar-major-padel-2025.avif') 
-  },
+  // { id: '1', title: 'Promociones destacadas', image: require('../assets/images/chica-posando-lentes-tennis.jpg') },
+  // { id: '2', title: 'Nuevos espacios', image: require('../assets/images/chica-espaldas-tennis.jpg') },
+  // { id: '3', title: 'Eventos especiales', image: require('../assets/images/chica-vestido-tennis.jpg') },
+  // { id: '4', title: 'Espacios populares', image: require('../assets/images/alejandro-galan-federico-chingotto-qatar-major-padel-2025.avif') },
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: '1', name: 'Cerca de mí', icon: 'location-outline', image: require('../assets/images/padel1.png') },
-  { id: '2', name: 'Precios bajos', icon: 'pricetag-outline', image: require('../assets/images/padel2.png') },
-  { id: '3', name: 'Reservar ya', icon: 'time-outline', image: require('../assets/images/padel3.png') },
+  {
+    id: '1',
+    name: 'Cerca de mí',
+    icon: 'location-outline',
+    image: require('../assets/images/padel1.png'),
+  },
+  {
+    id: '2',
+    name: 'Precios bajos',
+    icon: 'pricetag-outline',
+    image: require('../assets/images/padel2.png'),
+  },
+  {
+    id: '3',
+    name: 'Reservar ya',
+    icon: 'time-outline',
+    image: require('../assets/images/padel3.png'),
+  },
 ];
-
 
 export const SPACES = [
   {
@@ -145,7 +152,8 @@ export const EVENTS: Event[] = [
   {
     id: '1',
     title: '🎾 Torneo de Pádel Primavera 2025',
-    description: '¡Participa en nuestro torneo de pádel de primavera! Premios para los ganadores y descuentos especiales para participantes. Inscripciones abiertas hasta el 15 de marzo.',
+    description:
+      '¡Participa en nuestro torneo de pádel de primavera! Premios para los ganadores y descuentos especiales para participantes. Inscripciones abiertas hasta el 15 de marzo.',
     type: EventType.TOURNAMENT,
     image: 'padel1.png',
     date: '2025-03-20',
@@ -159,7 +167,8 @@ export const EVENTS: Event[] = [
   {
     id: '2',
     title: '🔥 50% OFF en Canchas Premium',
-    description: 'Aprovecha nuestro descuento especial del 50% en todas las canchas premium durante los fines de semana. Válido hasta el 28 de febrero.',
+    description:
+      'Aprovecha nuestro descuento especial del 50% en todas las canchas premium durante los fines de semana. Válido hasta el 28 de febrero.',
     type: EventType.PROMOTION,
     image: 'padel2.png',
     date: '2025-02-28',
@@ -172,7 +181,8 @@ export const EVENTS: Event[] = [
   {
     id: '3',
     title: '🏆 Liga Amateur de Pádel 2025',
-    description: 'Inscríbete en nuestra liga amateur de pádel. Compite durante 8 semanas y gana premios increíbles. Niveles: principiante, intermedio y avanzado.',
+    description:
+      'Inscríbete en nuestra liga amateur de pádel. Compite durante 8 semanas y gana premios increíbles. Niveles: principiante, intermedio y avanzado.',
     type: EventType.TOURNAMENT,
     image: 'padel3.png',
     date: '2025-04-01',
@@ -186,7 +196,8 @@ export const EVENTS: Event[] = [
   {
     id: '4',
     title: '🆕 Nuevas Canchas de Pádel',
-    description: '¡Estrenamos 4 nuevas canchas de pádel con tecnología de última generación! Reserva tu turno inaugural con un 25% de descuento.',
+    description:
+      '¡Estrenamos 4 nuevas canchas de pádel con tecnología de última generación! Reserva tu turno inaugural con un 25% de descuento.',
     type: EventType.NEWS,
     image: 'padel1.png',
     date: '2025-02-15',
@@ -200,7 +211,8 @@ export const EVENTS: Event[] = [
   {
     id: '7',
     title: '💑 20% OFF para Parejas',
-    description: 'Reserva una cancha para jugar en pareja y obtené un 20% de descuento. Válido todos los miércoles.',
+    description:
+      'Reserva una cancha para jugar en pareja y obtené un 20% de descuento. Válido todos los miércoles.',
     type: EventType.PROMOTION,
     image: 'padel5.jpeg',
     date: '2025-03-10',
@@ -211,7 +223,8 @@ export const EVENTS: Event[] = [
   {
     id: '8',
     title: '💵 30% OFF pagando en efectivo',
-    description: 'Pagá tu reserva en efectivo y obtené un 30% de descuento en cualquier cancha. Solo hasta fin de mes.',
+    description:
+      'Pagá tu reserva en efectivo y obtené un 30% de descuento en cualquier cancha. Solo hasta fin de mes.',
     type: EventType.PROMOTION,
     image: 'padel3.png',
     date: '2025-03-15',
@@ -222,7 +235,8 @@ export const EVENTS: Event[] = [
   {
     id: '9',
     title: '🤝 Torneo Benéfico: Pádel Solidario',
-    description: 'Participa en el torneo benéfico para recaudar fondos para la Asociación Manos Unidas. Todo lo recaudado será donado.',
+    description:
+      'Participa en el torneo benéfico para recaudar fondos para la Asociación Manos Unidas. Todo lo recaudado será donado.',
     type: EventType.TOURNAMENT,
     image: 'ManosUnidas.jpg',
     date: '2025-05-10',
@@ -236,7 +250,8 @@ export const EVENTS: Event[] = [
   {
     id: '10',
     title: '📢 Nuevo sistema de reservas online',
-    description: 'Ahora podés reservar tu cancha desde nuestra app de manera más rápida y sencilla.',
+    description:
+      'Ahora podés reservar tu cancha desde nuestra app de manera más rápida y sencilla.',
     type: EventType.NEWS,
     image: 'padel2.png',
     date: '2025-03-01',
@@ -246,7 +261,8 @@ export const EVENTS: Event[] = [
   {
     id: '11',
     title: '🌟 Renovación de instalaciones',
-    description: '¡Mejoramos para vos! Nuevas luces LED y césped sintético en todas las canchas.',
+    description:
+      '¡Mejoramos para vos! Nuevas luces LED y césped sintético en todas las canchas.',
     type: EventType.NEWS,
     image: 'padel3.png',
     date: '2025-03-05',
@@ -256,7 +272,8 @@ export const EVENTS: Event[] = [
   {
     id: '5',
     title: '⚡ Oferta Flash: 2x1 en Reservas',
-    description: '¡Oferta flash por tiempo limitado! Reserva 2 horas y paga solo 1. Válido solo para hoy de 18:00 a 22:00.',
+    description:
+      '¡Oferta flash por tiempo limitado! Reserva 2 horas y paga solo 1. Válido solo para hoy de 18:00 a 22:00.',
     type: EventType.PROMOTION,
     image: 'padel4.jpg',
     date: '2025-01-25',
@@ -269,7 +286,8 @@ export const EVENTS: Event[] = [
   {
     id: '6',
     title: '🔧 Mantenimiento Programado',
-    description: 'Las canchas 1 y 2 estarán cerradas para mantenimiento el próximo lunes de 8:00 a 12:00. Disculpa las molestias.',
+    description:
+      'Las canchas 1 y 2 estarán cerradas para mantenimiento el próximo lunes de 8:00 a 12:00. Disculpa las molestias.',
     type: EventType.MAINTENANCE,
     date: '2025-01-27',
     startDate: '2025-01-27T08:00:00Z',
@@ -281,7 +299,8 @@ export const EVENTS: Event[] = [
   {
     id: '12',
     title: '🛠 Corte de agua programado',
-    description: 'El día 5 de marzo se realizará un corte de agua por mantenimiento en las instalaciones. Se recomienda traer agua propia.',
+    description:
+      'El día 5 de marzo se realizará un corte de agua por mantenimiento en las instalaciones. Se recomienda traer agua propia.',
     type: EventType.MAINTENANCE,
     date: '2025-03-05',
     startDate: '2025-03-05T08:00:00Z',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,15 +13,21 @@ import {
   Button,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  TextInput,
+  ImageSourcePropType,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Banner, Category, Space } from '../../types';
-import { BANNERS, CATEGORIES, SPACES } from '../../mocks/data';
+import { Banner, Space } from '../../types';
+import { BANNERS, SPACES } from '../../mocks/data';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { SPACING, COLORS } from '../../constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAppStore } from '../../store';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,6 +35,237 @@ const availableHours = Array.from({ length: 13 }, (_, i) => {
   const hour = (14 + i) % 24;
   return `${hour.toString().padStart(2, '0')}:00`;
 });
+
+// 1. DEFINICIÓN DEL TIPO CANCHA (puede ir arriba de HomeScreen)
+type Cancha = {
+  id: string;
+  nombre: string;
+  imageUri: ImageSourcePropType;
+  precio: string;
+  descripcion: string;
+  direccionTexto: string;
+  ubicacionMapa: { latitude: number; longitude: number } | null;
+  puntuacion: number;
+  suelo?: 'césped' | 'hormigón' | 'madera';
+  disponible?: boolean;
+  horarios?: string;
+  especificaciones: string[];
+};
+
+// 2. MOCK DE CANCHAS (puedes reemplazar por fetch real si lo deseas)
+const MOCK_CANCHAS: Cancha[] = [
+  {
+    id: '1',
+    nombre: 'HD Padel',
+    imageUri: require('../../assets/images/blindex1.png'),
+    precio: '14000',
+    descripcion: 'Cancha techada, césped sintético, iluminación incluida.',
+    direccionTexto: 'Av. Siempre Viva 123',
+    ubicacionMapa: { latitude: -34.6037, longitude: -58.3816 },
+    puntuacion: 9.2,
+    suelo: 'césped',
+    disponible: true,
+    horarios: '08:00 - 23:00',
+    especificaciones: ['Techada', 'Iluminación incluida', 'Venta de pelotitas'],
+  },
+  {
+    id: '2',
+    nombre: 'Fluix Padel',
+    imageUri: require('../../assets/images/blindex2.png'),
+    precio: '16000',
+    descripcion: 'Cancha techada, césped sintético, iluminación incluida.',
+    direccionTexto: 'Calle Falsa 456',
+    ubicacionMapa: { latitude: -34.6038, longitude: -58.3820 },
+    puntuacion: 8.7,
+    suelo: 'césped',
+    disponible: false,
+    horarios: '09:00 - 22:00',
+    especificaciones: ['Techada', 'Iluminación incluida'],
+  },
+  {
+    id: '3',
+    nombre: 'SanFer Padel',
+    imageUri: require('../../assets/images/blindex3.png'),
+    precio: '11000',
+    descripcion: 'Cancha techada, césped sintético, iluminación incluida.',
+    direccionTexto: 'Ruta 8 km 45',
+    ubicacionMapa: { latitude: -34.6040, longitude: -58.3830 },
+    puntuacion: 9.5,
+    suelo: 'césped',
+    disponible: true,
+    horarios: '07:00 - 00:00',
+    especificaciones: ['Techada', 'Iluminación incluida', 'Kiosco'],
+  },
+  // Cemento
+  {
+    id: '4',
+    nombre: 'Las Cortadas',
+    imageUri: require('../../assets/images/material1.png'),
+    precio: '8000',
+    descripcion: 'Cancha de cemento techada, iluminación incluida.',
+    direccionTexto: 'Calle Cemento 123',
+    ubicacionMapa: { latitude: -34.6050, longitude: -58.3840 },
+    puntuacion: 8.9,
+    suelo: 'hormigón',
+    disponible: true,
+    horarios: '08:00 - 22:00',
+    especificaciones: ['Techada', 'Iluminación incluida', 'Venta de pelotitas'],
+  },
+  {
+    id: '5',
+    nombre: 'Loxor Padel',
+    imageUri: require('../../assets/images/material2.png'),
+    precio: '9000',
+    descripcion: 'Cancha de cemento techada, iluminación incluida.',
+    direccionTexto: 'Calle Cemento 456',
+    ubicacionMapa: { latitude: -34.6060, longitude: -58.3850 },
+    puntuacion: 8.3,
+    suelo: 'hormigón',
+    disponible: false,
+    horarios: '09:00 - 21:00',
+    especificaciones: ['Techada', 'Iluminación incluida'],
+  },
+  {
+    id: '6',
+    nombre: 'Diefer Padel',
+    imageUri: require('../../assets/images/material3.png'),
+    precio: '7000',
+    descripcion: 'Cancha de cemento techada, iluminación incluida.',
+    direccionTexto: 'Calle Cemento 789',
+    ubicacionMapa: { latitude: -34.6070, longitude: -58.3860 },
+    puntuacion: 8.1,
+    suelo: 'hormigón',
+    disponible: true,
+    horarios: '10:00 - 20:00',
+    especificaciones: ['Techada', 'Iluminación incluida', 'Kiosco'],
+  },
+];
+
+// ESTADO PARA FILTRO DE DISPONIBILIDAD
+type DisponibilidadFiltro = 'todas' | 'disponibles' | 'ocupadas';
+
+// 3. DEFINICIÓN DE CATEGORÍAS CON COLORES Y DESCRIPCIÓN
+const CATEGORIES = [
+  {
+    id: 'blindex',
+    name: 'Blindex',
+    icon: 'layers-outline',
+    color: '#4ADE80',
+    description: 'Canchas con paredes de blindex (vidrio) y césped sintético.'
+  },
+  {
+    id: 'cemento',
+    name: 'Cemento',
+    icon: 'grid-outline',
+    color: '#A1A1B3',
+    description: 'Canchas de cemento, ideales para juego rápido.'
+  },
+  {
+    id: 'techada',
+    name: 'Techadas',
+    icon: 'home-outline',
+    color: '#60A5FA',
+    description: 'Canchas techadas para jugar sin preocuparte por el clima.'
+  },
+  {
+    id: 'cafeteria',
+    name: 'Con cafetería',
+    icon: 'cafe-outline',
+    color: '#FFD600',
+    description: 'Canchas con cafetería o bar para disfrutar antes o después.'
+  },
+  {
+    id: 'pet',
+    name: 'Pet friendly',
+    icon: 'paw-outline',
+    color: '#F472B6',
+    description: 'Espacios donde podés venir con tu mascota.'
+  },
+  {
+    id: 'parking',
+    name: 'Estacionamiento',
+    icon: 'car-outline',
+    color: '#00C853',
+    description: 'Canchas con estacionamiento propio.'
+  },
+];
+
+// Componente para cada categoría (con animación, tooltip y color personalizado)
+function CategoryCard({ item, onPress }: { item: typeof CATEGORIES[0], onPress: () => void }) {
+  const scale = React.useRef(new Animated.Value(1)).current;
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  return (
+    <View style={{ alignItems: 'center', marginRight: 16 }}>
+      <Pressable
+        onPressIn={() => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()}
+        onLongPress={() => setShowTooltip(true)}
+        onPress={onPress}
+        style={({ pressed }) => [{
+          backgroundColor: item.color,
+          borderRadius: 18,
+          width: 64,
+          height: 64,
+          justifyContent: 'center',
+          alignItems: 'center',
+          elevation: pressed ? 4 : 2,
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        }]}
+      >
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <Ionicons name={item.icon as any} size={32} color="#fff" />
+        </Animated.View>
+      </Pressable>
+      <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#222', marginTop: 6 }}>{item.name}</Text>
+      {showTooltip && (
+        <View style={{ position: 'absolute', top: 70, left: -30, backgroundColor: '#222', padding: 8, borderRadius: 8, zIndex: 10, maxWidth: 120 }}>
+          <Text style={{ color: '#fff', fontSize: 12 }}>{item.description}</Text>
+          <Pressable onPress={() => setShowTooltip(false)} style={{ position: 'absolute', top: 2, right: 4 }}>
+            <Ionicons name="close" size={14} color="#fff" />
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// Reemplazar la fila de imágenes de personas por un carrusel horizontal con autoplay
+const PERSON_IMAGES = [
+  require('../../assets/images/persona1 (1).png'),
+  require('../../assets/images/persona2 (1).png'),
+  require('../../assets/images/persona3 (1).png'),
+  require('../../assets/images/persona4 (1).png'),
+  require('../../assets/images/persona5 (1).png'),
+];
+
+const PERSON_TEXTS = [
+  '¡Reserva tu cancha!',
+  'Jugá con amigos',
+  'Promos exclusivas',
+  '¡Sumate a la comunidad!',
+  'Descubrí nuevas canchas',
+];
+
+// Mapeo de íconos y colores para especificaciones
+const ESPEC_ICONS: { [key: string]: { icon: string; color: string } } = {
+  'Techada': { icon: 'home', color: '#F44336' },
+  'Iluminación incluida': { icon: 'bulb', color: '#FFD600' },
+  'Césped sintético': { icon: 'square', color: '#8BC34A' },
+  'Venta de pelotitas': { icon: 'tennisball', color: '#2196F3' },
+  'Venta de grips para paletas': { icon: 'albums', color: '#FFC107' },
+  'Kiosco con insumos deportivos': { icon: 'cart', color: '#E57373' },
+};
+
+// Añadir utilitario arriba del componente principal
+function getImageSource(image: any) {
+  if (!image) return require('../../assets/images/placeholder.png');
+  if (typeof image === 'number') return image; // require()
+  if (typeof image === 'string') return { uri: image };
+  if (image.uri) return { uri: image.uri };
+  return require('../../assets/images/placeholder.png');
+}
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -38,6 +275,20 @@ export default function HomeScreen() {
   const [selectedHours, setSelectedHours] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
+  // ESTADO PARA MODALES DE CANCHA
+  const [modalDetalleVisible, setModalDetalleVisible] = useState(false);
+  const [modalReservaVisible, setModalReservaVisible] = useState(false);
+  const [canchaDetalle, setCanchaDetalle] = useState<Cancha | null>(null);
+  const [canchaReservando, setCanchaReservando] = useState<Cancha | null>(null);
+  const [fechaReserva, setFechaReserva] = useState('');
+  const [horaReserva, setHoraReserva] = useState('');
+  // ESTADO PARA FILTRO DE TIPO DE CANCHA
+  const [tipoFiltro, setTipoFiltro] = useState<'todas' | 'blindex' | 'cemento'>('todas');
+  // ESTADO PARA FILTRO DE DISPONIBILIDAD
+  const [disponibilidadFiltro, setDisponibilidadFiltro] = useState<DisponibilidadFiltro>('todas');
+  // Estado para validación visual
+  const [reservaError, setReservaError] = useState<string>('');
+  const location = useAppStore(state => state.location);
 
   // Resetear categoría seleccionada cuando vuelvas al home
   useFocusEffect(
@@ -45,6 +296,24 @@ export default function HomeScreen() {
       setSelectedCategory(null);
     }, []),
   );
+
+  // Al montar, cargar filtros guardados
+  useEffect(() => {
+    (async () => {
+      const tipo = await AsyncStorage.getItem('filtro_tipo');
+      const disp = await AsyncStorage.getItem('filtro_disp');
+      if (tipo) setTipoFiltro(tipo as any);
+      if (disp) setDisponibilidadFiltro(disp as DisponibilidadFiltro);
+    })();
+  }, []);
+
+  // Guardar filtros al cambiar
+  useEffect(() => {
+    AsyncStorage.setItem('filtro_tipo', tipoFiltro);
+  }, [tipoFiltro]);
+  useEffect(() => {
+    AsyncStorage.setItem('filtro_disp', disponibilidadFiltro);
+  }, [disponibilidadFiltro]);
 
   const handleReservePress = (space: Space) => {
     setSelectedSpace(space);
@@ -75,31 +344,45 @@ export default function HomeScreen() {
     </View>
   );
 
-  const renderCategory = ({ item }: { item: Category }) => (
-    <TouchableOpacity
-      style={styles.categoryCardV2}
-      onPress={() => {
-        setSelectedCategory(item.id);
-        router.push({
-          pathname: '/search',
-          params: { filter: item.name },
-        });
-      }}
-      activeOpacity={0.85}
-    >
-      <Image source={item.image} style={styles.categoryImageV2} />
-      <View style={styles.categoryOverlayV2} />
-      <View style={styles.categoryContentV2}>
-        <Ionicons
-          name={item.icon as any}
-          size={28}
-          color="#fff"
-          style={{ marginBottom: 6 }}
-        />
-        <Text style={styles.categoryTextV2}>{item.name}</Text>
+  const renderCategory = ({ item }: { item: typeof CATEGORIES[0] }) => {
+    const scale = useRef(new Animated.Value(1)).current;
+    const [showTooltip, setShowTooltip] = useState(false);
+    return (
+      <View style={{ alignItems: 'center', marginRight: 16 }}>
+        <Pressable
+          onPressIn={() => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start()}
+          onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()}
+          onLongPress={() => setShowTooltip(true)}
+          onPress={() => setTipoFiltro(item.id as any)}
+          style={({ pressed }) => [{
+            backgroundColor: item.color,
+            borderRadius: 18,
+            width: 64,
+            height: 64,
+            justifyContent: 'center',
+            alignItems: 'center',
+            elevation: pressed ? 4 : 2,
+            shadowColor: '#000',
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+          }]}
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Ionicons name={item.icon as any} size={32} color="#fff" />
+          </Animated.View>
+        </Pressable>
+        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#222', marginTop: 6 }}>{item.name}</Text>
+        {showTooltip && (
+          <View style={{ position: 'absolute', top: 70, left: -30, backgroundColor: '#222', padding: 8, borderRadius: 8, zIndex: 10, maxWidth: 120 }}>
+            <Text style={{ color: '#fff', fontSize: 12 }}>{item.description}</Text>
+            <Pressable onPress={() => setShowTooltip(false)} style={{ position: 'absolute', top: 2, right: 4 }}>
+              <Ionicons name="close" size={14} color="#fff" />
+            </Pressable>
+          </View>
+        )}
       </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   const renderSpace = ({ item }: { item: (typeof SPACES)[0] }) => {
     const formatDistance = (m: number) =>
@@ -129,7 +412,7 @@ export default function HomeScreen() {
         )}
         <View style={styles.nearbyCardV3}>
           <View style={{ position: 'relative', overflow: 'visible' }}>
-            <Image source={item.image} style={styles.nearbyImageV3} />
+            <Image source={getImageSource(item.image)} style={styles.nearbyImageV3} />
           </View>
           <View style={styles.nearbyInfoV3}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -200,9 +483,174 @@ export default function HomeScreen() {
     );
   };
 
+  // HANDLERS
+  const handleVerDetalle = (cancha: Cancha) => {
+    setCanchaDetalle(cancha);
+    setModalDetalleVisible(true);
+  };
+  const handleReservar = (cancha: Cancha) => {
+    setCanchaReservando(cancha);
+    setModalReservaVisible(true);
+  };
+  const confirmarReserva = () => {
+    if (selectedHours.length === 0) {
+      setReservaError('Por favor selecciona al menos un horario');
+      return;
+    }
+    setReservaError('');
+    setModalReservaVisible(false);
+    setSelectedHours([]);
+    if (!selectedDate) return;
+    alert('Reserva confirmada para ' + canchaReservando?.nombre + ' el ' + selectedDate.toLocaleDateString() + ' a las ' + selectedHours.join(', '));
+  };
+
+  // Animación para las tarjetas de canchas
+  const animatedValues = useRef(MOCK_CANCHAS.map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    Animated.stagger(120, animatedValues.map(anim =>
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      })
+    )).start();
+  }, []);
+
+  // Animación de scale para botones
+  const useButtonScale = () => {
+    const scale = useRef(new Animated.Value(1)).current;
+    const onPressIn = () => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true }).start();
+    const onPressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
+    return { scale, onPressIn, onPressOut };
+  };
+
+  // Animación para modales
+  const modalAnim = useRef(new Animated.Value(0)).current;
+  const animateModalIn = () => {
+    modalAnim.setValue(0);
+    Animated.timing(modalAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+  const animateModalOut = (callback: () => void) => {
+    Animated.timing(modalAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => callback());
+  };
+
+  // Componente separado para la tarjeta de cancha (dentro de HomeScreen para acceso a hooks y funciones)
+  function CanchaCard({ item, index, onVerDetalle, onReservar, animatedValue }: {
+    item: Cancha;
+    index: number;
+    onVerDetalle: (item: Cancha) => void;
+    onReservar: (item: Cancha) => void;
+    animatedValue: Animated.Value;
+  }) {
+    const detalleBtn = useButtonScale();
+    const reservarBtn = useButtonScale();
+    return (
+      <Animated.View
+        style={{
+          opacity: animatedValue,
+          transform: [{ scale: animatedValue.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }],
+        }}
+      >
+        <View style={styles.canchaCard}>
+          <View>
+            <Image source={getImageSource(item.imageUri)} style={styles.canchaImage} />
+            {/* Overlay nombre y precio */}
+            <View style={styles.canchaOverlay}>
+              <Text style={styles.canchaNombre}>{item.nombre}</Text>
+              <Text style={styles.canchaPrecio}>${item.precio}</Text>
+            </View>
+            {/* Rating */}
+            <View style={styles.canchaRating}>
+              <Ionicons name="star" size={13} color="#fff" />
+              <Text style={styles.canchaRatingText}>{item.puntuacion}</Text>
+            </View>
+            {/* Suelo */}
+            {item.suelo && (
+              <View style={styles.canchaSuelo}>
+                <Ionicons name="layers-outline" size={12} color="#2196f3" />
+                <Text style={styles.canchaSueloText}>{item.suelo}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.canchaButtonsRow}>
+            <Animated.View style={{ transform: [{ scale: detalleBtn.scale }] }}>
+              <TouchableOpacity
+                style={styles.canchaButtonDetalle}
+                onPress={() => { detalleBtn.onPressOut(); onVerDetalle(item); animateModalIn(); }}
+                onPressIn={detalleBtn.onPressIn}
+                onPressOut={detalleBtn.onPressOut}
+              >
+                <Ionicons name="information-circle-outline" size={16} color="#007bff" />
+                <Text style={styles.canchaButtonDetalleText}>Ver detalles</Text>
+              </TouchableOpacity>
+            </Animated.View>
+            <Animated.View style={{ transform: [{ scale: reservarBtn.scale }] }}>
+              <TouchableOpacity
+                style={[styles.canchaButtonReservar, { backgroundColor: item.disponible ? '#4CAF50' : '#ccc' }]}
+                onPress={() => { reservarBtn.onPressOut(); onReservar(item); animateModalIn(); }}
+                onPressIn={reservarBtn.onPressIn}
+                onPressOut={reservarBtn.onPressOut}
+                disabled={!item.disponible}
+              >
+                <Text style={styles.canchaButtonReservarText}>{item.disponible ? 'Reservar' : 'Ocupada'}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  // Filtrar canchas por tipo
+  const canchasBlindex = MOCK_CANCHAS.filter(c => c.suelo === 'césped');
+  const canchasCemento = MOCK_CANCHAS.filter(c => c.suelo === 'hormigón');
+
+  // Filtrar canchas según tipo y disponibilidad
+  const canchasFiltradas = MOCK_CANCHAS.filter(c => {
+    let tipoOk = true;
+    if (tipoFiltro === 'blindex') tipoOk = c.suelo === 'césped';
+    if (tipoFiltro === 'cemento') tipoOk = c.suelo === 'hormigón';
+    let dispOk = true;
+    if (disponibilidadFiltro === 'disponibles') dispOk = !!c.disponible;
+    if (disponibilidadFiltro === 'ocupadas') dispOk = !c.disponible;
+    return tipoOk && dispOk;
+  });
+
+  // Estado para DatePicker
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Lógica para días disponibles según la cancha (ejemplo: solo lunes a sábado)
+  function isDayAvailable(date: Date, cancha: Cancha | null) {
+    if (!cancha) return false;
+    // Ejemplo: si la cancha solo abre de lunes a sábado
+    // 0 = domingo, 6 = sábado
+    const day = date.getDay();
+    // Aquí podrías usar cancha.horarios para lógica real
+    return day !== 0; // No domingos
+  }
+
+  const carouselVisible = useRef(new Animated.Value(0)).current;
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = event.nativeEvent.contentOffset.y;
+    Animated.timing(carouselVisible, {
+      toValue: Math.max(0, Math.min(120, y)),
+      duration: 220,
+      useNativeDriver: false,
+    }).start();
+  }, [carouselVisible]);
+
   return (
     <ScreenContainer>
-      <View style={{ backgroundColor: '#fff', paddingBottom: 12 }}>
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
         <View
           style={{
             flexDirection: 'row',
@@ -220,7 +668,7 @@ export default function HomeScreen() {
             <Text
               style={{ color: '#181028', fontWeight: 'bold', fontSize: 16 }}
             >
-              C. Falucho 265
+              {location?.name || 'Selecciona ubicación'}
             </Text>
             <Ionicons
               name="chevron-down"
@@ -269,9 +717,30 @@ export default function HomeScreen() {
             <Ionicons name="search" size={20} color="#888999" />
           </TouchableOpacity>
         </View>
-      </View>
-      <View style={styles.container}>
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{
+          opacity: carouselVisible.interpolate({ inputRange: [0, 10, 20], outputRange: [1, 0.5, 0] }),
+          height: carouselVisible.interpolate({ inputRange: [0, 10, 20], outputRange: [110, 60, 0] }),
+          marginBottom: carouselVisible.interpolate({ inputRange: [0, 10, 20], outputRange: [10, 5, 0] }),
+          overflow: 'hidden',
+          marginTop: 18
+        }}>
+          <FlatList
+            data={PERSON_IMAGES}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, idx) => idx.toString()}
+            renderItem={({ item }) => (
+              <View style={{ marginRight: 16 }}>
+                <Image
+                  source={getImageSource(item)}
+                  style={{ width: 170, height: 110, borderRadius: 18, resizeMode: 'cover' }}
+                />
+              </View>
+            )}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
+          />
+        </Animated.View>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16}>
           {/* Banners */}
           <View style={styles.bannerContainer}>
             <FlatList
@@ -297,40 +766,17 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Quick Access */}
-          <View style={styles.quickAccess}>
-            <View style={styles.quickAccessItem}>
-              <TouchableOpacity
-                style={styles.quickAccessCard}
-                onPress={() => router.push('/(user)/canchas')}
-              >
-                <Image
-                  source={require('../../assets/images/red-negra-tennis-tennis.jpg')}
-                  style={styles.quickAccessImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-              <Text style={styles.quickAccessText}>Canchas</Text>
-            </View>
-
-            <View style={styles.quickAccessItem}>
-              <TouchableOpacity style={styles.quickAccessCard}>
-                <Image
-                  source={require('../../assets/images/chica-espaldas-tennis.jpg')}
-                  style={styles.quickAccessImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-              <Text style={styles.quickAccessText}>Matchmaking</Text>
-            </View>
-          </View>
-
           {/* Filtros rápidos */}
           <View style={styles.categoriesSection}>
             <Text style={styles.sectionTitle}>Explora por</Text>
             <FlatList
               data={CATEGORIES}
-              renderItem={renderCategory}
+              renderItem={({ item }) => (
+                <CategoryCard
+                  item={item}
+                  onPress={() => setTipoFiltro(item.id as any)}
+                />
+              )}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.categoriesList}
@@ -338,80 +784,262 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* Cerca de ti */}
-          <View style={styles.spacesSection}>
-            <Text style={styles.sectionTitle}>Cerca de ti</Text>
-            <FlatList
-              data={SPACES.slice(0, 3)}
-              keyExtractor={(item) => item.id}
-              renderItem={renderSpace}
-              scrollEnabled={false}
-              nestedScrollEnabled={true}
-            />
+          {/* Filtro visual arriba de la grilla */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10, gap: 8 }}>
+            {[
+              { label: 'Todas', value: 'todas' },
+              { label: 'Blindex', value: 'blindex' },
+              { label: 'Cemento', value: 'cemento' },
+            ].map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                style={{
+                  backgroundColor: tipoFiltro === opt.value ? '#007bff' : '#eaf1fb',
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 7,
+                }}
+                onPress={() => setTipoFiltro(opt.value as any)}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: tipoFiltro === opt.value ? '#fff' : '#007bff', fontWeight: 'bold' }}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16, gap: 8 }}>
+            {[
+              { label: 'Todas', value: 'todas' },
+              { label: 'Disponibles', value: 'disponibles' },
+              { label: 'Ocupadas', value: 'ocupadas' },
+            ].map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                style={{
+                  backgroundColor: disponibilidadFiltro === opt.value ? '#4CAF50' : '#eaf1fb',
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 7,
+                }}
+                onPress={() => setDisponibilidadFiltro(opt.value as any)}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: disponibilidadFiltro === opt.value ? '#fff' : '#4CAF50', fontWeight: 'bold' }}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* SECCIÓN DE CANCHAS DISPONIBLES */}
+          {tipoFiltro === 'todas' ? (
+            <>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#181028', marginBottom: 8, marginLeft: 2 }}>
+                Canchas Blindex
+              </Text>
+              <FlatList
+                data={canchasBlindex}
+                renderItem={({ item, index }) => (
+                  <CanchaCard
+                    item={item}
+                    index={index}
+                    onVerDetalle={handleVerDetalle}
+                    onReservar={handleReservar}
+                    animatedValue={animatedValues[index]}
+                  />
+                )}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+                scrollEnabled={true}
+              />
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#181028', marginBottom: 8, marginLeft: 2, marginTop: 18 }}>
+                Canchas Cemento
+              </Text>
+              <FlatList
+                data={canchasCemento}
+                renderItem={({ item, index }) => (
+                  <CanchaCard
+                    item={item}
+                    index={index}
+                    onVerDetalle={handleVerDetalle}
+                    onReservar={handleReservar}
+                    animatedValue={animatedValues[index]}
+                  />
+                )}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+                scrollEnabled={true}
+              />
+            </>
+          ) : tipoFiltro === 'blindex' ? (
+            <FlatList
+              data={canchasBlindex}
+              renderItem={({ item, index }) => (
+                <CanchaCard
+                  item={item}
+                  index={index}
+                  onVerDetalle={handleVerDetalle}
+                  onReservar={handleReservar}
+                  animatedValue={animatedValues[index]}
+                />
+              )}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+              scrollEnabled={true}
+            />
+          ) : (
+            <FlatList
+              data={canchasCemento}
+              renderItem={({ item, index }) => (
+                <CanchaCard
+                  item={item}
+                  index={index}
+                  onVerDetalle={handleVerDetalle}
+                  onReservar={handleReservar}
+                  animatedValue={animatedValues[index]}
+                />
+              )}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 10, gap: 12, paddingLeft: 8, paddingRight: 8 }}
+              scrollEnabled={true}
+            />
+          )}
         </ScrollView>
 
-        {/* Modal de Reservas */}
+        {/* MODAL DETALLE */}
         <Modal
-          visible={modalVisible}
+          visible={modalDetalleVisible}
           transparent
           animationType="slide"
-          onRequestClose={() => setModalVisible(false)}
+          onRequestClose={() => setModalDetalleVisible(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: '#fff', borderRadius: 22, padding: 24, width: '85%', maxHeight: '80%', alignItems: 'center', position: 'relative' }}>
+              <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }} onPress={() => setModalDetalleVisible(false)}>
+                <Ionicons name="close-circle" size={28} color="#888" />
+              </TouchableOpacity>
+              {canchaDetalle && (
+                <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }} contentContainerStyle={{ alignItems: 'center' }}>
+                  <Image source={getImageSource(canchaDetalle.imageUri)} style={{ width: '100%', height: 140, borderRadius: 16, marginBottom: 16 }} resizeMode="cover" />
+                  <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' }}>{canchaDetalle.nombre}</Text>
+                  <View style={{ marginBottom: 10, width: '100%', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
+                      <Text style={{ fontSize: 16, color: '#2196f3', fontWeight: '600', marginRight: 4 }}>{Number(canchaDetalle.precio).toLocaleString()}$ s/luz</Text>
+                      <Ionicons name="sunny" size={18} color="#FFD600" style={{ marginLeft: 2 }} />
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 16, color: '#222', fontWeight: '600', marginRight: 4 }}>{(Number(canchaDetalle.precio) + 2000).toLocaleString()}$ c/luz</Text>
+                      <Ionicons name="moon" size={18} color="#222" style={{ marginLeft: 2 }} />
+                    </View>
+                  </View>
+                  <View style={{ backgroundColor: '#f7fafd', borderRadius: 16, padding: 12, width: '100%', marginBottom: 18 }}>
+                    {canchaDetalle.especificaciones.map((esp, idx) => {
+                      // Separar tipo y valor si viene como 'Superficie: Césped sintético'
+                      let tipo = esp;
+                      let valor = '';
+                      if (esp.includes(':')) {
+                        [tipo, valor] = esp.split(':').map(s => s.trim());
+                      }
+                      const iconData = ESPEC_ICONS[tipo] || { icon: 'information-circle', color: '#B0BEC5' };
+                      return (
+                        <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 8, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 2, elevation: 1 }}>
+                          <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                            <Ionicons name={iconData.icon} size={20} color={iconData.color} />
+                          </View>
+                          <Text style={{ fontSize: 15, color: '#222', flex: 1 }}>
+                            <Text style={{ fontWeight: 'bold' }}>{tipo}</Text>{valor ? `: ${valor}` : ''}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                  <TouchableOpacity style={{ backgroundColor: '#4CAF50', borderRadius: 10, paddingVertical: 14, width: '100%', alignItems: 'center', marginTop: 4 }} onPress={() => { setModalDetalleVisible(false); setModalReservaVisible(true); }}>
+                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>Reservar Ahora</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              )}
+            </View>
+          </View>
+        </Modal>
+        {/* MODAL RESERVA */}
+        <Modal
+          visible={modalReservaVisible}
+          transparent
+          animationType="none"
+          onRequestClose={() => animateModalOut(() => setModalReservaVisible(false))}
+          onShow={animateModalIn}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                Reservar en {selectedSpace?.name || ''}
-              </Text>
-              <Text style={{ marginBottom: 10 }}>Selecciona horarios:</Text>
-              <View style={styles.hoursContainer}>
+            <Animated.View style={[styles.modalContentDetalle, {
+              opacity: modalAnim,
+              transform: [{ scale: modalAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }],
+            }]}
+            >
+              <Text style={styles.modalTitle}>Reservar {canchaReservando?.nombre}</Text>
+              <TouchableOpacity
+                style={{
+                  marginBottom: 10,
+                  borderWidth: 1,
+                  borderColor: reservaError && !selectedDate ? 'red' : '#e5e5e5',
+                  borderRadius: 8,
+                  padding: 10,
+                }}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={{ color: selectedDate ? '#181028' : '#888', fontSize: 15 }}>
+                  {selectedDate ? selectedDate.toLocaleDateString() : 'Seleccionar fecha'}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDate || new Date()}
+                  mode="date"
+                  display="calendar"
+                  minimumDate={new Date()}
+                  onChange={(_, date) => {
+                    setShowDatePicker(false);
+                    if (date && isDayAvailable(date, canchaReservando)) setSelectedDate(date);
+                  }}
+                />
+              )}
+              {reservaError && !selectedDate && (
+                <Text style={{ color: 'red', marginBottom: 6 }}>{reservaError}</Text>
+              )}
+              <Text style={styles.modalLabel}>Selecciona horario:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10, marginTop: 4 }}>
                 {availableHours.map((hour) => {
                   const selected = selectedHours.includes(hour);
                   return (
-                    <Pressable
+                    <TouchableOpacity
                       key={hour}
                       onPress={() => {
-                        setSelectedHours((prev) =>
-                          prev.includes(hour)
-                            ? prev.filter((h) => h !== hour)
-                            : [...prev, hour],
-                        );
+                        if (selected) setSelectedHours(selectedHours.filter(h => h !== hour));
+                        else setSelectedHours([...selectedHours, hour]);
                       }}
                       style={[
                         styles.hourButton,
                         selected && styles.hourButtonSelected,
+                        { minWidth: 70, marginRight: 8, borderColor: reservaError && !selected ? 'red' : '#e5e5e5', borderWidth: 1 },
                       ]}
                     >
-                      <Text
-                        style={{
-                          color: selected ? '#fff' : '#000',
-                        }}
-                      >
-                        {hour}
-                      </Text>
-                    </Pressable>
+                      <Text style={{ color: selected ? '#fff' : '#000' }}>{hour}</Text>
+                    </TouchableOpacity>
                   );
                 })}
-              </View>
-
-              {selectedHours.length > 0 && selectedSpace && (
-                <Button
-                  title="Reservar"
-                  onPress={() => {
-                    setModalVisible(false);
-                    setSelectedHours([]);
-                    alert('Reserva confirmada');
-                  }}
-                />
+              </ScrollView>
+              {reservaError && selectedHours.length === 0 && (
+                <Text style={{ color: 'red', marginBottom: 6 }}>{reservaError}</Text>
               )}
+              <Button title="Confirmar reserva" color="#4CAF50" onPress={confirmarReserva} />
               <View style={{ marginTop: 10 }}>
-                <Button
-                  title="Cerrar"
-                  color="#999"
-                  onPress={() => setModalVisible(false)}
-                />
+                <Button title="Cancelar" color="#999" onPress={() => setModalReservaVisible(false)} />
               </View>
-            </View>
+            </Animated.View>
           </View>
         </Modal>
       </View>
@@ -517,50 +1145,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-  },
-
-  quickAccess: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-
-  quickAccessItem: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginHorizontal: 0,
-  },
-
-  quickAccessCard: {
-    width: 145,
-    height: 120,
-    borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-  },
-
-  quickAccessImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 24,
-  },
-
-  quickAccessText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 10,
-    textAlign: 'center',
-    textShadowColor: 'rgba(255, 255, 255, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 
   categoriesSection: {
@@ -808,5 +1392,149 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     overflow: 'hidden',
+  },
+  canchaCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    marginBottom: 18,
+    flex: 1,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  canchaImage: {
+    width: '100%',
+    height: 110,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
+  canchaOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+  },
+  canchaNombre: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  canchaPrecio: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  canchaRating: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#007bff',
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  canchaRatingText: {
+    color: '#fff',
+    fontSize: 12,
+    marginLeft: 3,
+    fontWeight: 'bold',
+  },
+  canchaSuelo: {
+    position: 'absolute',
+    left: 8,
+    top: 8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  canchaSueloText: {
+    color: '#2196f3',
+    fontSize: 11,
+    marginLeft: 3,
+    fontWeight: 'bold',
+  },
+  canchaButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  canchaButtonDetalle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eaf1fb',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  canchaButtonDetalleText: {
+    color: '#007bff',
+    fontWeight: 'bold',
+    fontSize: 13,
+    marginLeft: 4,
+  },
+  canchaButtonReservar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  canchaButtonReservarText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
+    marginLeft: 4,
+  },
+  modalContentDetalle: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 14,
+    width: '90%',
+    maxHeight: '85%',
+  },
+  modalTitle: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginBottom: 10,
+    color: '#181028',
+  },
+  modalLabel: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    marginTop: 10,
+    color: '#007bff',
+  },
+  modalText: {
+    fontSize: 14,
+    color: '#181028',
+    marginBottom: 2,
+  },
+  modalImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 10,
+    marginBottom: 10,
   },
 });

@@ -25,7 +25,12 @@ export default function LocationSelectionScreen() {
   const [loadingLocation, setLoadingLocation] = useState(false);
 
   const handleSaveLocation = () => {
-    // TODO: Implementar lógica para guardar la ubicación
+    setLocation({
+      id: 'manual',
+      name: address,
+      address: address,
+      coordinates: null,
+    });
     router.replace('/(user)');
   };
 
