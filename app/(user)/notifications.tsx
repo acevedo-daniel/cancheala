@@ -11,8 +11,9 @@ import {
   Platform,
   Dimensions,
   Animated,
-  Picker,
   PanResponder,
+  GestureResponderEvent,
+  PanResponderGestureState,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,7 +60,7 @@ export default function NotificationsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all');
-  const { events, readEvents, setEvents, setReadEvents } = useContext(NotificationsContext);
+  const { events, readEvents, setEvents, setReadEvents } = useContext(NotificationsContext) || { events: [], readEvents: [], setEvents: () => {}, setReadEvents: () => {} };
 
   const filteredEvents = filter === 'all'
     ? events
@@ -160,24 +161,24 @@ export default function NotificationsScreen() {
   const renderEventCard = ({ item, index }: { item: Event, index: number }) => {
     const fadeAnim = new Animated.Value(1);
     const isReadSection = filter === 'read';
-    const handleMarkRead = () => {
+    const handleMarkRead = (): void => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
       }).start(() => {
-        setEvents(prev => prev.filter(e => e.id !== item.id));
-        setReadEvents(prev => [...prev, item]);
+        setEvents((prev: Event[]) => prev.filter((e: Event) => e.id !== item.id));
+        setReadEvents((prev: Event[]) => [...prev, item]);
       });
     };
-    const handleRestore = () => {
+    const handleRestore = (): void => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
       }).start(() => {
-        setReadEvents(prev => prev.filter(e => e.id !== item.id));
-        setEvents(prev => [item, ...prev]);
+        setReadEvents((prev: Event[]) => prev.filter((e: Event) => e.id !== item.id));
+        setEvents((prev: Event[]) => [item, ...prev]);
       });
     };
     return isReadSection ? (
@@ -500,56 +501,140 @@ const styles = StyleSheet.create({
 
 function SwipeableRow({ children, onDelete }: { children: React.ReactNode, onDelete: () => void }) {
   const pan = React.useRef(new Animated.ValueXY()).current;
+  const [showIcon, setShowIcon] = React.useState(false);
+  const [iconOpacity] = React.useState(new Animated.Value(0));
+
   const panResponder = React.useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
-      onPanResponderMove: Animated.event([
-        null,
-        { dx: pan.x }
-      ], { useNativeDriver: false }),
+      onPanResponderMove: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        Animated.event([
+          null,
+          { dx: pan.x }
+        ], { useNativeDriver: false })(e, gestureState);
+        if (gestureState.dx < -20) {
+          setShowIcon(true);
+          Animated.timing(iconOpacity, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: true,
+          }).start();
+        } else {
+          setShowIcon(false);
+          Animated.timing(iconOpacity, {
+            toValue: 0,
+            duration: 100,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx < -100) {
           onDelete();
         } else {
           Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+          setShowIcon(false);
+          Animated.timing(iconOpacity, {
+            toValue: 0,
+            duration: 100,
+            useNativeDriver: true,
+          }).start();
         }
       },
     })
   ).current;
+
   return (
-    <Animated.View
-      style={{ transform: [{ translateX: pan.x }] }}
-      {...panResponder.panHandlers}
-    >
-      {children}
-    </Animated.View>
+    <View style={{ justifyContent: 'center' }}>
+      {showIcon && (
+        <Animated.View style={{
+          position: 'absolute',
+          right: 24,
+          zIndex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          opacity: iconOpacity,
+        }}>
+          <Ionicons name="mail-open-outline" size={32} color="#f44336" />
+        </Animated.View>
+      )}
+      <Animated.View
+        style={{ transform: [{ translateX: pan.x }] }}
+        {...panResponder.panHandlers}
+      >
+        {children}
+      </Animated.View>
+    </View>
   );
 }
 
 function SwipeableRowRestore({ children, onRestore }: { children: React.ReactNode, onRestore: () => void }) {
   const pan = React.useRef(new Animated.ValueXY()).current;
+  const [showIcon, setShowIcon] = React.useState(false);
+  const [iconOpacity] = React.useState(new Animated.Value(0));
+
   const panResponder = React.useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
-      onPanResponderMove: Animated.event([
-        null,
-        { dx: pan.x }
-      ], { useNativeDriver: false }),
+      onPanResponderMove: (e: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        Animated.event([
+          null,
+          { dx: pan.x }
+        ], { useNativeDriver: false })(e, gestureState);
+        if (gestureState.dx > 20) {
+          setShowIcon(true);
+          Animated.timing(iconOpacity, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: true,
+          }).start();
+        } else {
+          setShowIcon(false);
+          Animated.timing(iconOpacity, {
+            toValue: 0,
+            duration: 100,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx > 100) {
           onRestore();
         } else {
           Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+          setShowIcon(false);
+          Animated.timing(iconOpacity, {
+            toValue: 0,
+            duration: 100,
+            useNativeDriver: true,
+          }).start();
         }
       },
     })
   ).current;
+
   return (
-    <Animated.View
-      style={{ transform: [{ translateX: pan.x }] }}
-      {...panResponder.panHandlers}
-    >
-      {children}
-    </Animated.View>
+    <View style={{ justifyContent: 'center' }}>
+      {showIcon && (
+        <Animated.View style={{
+          position: 'absolute',
+          left: 24,
+          zIndex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          opacity: iconOpacity,
+        }}>
+          <Ionicons name="mail-unread-outline" size={32} color="#4caf50" />
+        </Animated.View>
+      )}
+      <Animated.View
+        style={{ transform: [{ translateX: pan.x }] }}
+        {...panResponder.panHandlers}
+      >
+        {children}
+      </Animated.View>
+    </View>
   );
 } 
