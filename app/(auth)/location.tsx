@@ -10,11 +10,14 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { useAppStore } from '../../store';
 
 export default function LocationScreen() {
   const router = useRouter();
   const [manualLocation, setManualLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const setLocation = useAppStore(state => state.setLocation);
+  const setError = useAppStore(state => state.setError);
 
   const handleAllowLocation = async () => {
     setIsLoading(true);
@@ -22,22 +25,49 @@ export default function LocationScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === 'granted') {
         const location = await Location.getCurrentPositionAsync({});
-        // TODO: Guardar la ubicación
+        const coords = location.coords;
+        // Geocoding inverso para obtener la dirección real
+        let address = 'Ubicación actual';
+        try {
+          const geocode = await Location.reverseGeocodeAsync({ latitude: coords.latitude, longitude: coords.longitude });
+          if (geocode && geocode.length > 0) {
+            const g = geocode[0];
+            address = `${g.street || ''} ${g.name || ''}, ${g.city || g.region || ''}`.trim();
+          }
+        } catch (geoError) {
+          // Si falla el geocoding, se mantiene 'Ubicación actual'
+        }
+        setLocation({
+          id: 'current',
+          name: address,
+          address: address,
+          coordinates: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          },
+        });
         router.replace('/(user)');
       } else {
         // Si el usuario rechaza, mostramos la opción de ubicación manual
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Error al obtener la ubicación:', error);
+      setError('Error al obtener la ubicación');
       setIsLoading(false);
     }
   };
 
   const handleManualLocation = () => {
     if (manualLocation.trim()) {
-      // TODO: Guardar la ubicación manual
-      console.log('Ubicación manual guardada:', manualLocation.trim());
+      setLocation({
+        id: 'manual',
+        name: manualLocation.trim(),
+        address: manualLocation.trim(),
+        coordinates: {
+          latitude: 0,
+          longitude: 0,
+        },
+      });
       router.replace('/(user)');
     }
   };

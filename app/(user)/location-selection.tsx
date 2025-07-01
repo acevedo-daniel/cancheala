@@ -6,25 +6,69 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ui/ScreenContainer';
+import * as Location from 'expo-location';
+import { useAppStore } from '../../store';
 
 export default function LocationSelectionScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [address, setAddress] = useState('');
+  const setLocation = useAppStore(state => state.setLocation);
+  const setLoading = useAppStore(state => state.setLoading);
+  const setError = useAppStore(state => state.setError);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const handleSaveLocation = () => {
     // TODO: Implementar lógica para guardar la ubicación
-    router.replace('/(user)/home');
+    router.replace('/(user)');
   };
 
-  const handleUseCurrentLocation = () => {
-    // TODO: Implementar lógica para obtener ubicación actual
-    router.replace('/(user)/home');
+  const handleUseCurrentLocation = async () => {
+    try {
+      setLoading(true);
+      setLoadingLocation(true);
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Permiso de ubicación denegado');
+        setLoading(false);
+        setLoadingLocation(false);
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      const coords = location.coords;
+      // Geocoding inverso para obtener la dirección real
+      let address = 'Ubicación actual';
+      try {
+        const geocode = await Location.reverseGeocodeAsync({ latitude: coords.latitude, longitude: coords.longitude });
+        if (geocode && geocode.length > 0) {
+          const g = geocode[0];
+          address = `${g.street || ''} ${g.name || ''}, ${g.city || g.region || ''}`.trim();
+        }
+      } catch (geoError) {
+        // Si falla el geocoding, se mantiene 'Ubicación actual'
+      }
+      setLocation({
+        id: 'current',
+        name: address,
+        address: address,
+        coordinates: {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        },
+      });
+      router.replace('/(user)');
+    } catch (error) {
+      setError('No se pudo obtener la ubicación actual');
+    } finally {
+      setLoading(false);
+      setLoadingLocation(false);
+    }
   };
 
   return (
@@ -44,11 +88,15 @@ export default function LocationSelectionScreen() {
           <TouchableOpacity
             style={styles.currentLocationButton}
             onPress={handleUseCurrentLocation}
+            disabled={loadingLocation}
           >
             <Ionicons name="location" size={24} color="#00C853" />
             <Text style={styles.currentLocationText}>
               Usar mi ubicación actual
             </Text>
+            {loadingLocation && (
+              <ActivityIndicator size="small" color="#00C853" style={{ marginLeft: 10 }} />
+            )}
           </TouchableOpacity>
 
           <View style={styles.divider}>

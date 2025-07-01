@@ -7,12 +7,17 @@ import { Event, EventType } from '../../types';
 interface EventCardProps {
   event: Event;
   onPress: () => void;
+  backgroundColor?: string;
 }
 
 const imageMap: Record<string, any> = {
   'padel1.png': require('../../assets/images/padel1.png'),
   'padel2.png': require('../../assets/images/padel2.png'),
   'padel3.png': require('../../assets/images/padel3.png'),
+  'padel4.jpg': require('../../assets/images/padel4.jpg'),
+  'padel5.jpeg': require('../../assets/images/padel5.jpeg'),
+  'ManosUnidas.jpg': require('../../assets/images/ManosUnidas.jpg'),
+  'placeholder.png': require('../../assets/images/placeholder.png'),
 };
 
 const getEventTypeIcon = (type: EventType): keyof typeof Ionicons.glyphMap => {
@@ -58,12 +63,12 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-export default function EventCard({ event, onPress }: EventCardProps) {
+export default function EventCard({ event, onPress, backgroundColor }: EventCardProps) {
   const eventIcon = getEventTypeIcon(event.type);
   const eventColor = getEventTypeColor(event.type);
 
   return (
-    <Pressable onPress={onPress} style={styles.card}>
+    <Pressable onPress={onPress} style={[styles.card, backgroundColor ? { backgroundColor } : null]}>
       <View style={styles.imageContainer}>
         {event.image ? (
           <Image source={imageMap[event.image]} style={styles.image} />
